@@ -1,0 +1,73 @@
+site_name: RHCSA Self-Study Course
+site_description: Beginner-friendly RHCSA self-study handbook with labs, verification, troubleshooting, and mock exams.
+site_url: ""
+repo_name: ex200
+repo_url: ""
+docs_dir: docs
+site_dir: site
+use_directory_urls: true
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: blue grey
+      accent: teal
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search
+  - mermaid2
+
+extra:
+  generator: false
+
+nav:
+  - Home: index.md
+  - Repository Guide: repository-guide.md
+  - Foundations:
+      - 00 Study Skills and Offline Help: 00-study-skills-and-offline-help.md
+      - 01 Shell Basics and Command Syntax: 01-shell-basics-and-command-syntax.md
+      - 02 Files, Directories, and Text Editing: 02-files-directories-and-text-editing.md
+      - 03 Redirection, Pipes, Grep, and Regex: 03-redirection-pipes-grep-and-regex.md
+      - 04 Archives, Compression, and Secure File Transfer: 04-archives-compression-and-secure-file-transfer.md
+      - 05 SSH, Login Control, and Remote Workflows: 05-ssh-login-switching-users-and-remote-workflows.md
+      - 06 Links, Permissions, and Default Permissions: 06-links-permissions-and-default-permissions.md
+  - Administration Core:
+      - 07 Software Management, RPM Repositories, and Flatpak: 07-software-management-rpm-repos-and-flatpak.md
+      - 08 Shell Scripting Basics: 08-shell-scripting-basics.md
+      - 09 Boot, Targets, Processes, Logs, and Tuning: 09-boot-targets-processes-logs-and-tuning.md
+      - 10 Storage, Partitions, LVM, and Swap: 10-storage-partitions-lvm-and-swap.md
+      - 11 Filesystems, Mounts, NFS, and Autofs: 11-filesystems-mounts-nfs-and-autofs.md
+      - 12 Scheduling, Services, Time, and Bootloader: 12-scheduling-services-time-and-bootloader.md
+      - 13 Networking, Hostname Resolution, and firewalld: 13-networking-hostname-resolution-and-firewalld.md
+      - 14 Users, Groups, Passwords, and Sudo: 14-users-groups-passwords-and-sudo.md
+      - 15 SELinux, SSH Keys, and Security: 15-selinux-ssh-keys-and-security.md
+      - 16 Persistence, Reboot Checks, and Troubleshooting: 16-persistence-reboot-checks-and-troubleshooting.md
+  - Review and Mock Exams:
+      - 17 Final Review and Cheat Sheets: 17-final-review-cheat-sheets.md
+      - 18 Mock Exam 1: 18-mock-exam-1.md
+      - 19 Mock Exam 1 Solutions: 19-mock-exam-1-solutions.md
+      - 20 Mock Exam 2: 20-mock-exam-2.md
+      - 21 Mock Exam 2 Solutions: 21-mock-exam-2-solutions.md

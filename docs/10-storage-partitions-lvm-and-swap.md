@@ -1,0 +1,1 @@
+../10-storage-partitions-lvm-and-swap.md

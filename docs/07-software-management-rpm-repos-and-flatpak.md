@@ -1,0 +1,1 @@
+../07-software-management-rpm-repos-and-flatpak.md

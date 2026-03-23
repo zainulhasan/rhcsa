@@ -1,0 +1,1 @@
+../13-networking-hostname-resolution-and-firewalld.md
