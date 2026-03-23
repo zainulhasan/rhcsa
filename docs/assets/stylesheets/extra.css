@@ -176,6 +176,20 @@
   margin: 1rem 0 1.1rem;
 }
 
+.md-typeset .md-button:hover,
+.md-typeset .md-button:focus {
+  background-color: #b3261e;
+  border-color: #b3261e;
+  color: #fff7f6;
+}
+
+.md-typeset .md-button--primary:hover,
+.md-typeset .md-button--primary:focus {
+  background-color: #9f1d17;
+  border-color: #9f1d17;
+  color: #ffffff;
+}
+
 [data-md-color-scheme="slate"] .md-typeset .md-button {
   border-color: rgba(143, 210, 208, 0.4);
   color: #d9f0ef;
@@ -183,9 +197,9 @@
 
 [data-md-color-scheme="slate"] .md-typeset .md-button:hover,
 [data-md-color-scheme="slate"] .md-typeset .md-button:focus {
-  background-color: rgba(143, 210, 208, 0.1);
-  border-color: rgba(143, 210, 208, 0.58);
-  color: #f4fbfb;
+  background-color: #c43a31;
+  border-color: #e36a5f;
+  color: #fff9f8;
 }
 
 [data-md-color-scheme="slate"] .md-typeset .md-button--primary {
@@ -196,8 +210,8 @@
 
 [data-md-color-scheme="slate"] .md-typeset .md-button--primary:hover,
 [data-md-color-scheme="slate"] .md-typeset .md-button--primary:focus {
-  background-color: #338993;
-  border-color: #63bcbd;
+  background-color: #b93129;
+  border-color: #e36a5f;
   color: #ffffff;
 }
 
