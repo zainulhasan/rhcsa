@@ -6,9 +6,10 @@ This site turns the course into a browsable handbook for GitHub Pages. The sourc
 
 1. Start with [Study Skills and Offline Help](00-study-skills-and-offline-help.md).
 2. Work through the numbered lessons in order.
-3. Use [Final Review and Cheat Sheets](17-final-review-cheat-sheets.md) after finishing the lesson track.
-4. Attempt [Mock Exam 1](18-mock-exam-1.md) and [Mock Exam 2](20-mock-exam-2.md) only after completing lessons `00-16`.
-5. Open the mock exam solution files only after you finish the exam attempt.
+3. Use the [RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md) when you need fast recall by command family.
+4. Use [Final Review and Cheat Sheets](17-final-review-cheat-sheets.md) after finishing the lesson track.
+5. Attempt [Mock Exam 1](18-mock-exam-1.md) and [Mock Exam 2](20-mock-exam-2.md) only after completing lessons `00-16`.
+6. Open the mock exam solution files only after you finish the exam attempt.
 
 ## Recommended Study Path
 
@@ -37,6 +38,7 @@ This site turns the course into a browsable handbook for GitHub Pages. The sourc
 
 ### Review and Exams
 
+- [17a RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md)
 - [17 Final Review and Cheat Sheets](17-final-review-cheat-sheets.md)
 - [18 Mock Exam 1](18-mock-exam-1.md)
 - [19 Mock Exam 1 Solutions](19-mock-exam-1-solutions.md)

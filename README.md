@@ -44,11 +44,12 @@ Study loop for every lesson:
 15. `14-users-groups-passwords-and-sudo.md`
 16. `15-selinux-ssh-keys-and-security.md`
 17. `16-persistence-reboot-checks-and-troubleshooting.md`
-18. `17-final-review-cheat-sheets.md`
-19. `18-mock-exam-1.md`
-20. `19-mock-exam-1-solutions.md`
-21. `20-mock-exam-2.md`
-22. `21-mock-exam-2-solutions.md`
+18. `17a-rhcsa-command-reference-cheat-sheet.md`
+19. `17-final-review-cheat-sheets.md`
+20. `18-mock-exam-1.md`
+21. `19-mock-exam-1-solutions.md`
+22. `20-mock-exam-2.md`
+23. `21-mock-exam-2-solutions.md`
 
 ## How To Use The Files
 
