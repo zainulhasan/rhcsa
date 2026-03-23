@@ -1,25 +1,27 @@
-# 1. Title
+# Filesystems, Mounts, NFS, and Autofs
 
-Filesystems, Mounts, NFS, and Autofs
+> Teach you how to create filesystems, mount and unmount storage, configure persistent mounts, work with NFS, and use autofs.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to create filesystems, mount and unmount storage, configure persistent mounts, work with NFS, and use autofs.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 Mounting storage correctly and making it survive reboot is a major RHCSA skill. NFS and autofs are also explicit objectives.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins mount local storage, add application volumes, expose shared data with NFS, and use automounting so remote filesystems appear only when needed.
 
-# 5. Prerequisites
+**Estimated study time**
+
+8 hours
+
+## Prerequisites
 
 - Read `10-storage-partitions-lvm-and-swap.md`
 - Read `02-files-directories-and-text-editing.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Create, mount, unmount, and use VFAT, ext4, and XFS filesystems
 - Configure systems to mount filesystems at boot by UUID or label
@@ -28,11 +30,11 @@ Admins mount local storage, add application volumes, expose shared data with NFS
 - Extend existing logical volumes
 - Diagnose and correct file permission problems
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `mkfs.xfs`, `mkfs.ext4`, `mkfs.vfat`, `mount`, `umount`, `findmnt`, `blkid`, `lsblk`, `xfs_growfs`, `resize2fs`, `exportfs`, `showmount`, `autofs`, `systemctl`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man mount`
 - `man umount`
@@ -43,11 +45,7 @@ Admins mount local storage, add application volumes, expose shared data with NFS
 - `man autofs`
 - `man auto.master`
 
-# 9. Estimated study time
-
-8 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Formatting the wrong device
 - Mounting successfully now but forgetting `/etc/fstab`

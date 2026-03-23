@@ -1,34 +1,36 @@
-# 1. Title
+# Shell Basics and Command Syntax
 
-Shell Basics and Command Syntax
+> Teach you how to work at a Linux shell prompt, read command syntax, understand paths, and run commands correctly as either a regular user or root.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to work at a Linux shell prompt, read command syntax, understand paths, and run commands correctly as either a regular user or root.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 Every RHCSA task starts at the shell. If you cannot read prompts, understand command structure, or tell where you are in the filesystem, every later topic becomes harder.
 
-# 4. Real-world use
+**Real-world use**
 
 System administrators spend much of their time at a shell prompt running commands, inspecting output, and making careful changes with minimal guesswork.
 
-# 5. Prerequisites
+**Estimated study time**
+
+4 hours
+
+## Prerequisites
 
 - Read `00-study-skills-and-offline-help.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Access a shell prompt and issue commands with correct syntax
 - Log in and switch users in multiuser targets
 - Locate, read, and use system documentation including local help
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `pwd`, `ls`, `cd`, `echo`, `whoami`, `id`, `hostname`, `date`, `cal`, `clear`, `history`, `exit`, `su`, `sudo`, `uname`, `type`, `man`, `help`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `help cd`
 - `help history`
@@ -39,11 +41,7 @@ System administrators spend much of their time at a shell prompt running command
 - `man ls`
 - `man hier`
 
-# 9. Estimated study time
-
-4 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Mixing up command name and arguments
 - Forgetting spaces between options and values

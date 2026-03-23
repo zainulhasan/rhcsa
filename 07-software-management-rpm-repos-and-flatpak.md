@@ -1,25 +1,27 @@
-# 1. Title
+# Software Management, RPM Repositories, and Flatpak
 
-Software Management, RPM Repositories, and Flatpak
+> Teach you how to configure software sources, install and remove packages, and manage both RPM-based software and Flatpak packages.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to configure software sources, install and remove packages, and manage both RPM-based software and Flatpak packages.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 Software management is a direct exam objective. You must know how to install packages from repositories, from local files, and how to verify what is installed.
 
-# 4. Real-world use
+**Real-world use**
 
 Administrators install services, troubleshooting tools, and updates. They also need to know which repository a package came from and how to remove software cleanly.
 
-# 5. Prerequisites
+**Estimated study time**
+
+5 hours
+
+## Prerequisites
 
 - Read `00-study-skills-and-offline-help.md`
 - Read `01-shell-basics-and-command-syntax.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Configure access to RPM repositories
 - Install and remove RPM software packages
@@ -27,11 +29,11 @@ Administrators install services, troubleshooting tools, and updates. They also n
 - Install and remove Flatpak software packages
 - Install and update software packages from CDN, remote repositories, or local file system
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `rpm`, `dnf`, `yum` if present as compatibility command, `subscription-manager`, `flatpak`, `cat`, `ls`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man dnf`
 - `man rpm`
@@ -40,11 +42,7 @@ Administrators install services, troubleshooting tools, and updates. They also n
 - `flatpak --help`
 - `/etc/yum.repos.d/`
 
-# 9. Estimated study time
-
-5 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Installing from an unverified source
 - Confusing `rpm` with dependency-resolving package managers such as `dnf`

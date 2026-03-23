@@ -1,37 +1,39 @@
-# 1. Title
+# Links, Permissions, and Default Permissions
 
-Links, Permissions, and Default Permissions
+> Teach you how hard links and symbolic links work, how standard `ugo/rwx` permissions are read and changed, and how default file permissions are influenced by `umask`.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how hard links and symbolic links work, how standard `ugo/rwx` permissions are read and changed, and how default file permissions are influenced by `umask`.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 Permissions and links are core RHCSA tasks. Many failures that look like "Linux is broken" are really permission or path problems.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins manage shared directories, protect private data, and create links to files and directories for easier access or compatibility.
 
-# 5. Prerequisites
+**Estimated study time**
+
+5 hours
+
+## Prerequisites
 
 - Read `00-study-skills-and-offline-help.md`
 - Read `01-shell-basics-and-command-syntax.md`
 - Read `02-files-directories-and-text-editing.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Create hard and soft links
 - List, set, and change standard `ugo/rwx` permissions
 - Manage default file permissions
 - Diagnose and correct file permission problems
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `ls`, `ln`, `chmod`, `umask`, `touch`, `mkdir`, `stat`, `id`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man ln`
 - `man chmod`
@@ -39,11 +41,7 @@ Admins manage shared directories, protect private data, and create links to file
 - `man umask`
 - `man stat`
 
-# 9. Estimated study time
-
-5 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Confusing hard links and symbolic links
 - Forgetting execute permission on directories

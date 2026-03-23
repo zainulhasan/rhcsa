@@ -1,35 +1,37 @@
-# 1. Title
+# Files, Directories, and Text Editing
 
-Files, Directories, and Text Editing
+> Teach you how to create, inspect, copy, move, rename, delete, and edit files and directories safely from the command line.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to create, inspect, copy, move, rename, delete, and edit files and directories safely from the command line.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 Most RHCSA tasks involve files: configuration files, logs, user files, service files, and mount points. If file handling is slow or careless, every admin task becomes harder.
 
-# 4. Real-world use
+**Real-world use**
 
 Administrators constantly create directories, back up configuration files, edit text, inspect logs, and move data into correct locations.
 
-# 5. Prerequisites
+**Estimated study time**
+
+5 hours
+
+## Prerequisites
 
 - Read `00-study-skills-and-offline-help.md`
 - Read `01-shell-basics-and-command-syntax.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Create and edit text files
 - Create, delete, copy, and move files and directories
 - Access a shell prompt and issue commands with correct syntax
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `touch`, `mkdir`, `rmdir`, `cp`, `mv`, `rm`, `cat`, `less`, `head`, `tail`, `wc`, `file`, `stat`, `nano` or `vim`, `echo`, `printf`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man touch`
 - `man mkdir`
@@ -40,11 +42,7 @@ Administrators constantly create directories, back up configuration files, edit 
 - `man file`
 - `man nano` or `man vim`
 
-# 9. Estimated study time
-
-5 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Deleting the wrong file because you did not check the path
 - Using `rm -r` carelessly

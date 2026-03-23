@@ -1,25 +1,27 @@
-# 1. Title
+# Scheduling, Services, Time, and Bootloader
 
-Scheduling, Services, Time, and Bootloader
+> Teach you how to schedule tasks with `at`, `cron`, and systemd timers, manage services at boot, configure time synchronization, and make controlled bootloader changes.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to schedule tasks with `at`, `cron`, and systemd timers, manage services at boot, configure time synchronization, and make controlled bootloader changes.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 These are direct exam objectives and are strongly tied to persistence. A task that works now but not later is not enough.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins schedule reports and maintenance jobs, ensure services start automatically, keep system clocks correct, and adjust bootloader behavior when required.
 
-# 5. Prerequisites
+**Estimated study time**
+
+6 hours
+
+## Prerequisites
 
 - Read `09-boot-targets-processes-logs-and-tuning.md`
 - Read `08-shell-scripting-basics.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Schedule tasks using `at`, `cron`, and systemd timer units
 - Start and stop services and configure services to start automatically at boot
@@ -27,11 +29,11 @@ Admins schedule reports and maintenance jobs, ensure services start automaticall
 - Configure time service clients
 - Modify the system bootloader
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `at`, `atq`, `atrm`, `crontab`, `systemctl`, `timedatectl`, `chronyc`, `grubby`, `grub2-mkconfig` where relevant, `ls`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man at`
 - `man crontab`
@@ -40,11 +42,7 @@ Admins schedule reports and maintenance jobs, ensure services start automaticall
 - `man chronyc`
 - `man grubby`
 
-# 9. Estimated study time
-
-6 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Scheduling a job and never verifying it ran
 - Editing the wrong user's crontab

@@ -1,35 +1,37 @@
-# 1. Title
+# Study Skills, Practice Discipline, and Offline Help
 
-Study Skills, Practice Discipline, and Offline Help
+> Teach you how to learn Linux from zero, how to practice without wasting time, how to stay calm when stuck, and how to use offline documentation during RHCSA-style hands-on work.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to learn Linux from zero, how to practice without wasting time, how to stay calm when stuck, and how to use offline documentation during RHCSA-style hands-on work.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 RHCSA is not a trivia exam. It is a performance exam. You pass by completing tasks correctly, verifying them, and making changes persist after reboot. If you panic, guess, or skip verification, you lose points even if you "almost" know the topic.
 
-# 4. Real-world use
+**Real-world use**
 
 Real system administrators often work on systems without internet access, on servers where mistakes matter, and under time pressure. Good admins use local help, test carefully, and recover from errors without drama.
 
-# 5. Prerequisites
+**Estimated study time**
+
+3 hours for first study, plus repeat this file briefly every week.
+
+## Prerequisites
 
 None. This file assumes you are starting from zero.
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Locate, read, and use system documentation including `man`, `info`, and files in `/usr/share/doc`
 - Access a shell prompt and issue commands with correct syntax
 - Build study and troubleshooting habits that support all RHCSA objectives
 - Learn how to verify whether a task is complete and persistent after reboot
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `man`, `info`, `--help`, `help`, `type`, `which`, `command -v`, `whatis`, `apropos`, `pwd`, `ls`, `echo`, `history`, `clear`, `reset`, `script`, `cat`, `less`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man man`
 - `man info`
@@ -43,11 +45,7 @@ None. This file assumes you are starting from zero.
 - `man bash`
 - `/usr/share/doc`
 
-# 9. Estimated study time
-
-3 hours for first study, plus repeat this file briefly every week.
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Trying to memorize everything before typing commands
 - Guessing command syntax instead of checking help

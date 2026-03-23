@@ -1,34 +1,36 @@
-# 1. Title
+# Persistence, Reboot Checks, and Troubleshooting
 
-Persistence, Reboot Checks, and Troubleshooting
+> Teach you how to prove a task is truly complete, how to check whether it survives reboot, and how to troubleshoot RHCSA-style failures systematically.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to prove a task is truly complete, how to check whether it survives reboot, and how to troubleshoot RHCSA-style failures systematically.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 Red Hat states that configurations must persist after reboot without intervention. Many students can make things work once. Fewer can prove the system still works after restart.
 
-# 4. Real-world use
+**Real-world use**
 
 Real administrators are trusted because their fixes remain stable. Temporary success without persistence is unreliable operations.
 
-# 5. Prerequisites
+**Estimated study time**
+
+5 hours
+
+## Prerequisites
 
 - Read lessons `00` through `15`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Persistence after reboot across all configuration topics
 - Troubleshooting file, service, network, storage, and security problems
 - Exam-style self-verification habits
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `systemctl`, `findmnt`, `mount -a`, `lsblk`, `blkid`, `ip`, `nmcli`, `firewall-cmd`, `getenforce`, `restorecon`, `journalctl`, `ss`, `id`, `reboot`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man systemctl`
 - `man fstab`
@@ -38,11 +40,7 @@ Real administrators are trusted because their fixes remain stable. Temporary suc
 - `man restorecon`
 - `apropos service`
 
-# 9. Estimated study time
-
-5 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Declaring a task done after one successful command
 - Rebooting without a test plan

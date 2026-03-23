@@ -1,26 +1,28 @@
-# 1. Title
+# Networking, Hostname Resolution, and firewalld
 
-Networking, Hostname Resolution, and firewalld
+> Teach you how to configure IPv4 and IPv6 addresses, hostname resolution, network service boot behavior, and firewall access control with `firewalld`.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to configure IPv4 and IPv6 addresses, hostname resolution, network service boot behavior, and firewall access control with `firewalld`.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 Networking tasks are frequent on RHCSA and in real administration. Services that work locally but not over the network often fail because of IP, DNS, or firewall mistakes.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins assign addresses, troubleshoot connectivity, configure hostnames, and open only the network access a service actually needs.
 
-# 5. Prerequisites
+**Estimated study time**
+
+6 hours
+
+## Prerequisites
 
 - Read `01-shell-basics-and-command-syntax.md`
 - Read `05-ssh-login-switching-users-and-remote-workflows.md`
 - Read `09-boot-targets-processes-logs-and-tuning.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Configure IPv4 and IPv6 addresses
 - Configure hostname resolution
@@ -28,11 +30,11 @@ Admins assign addresses, troubleshoot connectivity, configure hostnames, and ope
 - Restrict network access using `firewalld` and `firewall-cmd`
 - Configure firewall settings using `firewall-cmd` and `firewalld`
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `ip`, `nmcli`, `hostnamectl`, `ping`, `ss`, `firewall-cmd`, `systemctl`, `cat`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man ip`
 - `man nmcli`
@@ -41,11 +43,7 @@ Admins assign addresses, troubleshoot connectivity, configure hostnames, and ope
 - `man firewall-cmd`
 - `nmcli --help`
 
-# 9. Estimated study time
-
-6 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Changing the wrong network connection profile
 - Forgetting to bring the connection back up

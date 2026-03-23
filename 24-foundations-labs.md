@@ -1,26 +1,28 @@
-# 1. Title
+# Foundations Labs
 
-Foundations Labs
+> Let you test shell, file, text-processing, remote access, archive, and permissions skills through direct hands-on questions.
 
-# 2. Purpose
+## At a Glance
 
-Let you test shell, file, text-processing, remote access, archive, and permissions skills through direct hands-on questions.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 These are the commands you will use constantly during the exam. If the foundations are slow, every advanced task becomes slower and riskier.
 
-# 4. Real-world use
+**Real-world use**
 
 Real administrators read docs, create files, edit configuration, search logs, copy files, and fix permissions every day.
 
-# 5. Prerequisites
+**Estimated study time**
+
+4 to 6 hours
+
+## Prerequisites
 
 - A working VM lab
 - Basic shell access
 - Lesson `00` to `06` completed, or enough prior knowledge to attempt direct lab work
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Shell syntax and offline help
 - Files, directories, and text editing
@@ -29,11 +31,11 @@ Real administrators read docs, create files, edit configuration, search logs, co
 - SSH, `scp`, and remote command workflows
 - Links, permissions, `umask`, and special permissions
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `man`, `apropos`, `pwd`, `ls`, `cp`, `mv`, `rm`, `cat`, `less`, `grep`, `sed`, `awk`, `tar`, `gzip`, `bzip2`, `ssh`, `scp`, `ln`, `chmod`, `umask`, `stat`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man grep`
 - `man sed`
@@ -44,11 +46,7 @@ Real administrators read docs, create files, edit configuration, search logs, co
 - `man umask`
 - `apropos permission`
 
-# 9. Estimated study time
-
-4 to 6 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Using the wrong path
 - Overwriting files with `>`

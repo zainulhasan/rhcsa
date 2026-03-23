@@ -1,25 +1,27 @@
-# 1. Title
+# Boot, Targets, Processes, Logs, and Tuning
 
-Boot, Targets, Processes, Logs, and Tuning
+> Teach you how to boot and shut down systems safely, work with systemd targets, manage processes, inspect logs, preserve journals, and use tuning profiles.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to boot and shut down systems safely, work with systemd targets, manage processes, inspect logs, preserve journals, and use tuning profiles.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 These are direct RHCSA objectives and are central to real administration. You must understand how the system starts, how services and processes behave, and how to read evidence from logs.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins reboot systems for maintenance, isolate broken services, kill runaway processes, review journals for failures, and tune systems for different workloads.
 
-# 5. Prerequisites
+**Estimated study time**
+
+6 hours
+
+## Prerequisites
 
 - Read `01-shell-basics-and-command-syntax.md`
 - Read `03-redirection-pipes-grep-and-regex.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Boot, reboot, and shut down a system normally
 - Boot systems into different targets manually
@@ -31,11 +33,11 @@ Admins reboot systems for maintenance, isolate broken services, kill runaway pro
 - Preserve system journals
 - Start, stop, and check the status of network services
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `systemctl`, `reboot`, `shutdown`, `ps`, `top`, `kill`, `pkill`, `nice`, `renice`, `journalctl`, `tuned-adm`, `free`, `uptime`, `loginctl`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man systemctl`
 - `man journalctl`
@@ -46,11 +48,7 @@ Admins reboot systems for maintenance, isolate broken services, kill runaway pro
 - `man renice`
 - `man tuned-adm`
 
-# 9. Estimated study time
-
-6 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Rebooting without checking for persistent configuration
 - Killing the wrong process because PID was not verified

@@ -1,36 +1,38 @@
-# 1. Title
+# SSH, Login Control, Switching Users, and Remote Workflows
 
-SSH, Login Control, Switching Users, and Remote Workflows
+> Teach you how to log in locally and remotely, switch users safely, and perform common remote administration tasks with SSH.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to log in locally and remotely, switch users safely, and perform common remote administration tasks with SSH.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 The exam includes access to remote systems using SSH and login/switch-user tasks in multiuser environments. You must be comfortable moving between systems without confusion.
 
-# 4. Real-world use
+**Real-world use**
 
 Administrators work on remote Linux servers constantly. Clear habits around user identity, hostname awareness, and secure connection methods prevent mistakes.
 
-# 5. Prerequisites
+**Estimated study time**
+
+4 hours
+
+## Prerequisites
 
 - Read `00-study-skills-and-offline-help.md`
 - Read `01-shell-basics-and-command-syntax.md`
 - Read `04-archives-compression-and-secure-file-transfer.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Access remote systems using SSH
 - Log in and switch users in multiuser targets
 - Securely transfer files between systems
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `ssh`, `scp`, `sftp`, `whoami`, `hostname`, `id`, `exit`, `su`, `sudo`, `ssh-copy-id`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man ssh`
 - `man ssh_config`
@@ -39,11 +41,7 @@ Administrators work on remote Linux servers constantly. Clear habits around user
 - `man su`
 - `man sudo`
 
-# 9. Estimated study time
-
-4 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Forgetting which host you are connected to
 - Running a command on the wrong system

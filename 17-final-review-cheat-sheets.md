@@ -1,32 +1,34 @@
-# 1. Title
+# Final Review and Cheat Sheets
 
-Final Review and Cheat Sheets
+> Compress the course into fast review notes you can use before mock exams or as a weekly memory refresh.
 
-# 2. Purpose
+## At a Glance
 
-Compress the course into fast review notes you can use before mock exams or as a weekly memory refresh.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 Fast recall matters in a timed hands-on exam. You should be able to remember the tool family, the likely config file, and the right verification command quickly.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins build compact mental checklists so they can work faster under pressure without skipping validation.
 
-# 5. Prerequisites
+**Estimated study time**
+
+4 hours
+
+## Prerequisites
 
 - Read lessons `00` through `16`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Whole-course review across essential tools, software, scripting, system operation, storage, networking, users, and security
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 Whole-course review set
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man -k keyword`
 - `apropos keyword`
@@ -34,11 +36,7 @@ Whole-course review set
 - `help builtin`
 - `/usr/share/doc`
 
-# 9. Estimated study time
-
-4 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Memorizing command names without knowing how to verify results
 - Reviewing passively instead of retyping commands

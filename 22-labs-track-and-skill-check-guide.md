@@ -1,26 +1,28 @@
-# 1. Title
+# RHCSA Labs Track and Skill Check Guide
 
-RHCSA Labs Track and Skill Check Guide
+> Give you a fast way to practice RHCSA tasks by objective area without rereading the full lessons first.
 
-# 2. Purpose
+## At a Glance
 
-Give you a fast way to practice RHCSA tasks by objective area without rereading the full lessons first.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 RHCSA is a hands-on exam. You need a way to test whether you can actually perform tasks, not just recognize them on paper. A lab track lets you measure real skill under time pressure.
 
-# 4. Real-world use
+**Real-world use**
 
 Junior administrators often inherit servers and must prove they can perform common tasks quickly. A lab checklist is a practical way to validate that skill before touching production systems.
 
-# 5. Prerequisites
+**Estimated study time**
+
+1.5 to 2 hours
+
+## Prerequisites
 
 - Basic access to a RHEL-compatible VM or physical system
 - Root access or sudo access
 - Willingness to practice by typing commands
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Build a repeatable lab routine
 - Use section-based labs to test current skill
@@ -28,11 +30,11 @@ Junior administrators often inherit servers and must prove they can perform comm
 - Verify work instead of assuming it is correct
 - Use a question-first workflow for revision
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `pwd`, `ls`, `hostnamectl`, `whoami`, `sudo`, `script`, `date`, `systemctl`, `reboot`, `man`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man script`
 - `man systemctl`
@@ -40,11 +42,7 @@ Junior administrators often inherit servers and must prove they can perform comm
 - `man hostnamectl`
 - `help`
 
-# 9. Estimated study time
-
-1.5 to 2 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Jumping into hard labs without checking prerequisites
 - Trying to memorize answers instead of solving tasks

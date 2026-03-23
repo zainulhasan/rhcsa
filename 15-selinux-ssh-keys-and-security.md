@@ -1,26 +1,28 @@
-# 1. Title
+# SELinux, SSH Keys, and Security
 
-SELinux, SSH Keys, and Security
+> Teach you how to work with SELinux modes and contexts, restore labels, manage SELinux ports and booleans, and configure SSH key-based authentication.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to work with SELinux modes and contexts, restore labels, manage SELinux ports and booleans, and configure SSH key-based authentication.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 SELinux and SSH key-based authentication are direct RHCSA objectives. SELinux often appears when a service seems correct but still cannot access files or ports.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins secure systems by using key-based login, least-privilege firewall rules, and SELinux policy controls instead of simply disabling security features.
 
-# 5. Prerequisites
+**Estimated study time**
+
+8 hours
+
+## Prerequisites
 
 - Read `05-ssh-login-switching-users-and-remote-workflows.md`
 - Read `06-links-permissions-and-default-permissions.md`
 - Read `13-networking-hostname-resolution-and-firewalld.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Configure key-based authentication for SSH
 - Set enforcing and permissive modes for SELinux
@@ -31,11 +33,11 @@ Admins secure systems by using key-based login, least-privilege firewall rules, 
 - Configure firewall settings using `firewall-cmd` and `firewalld`
 - Manage default file permissions
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `getenforce`, `setenforce`, `sestatus`, `ls -Z`, `ps -eZ`, `restorecon`, `semanage`, `getsebool`, `setsebool`, `ssh-keygen`, `ssh-copy-id`, `ssh`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man selinux`
 - `man getenforce`
@@ -45,11 +47,7 @@ Admins secure systems by using key-based login, least-privilege firewall rules, 
 - `man ssh-keygen`
 - `man ssh-copy-id`
 
-# 9. Estimated study time
-
-8 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Disabling SELinux instead of understanding the real issue
 - Using `setenforce 0` and forgetting it is temporary

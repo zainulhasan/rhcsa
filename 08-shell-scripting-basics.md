@@ -1,26 +1,28 @@
-# 1. Title
+# Shell Scripting Basics
 
-Shell Scripting Basics
+> Teach you how to write small Bash scripts that accept input, make decisions, loop over data, and use command output.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to write small Bash scripts that accept input, make decisions, loop over data, and use command output.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 Simple shell scripting is an explicit exam objective. You do not need to become a software developer, but you do need to write small working scripts under pressure.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins automate repetitive checks, generate reports, process files, and reduce typing errors through small scripts.
 
-# 5. Prerequisites
+**Estimated study time**
+
+6 hours
+
+## Prerequisites
 
 - Read `01-shell-basics-and-command-syntax.md`
 - Read `02-files-directories-and-text-editing.md`
 - Read `03-redirection-pipes-grep-and-regex.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Conditionally execute code (`if`, `test`, `[ ]`)
 - Use looping constructs (`for`, and simple iteration)
@@ -28,11 +30,11 @@ Admins automate repetitive checks, generate reports, process files, and reduce t
 - Process output of shell commands within a script
 - Use here-strings and simple calculation tools when helpful in scripts
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `bash`, `echo`, `test`, `[ ]`, `for`, `if`, `read`, `grep`, `id`, `date`, `chmod`, `awk`, `bc`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `help if`
 - `help test`
@@ -41,11 +43,7 @@ Admins automate repetitive checks, generate reports, process files, and reduce t
 - `man bash`
 - `man bc`
 
-# 9. Estimated study time
-
-6 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Forgetting spaces inside `[ ]`
 - Forgetting to make the script executable

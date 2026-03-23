@@ -1,26 +1,28 @@
-# 1. Title
+# Administration Core Labs
 
-Administration Core Labs
+> Test your ability to manage software, write small scripts, control running systems, work with storage, configure filesystems, and use systemd-related tools.
 
-# 2. Purpose
+## At a Glance
 
-Test your ability to manage software, write small scripts, control running systems, work with storage, configure filesystems, and use systemd-related tools.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 This is the center of the RHCSA exam. If you can perform these labs confidently, you are much closer to real exam readiness.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins install packages, automate checks, inspect logs, extend storage, mount filesystems, and keep services working after reboot.
 
-# 5. Prerequisites
+**Estimated study time**
+
+6 to 8 hours
+
+## Prerequisites
 
 - A working lab VM
 - Preferably one extra disk on `servera`
 - Foundation skills from earlier lessons or labs
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Package and repository management
 - Simple shell scripting
@@ -29,11 +31,11 @@ Admins install packages, automate checks, inspect logs, extend storage, mount fi
 - Filesystems, mounts, `/etc/fstab`, NFS, and autofs
 - `at`, `cron`, `systemd`, `chronyd`, and bootloader checks
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `dnf`, `rpm`, `bash`, `grep`, `awk`, `bc`, `systemctl`, `journalctl`, `ps`, `kill`, `tuned-adm`, `parted`, `pvcreate`, `vgcreate`, `lvcreate`, `mkfs`, `mount`, `findmnt`, `blkid`, `crontab`, `at`, `timedatectl`, `chronyc`, `grubby`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man dnf`
 - `man bash`
@@ -45,11 +47,7 @@ Admins install packages, automate checks, inspect logs, extend storage, mount fi
 - `man crontab`
 - `man systemctl`
 
-# 9. Estimated study time
-
-6 to 8 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Installing a package but not verifying it
 - Writing a script without executable permission

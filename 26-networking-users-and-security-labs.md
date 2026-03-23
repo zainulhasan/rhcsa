@@ -1,26 +1,28 @@
-# 1. Title
+# Networking, Users, and Security Labs
 
-Networking, Users, and Security Labs
+> Test your ability to configure network settings, firewalld, local users and groups, sudo access, SSH keys, and SELinux.
 
-# 2. Purpose
+## At a Glance
 
-Test your ability to configure network settings, firewalld, local users and groups, sudo access, SSH keys, and SELinux.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 These are high-value hands-on exam areas. They combine configuration, verification, and troubleshooting, and many tasks fail because learners forget persistence or SELinux side effects.
 
-# 4. Real-world use
+**Real-world use**
 
 Administrators constantly assign IP settings, control access, create users, manage sudo, allow services through firewalls, and fix SELinux labeling and policy issues.
 
-# 5. Prerequisites
+**Estimated study time**
+
+5 to 7 hours
+
+## Prerequisites
 
 - A working lab VM
 - Preferably a second VM for SSH tests
 - Previous lesson or lab exposure to systemd and basic shell work
 
-# 6. Objectives covered
+## Objectives Covered
 
 - IPv4 and IPv6 basics with `nmcli`
 - Hostname resolution
@@ -29,11 +31,11 @@ Administrators constantly assign IP settings, control access, create users, mana
 - SSH key-based authentication
 - SELinux modes, contexts, booleans, and ports
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `ip`, `nmcli`, `hostnamectl`, `getent`, `ss`, `firewall-cmd`, `useradd`, `usermod`, `groupadd`, `passwd`, `chage`, `visudo`, `ssh-keygen`, `ssh-copy-id`, `getenforce`, `sestatus`, `restorecon`, `setsebool`, `getsebool`, `semanage`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man nmcli`
 - `man firewall-cmd`
@@ -44,11 +46,7 @@ Administrators constantly assign IP settings, control access, create users, mana
 - `man ssh-copy-id`
 - `man semanage`
 
-# 9. Estimated study time
-
-5 to 7 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Setting an IP but forgetting to bring the connection up
 - Opening a firewall port temporarily when persistence is required

@@ -1,36 +1,38 @@
-# 1. Title
+# Users, Groups, Passwords, and Sudo
 
-Users, Groups, Passwords, and Sudo
+> Teach you how to create, modify, and remove local users and groups, manage passwords and aging, and configure privileged access.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to create, modify, and remove local users and groups, manage passwords and aging, and configure privileged access.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 User administration is a core RHCSA skill. Many other tasks depend on correct ownership, group membership, and controlled privilege use.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins onboard users, assign group access, expire accounts, and delegate limited administrative privileges through `sudo`.
 
-# 5. Prerequisites
+**Estimated study time**
+
+6 hours
+
+## Prerequisites
 
 - Read `01-shell-basics-and-command-syntax.md`
 - Read `06-links-permissions-and-default-permissions.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Create, delete, and modify local user accounts
 - Change passwords and adjust password aging
 - Create, delete, and modify local groups and memberships
 - Configure privileged access
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `useradd`, `usermod`, `userdel`, `passwd`, `chage`, `groupadd`, `groupmod`, `groupdel`, `id`, `groups`, `sudo`, `visudo`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man useradd`
 - `man usermod`
@@ -41,11 +43,7 @@ Admins onboard users, assign group access, expire accounts, and delegate limited
 - `man sudoers`
 - `man visudo`
 
-# 9. Estimated study time
-
-6 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Creating a user but forgetting its primary or supplementary groups
 - Deleting a user without deciding what to do with the home directory

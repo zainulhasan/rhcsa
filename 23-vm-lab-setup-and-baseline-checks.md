@@ -1,37 +1,39 @@
-# 1. Title
+# VM Lab Setup and Baseline Checks
 
-VM Lab Setup and Baseline Checks
+> Teach you how to build a safe local RHCSA practice lab and confirm it is ready for the rest of the labs.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to build a safe local RHCSA practice lab and confirm it is ready for the rest of the labs.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 You need a repeatable environment where you can break, fix, reboot, and re-test systems without fear. Good lab setup makes the rest of your practice realistic.
 
-# 4. Real-world use
+**Real-world use**
 
 Administrators often use virtual machines to test package changes, boot settings, storage changes, firewall rules, and service behavior before touching important systems.
 
-# 5. Prerequisites
+**Estimated study time**
+
+2 to 3 hours
+
+## Prerequisites
 
 - A computer capable of running local virtual machines
 - Access to a hypervisor such as VirtualBox, VMware, GNOME Boxes, or KVM-based tools
 - A RHEL-compatible installation image or an already installed VM
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Set up one or two practice VMs locally
 - Plan hostnames, disk layout, and network use
 - Create a baseline checklist before advanced labs
 - Confirm reboot, sudo, networking, and package manager basics
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `hostnamectl`, `ip addr`, `ip route`, `ping`, `nmcli`, `lsblk`, `df -h`, `dnf`, `rpm`, `systemctl`, `whoami`, `sudo`, `reboot`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man hostnamectl`
 - `man ip`
@@ -40,11 +42,7 @@ Administrators often use virtual machines to test package changes, boot settings
 - `man dnf`
 - `man systemctl`
 
-# 9. Estimated study time
-
-2 to 3 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Practicing on a machine without snapshots or rollback
 - Using only one VM when a second host is needed for SSH and NFS practice

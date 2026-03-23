@@ -1,37 +1,39 @@
-# 1. Title
+# Redirection, Pipes, Grep, and Regular Expressions
 
-Redirection, Pipes, Grep, and Regular Expressions
+> Teach you how to control command input and output, connect commands together, and search text accurately with `grep` and basic regular expressions.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to control command input and output, connect commands together, and search text accurately with `grep` and basic regular expressions.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 RHCSA tasks often require extracting information from files, filtering command output, and saving results. If you cannot redirect output or search text quickly, you lose time on simple tasks.
 
-# 4. Real-world use
+**Real-world use**
 
 Administrators constantly inspect logs, search configuration files, capture errors, and combine commands to answer specific questions fast.
 
-# 5. Prerequisites
+**Estimated study time**
+
+5 hours
+
+## Prerequisites
 
 - Read `00-study-skills-and-offline-help.md`
 - Read `01-shell-basics-and-command-syntax.md`
 - Read `02-files-directories-and-text-editing.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Use input-output redirection (`>`, `>>`, `|`, `2>`, and related forms)
 - Use `grep` and regular expressions to analyze text
 - Create and edit text files
 - Use `sed` and `awk` for quick text extraction and transformation
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `echo`, `cat`, `grep`, `egrep` or `grep -E`, `head`, `tail`, `wc`, `sort`, `uniq`, `cut`, `tee`, `less`, `sed`, `awk`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man bash`
 - `man grep`
@@ -42,11 +44,7 @@ Administrators constantly inspect logs, search configuration files, capture erro
 - `man sed`
 - `man awk`
 
-# 9. Estimated study time
-
-5 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Overwriting a file with `>` when you meant to append with `>>`
 - Forgetting that `|` sends standard output, not errors

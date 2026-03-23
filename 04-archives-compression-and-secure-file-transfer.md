@@ -1,36 +1,38 @@
-# 1. Title
+# Archives, Compression, and Secure File Transfer
 
-Archives, Compression, and Secure File Transfer
+> Teach you how to bundle files into archives, compress and uncompress them, and securely transfer files between systems.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to bundle files into archives, compress and uncompress them, and securely transfer files between systems.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 RHCSA includes `tar`, `gzip`, and `bzip2`, and real administration often involves packaging logs, backing up directories, and moving files between systems securely.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins archive configuration directories before changes, compress log bundles, and copy files between servers using secure tools such as `scp` and `sftp`.
 
-# 5. Prerequisites
+**Estimated study time**
+
+3 hours
+
+## Prerequisites
 
 - Read `00-study-skills-and-offline-help.md`
 - Read `01-shell-basics-and-command-syntax.md`
 - Read `02-files-directories-and-text-editing.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - Archive, compress, unpack, and uncompress files using `tar`, `gzip`, and `bzip2`
 - Securely transfer files between systems
 - Access remote systems using SSH
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `tar`, `gzip`, `gunzip`, `bzip2`, `bunzip2`, `scp`, `sftp`, `ssh`, `ls`, `file`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man tar`
 - `man gzip`
@@ -38,11 +40,7 @@ Admins archive configuration directories before changes, compress log bundles, a
 - `man scp`
 - `man sftp`
 
-# 9. Estimated study time
-
-3 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Compressing a directory with the wrong tool directly instead of using `tar`
 - Forgetting where extracted files will appear

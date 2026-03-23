@@ -1,25 +1,27 @@
-# 1. Title
+# Storage, Partitions, LVM, and Swap
 
-Storage, Partitions, LVM, and Swap
+> Teach you how to inspect disks, create GPT partitions, build LVM storage, and add swap space without destroying existing data.
 
-# 2. Purpose
+## At a Glance
 
-Teach you how to inspect disks, create GPT partitions, build LVM storage, and add swap space without destroying existing data.
-
-# 3. Why this matters for RHCSA
+**Why this matters for RHCSA**
 
 Storage is one of the most important RHCSA topics. You must be able to work carefully, verify every step, and understand persistence after reboot.
 
-# 4. Real-world use
+**Real-world use**
 
 Admins add disks, create logical volumes for applications, extend storage, and configure swap to support system stability.
 
-# 5. Prerequisites
+**Estimated study time**
+
+8 hours
+
+## Prerequisites
 
 - Read `01-shell-basics-and-command-syntax.md`
 - Read `02-files-directories-and-text-editing.md`
 
-# 6. Objectives covered
+## Objectives Covered
 
 - List, create, and delete partitions on GPT disks
 - Create and remove physical volumes
@@ -28,11 +30,11 @@ Admins add disks, create logical volumes for applications, extend storage, and c
 - Add swap to a system non-destructively
 - Prepare storage for persistent mounting later
 
-# 7. Commands/tools used
+## Commands/Tools Used
 
 `lsblk`, `blkid`, `parted`, `fdisk` where available for viewing, `pvcreate`, `pvs`, `vgcreate`, `vgs`, `lvcreate`, `lvs`, `lvremove`, `vgremove`, `pvremove`, `mkswap`, `swapon`, `swapoff`, `free`
 
-# 8. Offline help references for this topic
+## Offline Help References For This Topic
 
 - `man lsblk`
 - `man parted`
@@ -42,11 +44,7 @@ Admins add disks, create logical volumes for applications, extend storage, and c
 - `man mkswap`
 - `man swapon`
 
-# 9. Estimated study time
-
-8 hours
-
-# 10. Common beginner mistakes
+## Common Beginner Mistakes
 
 - Editing the wrong disk
 - Forgetting to inspect the current layout before changes
