@@ -3,6 +3,14 @@
 {% block extrahead %}
   {{ super() }}
   {% set social_title = config.site_name if (page.canonical_url or config.site_url) == config.site_url else page.title ~ " - " ~ config.site_name %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-240WHFQT1Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-240WHFQT1Z');
+  </script>
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="author" content="Zainul Hasan">
   <meta name="keywords" content="RHCSA, EX200, Red Hat, RHEL, Linux administration, Linux course, RHCSA labs, RHCSA mock exam, system administration, Linux cheat sheet">
