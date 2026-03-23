@@ -29,6 +29,26 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `MOUNTPOINT` | A path such as `/data` |
 | `SERVICE` | A systemd unit such as `sshd` |
 
+## RHCSA Objective Study Path
+
+Use this sheet in the same order you would build exam muscle memory:
+
+1. Essential tools
+2. Software management
+3. Shell scripting
+4. Running systems
+5. Local storage
+6. Filesystems and mounts
+7. Scheduling, services, time, and boot behavior
+8. Networking
+9. Users and groups
+10. Security
+11. Containers and advanced systemd work if your exam version expects it
+
+---
+
+## Core: Essential Tools
+
 ## Shell and Offline Help
 
 | Command | What it does | Example with parameters |
@@ -144,6 +164,16 @@ This is a fast command reference for revision. It is not a replacement for the l
 | Extract tar gzip archive | `tar -xzvf backup.tar.gz` |
 | List tar gzip archive contents | `tar -tzvf backup.tar.gz` |
 
+### Essential Tools Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| Find help when stuck | `apropos KEYWORD` -> `man COMMAND` -> `COMMAND --help` |
+| Create and inspect files | `touch FILE` -> `ls -l FILE` -> `cat FILE` |
+| Search and filter text | `grep PATTERN FILE` -> `sed ...` -> `awk ...` |
+| Save output safely | `COMMAND > FILE` or `COMMAND >> FILE` |
+| Archive and verify | `tar -czvf backup.tar.gz DIR` -> `tar -tzvf backup.tar.gz` |
+
 ## SSH and Secure File Transfer
 
 | Command | What it does | Example with parameters |
@@ -217,6 +247,20 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `700` | owner `rwx`, others none | private directory |
 | `775` | owner/group `rwx`, others `rx` | shared directory |
 
+### Access and Permissions Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| Reach another host | `ssh USER@HOST` |
+| Copy a file | `scp FILE USER@HOST:/tmp/` |
+| become root | `sudo COMMAND` or `su -` |
+| Share directory by group | `chown :GROUP DIR` -> `chmod 2775 DIR` |
+| Protect private content | `chmod 700 DIR` or `chmod 600 FILE` |
+
+---
+
+## Core: Manage Software
+
 ## Software Management
 
 | Command | What it does | Example with parameters |
@@ -256,6 +300,20 @@ enabled=1
 gpgcheck=0
 ```
 
+### Software Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| See repos | `dnf repolist` and `dnf repolist all` |
+| Add repo | create `/etc/yum.repos.d/custom.repo` -> `dnf repolist` |
+| Install package | `dnf install PKG` |
+| Verify package | `rpm -q PKG` or `dnf info PKG` |
+| Remove package | `dnf remove PKG` |
+
+---
+
+## Core: Create Simple Shell Scripts
+
 ## Scripting Basics
 
 | Command or Pattern | What it does | Example with parameters |
@@ -270,6 +328,20 @@ gpgcheck=0
 | `id USER >/dev/null 2>&1` | Checks whether a user exists silently | `if id "$1" >/dev/null 2>&1; then echo exists; fi` |
 | `<<<` | Sends one short string as standard input | `grep root <<< "root:x:0:0"` |
 | `bc` | Command-line calculator | `bc <<< '2 + 3'` |
+
+### Scripting Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| Start script | `#!/bin/bash` |
+| Accept argument | `$1`, `$2`, `$#` |
+| Make decision | `if [ CONDITION ]; then ... fi` |
+| Loop through items | `for ITEM in "$@"; do ... done` |
+| Quick text or math | `grep ... <<< "text"` and `bc <<< '2 + 3'` |
+
+---
+
+## Core: Operate Running Systems
 
 ## Boot, Targets, Processes, and Logs
 
@@ -296,6 +368,20 @@ gpgcheck=0
 | `tuned-adm list` | Lists tuning profiles | `tuned-adm list` |
 | `tuned-adm active` | Shows active tuning profile | `sudo tuned-adm active` |
 | `tuned-adm profile NAME` | Sets tuning profile | `sudo tuned-adm profile balanced` |
+
+### Running Systems Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| Reboot safely | `systemctl reboot` |
+| Check target | `systemctl get-default` and `systemctl isolate TARGET` |
+| Find heavy process | `top` or `ps aux` |
+| Stop bad process | `kill PID` or `pkill NAME` |
+| Read service logs | `journalctl -u SERVICE -b` |
+
+---
+
+## Core: Configure Local Storage
 
 ## Storage, Partitions, LVM, and Swap
 
@@ -332,6 +418,20 @@ gpgcheck=0
 | `LV` | logical volume | `lvfiles` |
 | LV path | full LV device path | `/dev/vgdata/lvfiles` |
 
+### Storage Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| Inspect disks | `lsblk` -> `blkid` |
+| Create GPT partition | `parted DEVICE` -> `mklabel gpt` -> `mkpart ...` |
+| Build LVM | `pvcreate` -> `vgcreate` -> `lvcreate` |
+| Add swap | `mkswap DEVICE` -> `swapon DEVICE` |
+| Verify | `pvs` `vgs` `lvs` `swapon --show` |
+
+---
+
+## Core: Create and Configure File Systems
+
 ## Filesystems, Mounts, NFS, and autofs
 
 | Command | What it does | Example with parameters |
@@ -360,6 +460,20 @@ gpgcheck=0
 | `ext4` | common Linux filesystem | `sudo mkfs.ext4 /dev/vdb1` |
 | `GPT` | modern partition table format | create with `mklabel gpt` in `parted` |
 
+### Filesystems and Mounts Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| Create filesystem | `mkfs.xfs DEVICE` or `mkfs.ext4 DEVICE` |
+| Mount now | `mount DEVICE MOUNTPOINT` |
+| Verify mount | `findmnt MOUNTPOINT` |
+| Make persistent | add UUID or LABEL to `/etc/fstab` -> `mount -a` |
+| NFS check | `showmount -e HOST` -> `mount -t nfs HOST:PATH MOUNTPOINT` |
+
+---
+
+## Core: Deploy, Configure, and Maintain Systems
+
 ## Scheduling, Time, and Bootloader
 
 | Command | What it does | Example with parameters |
@@ -377,6 +491,16 @@ gpgcheck=0
 | `grubby --default-kernel` | Shows current default kernel | `sudo grubby --default-kernel` |
 | `grubby --update-kernel=ALL --args="ARG"` | Adds kernel argument | `sudo grubby --update-kernel=ALL --args="quiet"` |
 | `grubby --update-kernel=ALL --remove-args="ARG"` | Removes kernel argument | `sudo grubby --update-kernel=ALL --remove-args="quiet"` |
+
+### Scheduling, Time, and Bootloader Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| One-time job | `echo "COMMAND" | at now + 5 minutes` -> `atq` |
+| Repeating job | `crontab -e` -> `crontab -l` |
+| Check timers | `systemctl list-timers` |
+| Check time sync | `timedatectl` -> `chronyc sources` |
+| Inspect bootloader | `grubby --info=ALL` -> `grubby --default-kernel` |
 
 ## systemd Service and Unit Reference
 
@@ -470,6 +594,20 @@ Meaning:
 | Prove logs are clean | `journalctl -u SERVICE -b` |
 | Prove unit file content | `systemctl cat SERVICE` |
 
+### systemd Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| Start and enable service | `systemctl enable --now SERVICE` |
+| Verify current state | `systemctl is-active SERVICE` |
+| Verify boot persistence | `systemctl is-enabled SERVICE` |
+| Reload unit changes | `systemctl daemon-reload` |
+| Debug failures | `systemctl status SERVICE` -> `journalctl -u SERVICE -b` |
+
+---
+
+## Core: Manage Basic Networking
+
 ## Networking and firewalld
 
 | Command | What it does | Example with parameters |
@@ -491,6 +629,20 @@ Meaning:
 | `firewall-cmd --add-service=NAME --permanent` | Permanently allows named service | `sudo firewall-cmd --add-service=http --permanent` |
 | `firewall-cmd --add-port=PORT/proto --permanent` | Permanently allows custom port | `sudo firewall-cmd --add-port=8080/tcp --permanent` |
 | `firewall-cmd --reload` | Reloads firewalld | `sudo firewall-cmd --reload` |
+
+### Networking Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| Check address | `ip addr` and `ip route` |
+| Change connection | `nmcli connection modify ...` -> `nmcli connection up NAME` |
+| Set hostname | `hostnamectl set-hostname NAME` |
+| Test resolution | `getent hosts NAME` |
+| Open firewall | `firewall-cmd --add-service=NAME --permanent` -> `firewall-cmd --reload` |
+
+---
+
+## Core: Manage Users and Groups
 
 ## Users, Groups, Passwords, and Sudo
 
@@ -524,6 +676,20 @@ Meaning:
 | Create user without home | `sudo useradd -M USER` |
 | Create user with custom home | `sudo useradd -m -d /custom/home USER` |
 | Move an existing user to a new home | `sudo usermod -d /custom/home -m USER` |
+
+### Users and Groups Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| Create user | `useradd -m USER` |
+| Create custom home | `useradd -m -d /custom/home USER` |
+| Add to group | `usermod -aG GROUP USER` |
+| Set password policy | `passwd USER` -> `chage -l USER` |
+| Grant sudo | `visudo` or sudoers drop-in -> `visudo -c` |
+
+---
+
+## Core: Manage Security
 
 ## SELinux and SSH Keys
 
@@ -570,6 +736,20 @@ Example service-side config reminder:
 | Check runtime mode | `getenforce` |
 | Check full status | `sestatus` |
 | Check configured boot mode | `cat /etc/selinux/config` |
+
+### Security Muscle Memory Drill
+
+| Goal | Fast command flow |
+|---|---|
+| Check SELinux mode | `getenforce` and `sestatus` |
+| Fix file context | `ls -Z PATH` -> `restorecon -Rv PATH` |
+| Allow service behavior | `getsebool -a | grep NAME` -> `setsebool -P BOOLEAN on` |
+| Allow custom port | `semanage port -a/-m ...` |
+| Use SSH keys | `ssh-keygen` -> `ssh-copy-id USER@HOST` |
+
+---
+
+## Optional or Version-Specific: Containers and systemd Add-On
 
 ## Containers and systemd
 
