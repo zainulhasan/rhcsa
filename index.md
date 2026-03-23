@@ -2,6 +2,39 @@
 
 This site turns the course into a browsable handbook for GitHub Pages. The source lessons remain as plain Markdown files in the repository root so they still render cleanly on GitHub and stay easy to edit offline.
 
+## RHCSA Exam Map
+
+```mermaid
+flowchart TD
+    A["RHCSA / EX200 Study Scope"] --> B["Foundations"]
+    A --> C["Administration Core"]
+    A --> D["Review and Mock Exams"]
+
+    B --> B1["Shell basics and syntax<br/>Examples: pwd, ls, cd, sudo"]
+    B --> B2["Files, editing, and text work<br/>Examples: cp, mv, rm, vim or nano"]
+    B --> B3["Redirection, pipes, grep, regex<br/>Examples: >, >>, 2>, grep -E"]
+    B --> B4["Archives and remote access<br/>Examples: tar, gzip, scp, ssh"]
+    B --> B5["Links and permissions<br/>Examples: ln, chmod, umask"]
+
+    C --> C1["Software management<br/>Examples: dnf, rpm, flatpak"]
+    C --> C2["Shell scripting<br/>Examples: if, for, \$1, \$(command)"]
+    C --> C3["Boot, processes, logs, tuning<br/>Examples: systemctl, ps, journalctl, tuned-adm"]
+    C --> C4["Storage and filesystems<br/>Examples: parted, LVM, mkfs, mount, /etc/fstab"]
+    C --> C5["NFS and autofs<br/>Examples: exportfs, showmount, autofs"]
+    C --> C6["Scheduling and bootloader<br/>Examples: at, crontab, timers, grubby"]
+    C --> C7["Networking and firewall<br/>Examples: nmcli, ip, hostnamectl, firewall-cmd"]
+    C --> C8["Users, groups, and sudo<br/>Examples: useradd, usermod, chage, visudo"]
+    C --> C9["SELinux and SSH keys<br/>Examples: getenforce, restorecon, setsebool -P, ssh-copy-id"]
+    C --> C10["Persistence and troubleshooting<br/>Examples: reboot checks, mount -a, systemctl is-enabled"]
+
+    D --> D1["Command reference cheat sheet"]
+    D --> D2["Final review"]
+    D --> D3["Mock exam 1"]
+    D --> D4["Mock exam 2"]
+```
+
+Use this map as a quick reminder of what the exam expects: command-line confidence, system administration execution, and proof that your changes still work after reboot.
+
 ## How To Use This Site
 
 1. Start with [Study Skills and Offline Help](00-study-skills-and-offline-help.md).
