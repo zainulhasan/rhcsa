@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://zainulhasan.github.io/rhcsa/sitemap.xml

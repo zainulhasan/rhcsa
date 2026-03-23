@@ -1,5 +1,5 @@
 site_name: RHCSA Self-Study Course
-site_description: Beginner-friendly RHCSA self-study handbook with labs, verification, troubleshooting, and mock exams.
+site_description: RHCSA EX200 self-study course with Linux administration labs, cheat sheets, mock exams, troubleshooting, and offline help for RHEL-style systems.
 site_url: https://zainulhasan.github.io/rhcsa/
 docs_dir: docs
 site_dir: site
@@ -7,6 +7,7 @@ use_directory_urls: true
 
 theme:
   name: material
+  custom_dir: docs/overrides
   logo: assets/images/rhcsa-mark.svg
   favicon: assets/images/rhcsa-favicon.svg
   features:
@@ -21,23 +22,24 @@ theme:
     - search.highlight
     - content.code.copy
   palette:
-    - scheme: default
-      primary: teal
-      accent: amber
-      toggle:
-        icon: material/weather-night
-        name: Switch to dark mode
     - scheme: slate
       primary: teal
       accent: amber
       toggle:
         icon: material/weather-sunny
         name: Switch to light mode
+    - scheme: default
+      primary: teal
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
 
 markdown_extensions:
   - admonition
   - attr_list
   - def_list
+  - meta
   - md_in_html
   - tables
   - toc:
