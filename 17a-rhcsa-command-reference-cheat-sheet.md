@@ -341,6 +341,94 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `grubby --update-kernel=ALL --args="ARG"` | Adds kernel argument | `sudo grubby --update-kernel=ALL --args="quiet"` |
 | `grubby --update-kernel=ALL --remove-args="ARG"` | Removes kernel argument | `sudo grubby --update-kernel=ALL --remove-args="quiet"` |
 
+## systemd Service and Unit Reference
+
+### Core systemd Commands
+
+| Command | What it does | Example with parameters |
+|---|---|---|
+| `systemctl status SERVICE` | Shows service state and recent logs | `systemctl status sshd` |
+| `systemctl start SERVICE` | Starts service now | `sudo systemctl start httpd` |
+| `systemctl stop SERVICE` | Stops service now | `sudo systemctl stop httpd` |
+| `systemctl restart SERVICE` | Restarts service | `sudo systemctl restart httpd` |
+| `systemctl reload SERVICE` | Reloads config without full restart if supported | `sudo systemctl reload sshd` |
+| `systemctl enable SERVICE` | Enables service at boot | `sudo systemctl enable httpd` |
+| `systemctl disable SERVICE` | Disables service at boot | `sudo systemctl disable httpd` |
+| `systemctl enable --now SERVICE` | Enables at boot and starts now | `sudo systemctl enable --now httpd` |
+| `systemctl is-active SERVICE` | Checks current running state | `systemctl is-active httpd` |
+| `systemctl is-enabled SERVICE` | Checks boot persistence | `systemctl is-enabled httpd` |
+| `systemctl daemon-reload` | Reloads unit files after changes | `sudo systemctl daemon-reload` |
+| `systemctl cat SERVICE` | Shows full unit file content | `systemctl cat sshd` |
+| `systemctl list-units --type=service` | Lists loaded service units | `systemctl list-units --type=service` |
+| `systemctl list-unit-files --type=service` | Lists service files and enabled state | `systemctl list-unit-files --type=service` |
+| `journalctl -u SERVICE -b` | Shows current-boot logs for a service | `journalctl -u httpd -b` |
+
+### Common Unit File Locations
+
+| Path | What it is for |
+|---|---|
+| `/usr/lib/systemd/system/` | package-provided unit files |
+| `/etc/systemd/system/` | administrator overrides and custom units |
+| `/etc/systemd/system/multi-user.target.wants/` | symlinks showing enabled units |
+
+### Custom systemd Service Unit Example
+
+Use this pattern when you need to create your own service:
+
+```ini
+[Unit]
+Description=Simple custom report service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/report.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Typical workflow:
+
+1. Create the script such as `/usr/local/bin/report.sh`
+2. Make it executable with `chmod +x /usr/local/bin/report.sh`
+3. Save the unit as `/etc/systemd/system/report.service`
+4. Run `sudo systemctl daemon-reload`
+5. Run `sudo systemctl enable --now report.service`
+6. Verify with `systemctl status report.service`
+7. Verify logs with `journalctl -u report.service -b`
+
+### Custom systemd Timer Reminder
+
+| File | Purpose |
+|---|---|
+| `name.service` | the job that actually runs |
+| `name.timer` | the schedule that triggers it |
+
+Example timer schedule section:
+
+```ini
+[Timer]
+OnCalendar=*-*-* *:00:00
+Persistent=true
+```
+
+Meaning:
+
+- run every hour on the hour
+- if the system was down, run missed jobs after boot
+
+### Fast systemd Verification Pattern
+
+| Task | Command |
+|---|---|
+| Prove service runs now | `systemctl is-active SERVICE` |
+| Prove service starts at boot | `systemctl is-enabled SERVICE` |
+| Prove config was read | `systemctl status SERVICE` |
+| Prove logs are clean | `journalctl -u SERVICE -b` |
+| Prove unit file content | `systemctl cat SERVICE` |
+
 ## Networking and firewalld
 
 | Command | What it does | Example with parameters |
@@ -442,6 +530,139 @@ Example service-side config reminder:
 | Check full status | `sestatus` |
 | Check configured boot mode | `cat /etc/selinux/config` |
 
+## Containers and systemd
+
+This section is useful for modern RHEL-style administration and may be version-specific depending on the exact RHCSA objective set. Keep it as an add-on reference.
+
+### Podman Core Commands
+
+| Command | What it does | Example with parameters |
+|---|---|---|
+| `podman images` | Lists local container images | `podman images` |
+| `podman pull IMAGE` | Downloads image | `podman pull registry.access.redhat.com/ubi9/ubi` |
+| `podman ps` | Lists running containers | `podman ps` |
+| `podman ps -a` | Lists all containers | `podman ps -a` |
+| `podman run IMAGE` | Runs a container | `podman run ubi9/ubi echo hello` |
+| `podman run -d --name NAME IMAGE` | Runs detached named container | `podman run -d --name web quay.io/httpd/httpd-24` |
+| `podman run -d -p HOSTPORT:CONTAINERPORT IMAGE` | Publishes container port | `podman run -d --name web -p 8080:80 quay.io/httpd/httpd-24` |
+| `podman exec -it NAME COMMAND` | Runs command inside running container | `podman exec -it web /bin/bash` |
+| `podman logs NAME` | Shows container logs | `podman logs web` |
+| `podman stop NAME` | Stops container | `podman stop web` |
+| `podman start NAME` | Starts existing container | `podman start web` |
+| `podman rm NAME` | Removes stopped container | `podman rm web` |
+| `podman inspect NAME` | Shows detailed JSON info | `podman inspect web` |
+
+### Useful Podman Options
+
+| Option | Meaning | Example |
+|---|---|---|
+| `-d` | detached mode | `podman run -d ...` |
+| `--name NAME` | assigns container name | `podman run --name db ...` |
+| `-p HOST:CTR` | maps host port to container port | `-p 8080:80` |
+| `-v HOSTDIR:CTRDIR:Z` | mounts volume and relabels for SELinux | `-v /webcontent:/var/www/html:Z` |
+| `--restart=always` | restart policy | `podman run --restart=always ...` |
+| `--rm` | remove container when it exits | `podman run --rm ubi9/ubi date` |
+
+### Container Verification Pattern
+
+| Task | Command |
+|---|---|
+| Prove image exists | `podman images` |
+| Prove container runs now | `podman ps` |
+| Prove all container state | `podman ps -a` |
+| Prove logs | `podman logs NAME` |
+| Prove published ports | `ss -tuln` and `podman inspect NAME` |
+
+### Running Containers With systemd
+
+There are two common patterns:
+
+1. `podman generate systemd`
+2. Quadlet files under systemd-managed directories
+
+#### Pattern 1: Generate a systemd Unit From an Existing Container
+
+| Command | What it does | Example |
+|---|---|---|
+| `podman generate systemd --name NAME --files` | creates a unit file for a container | `podman generate systemd --name web --files` |
+
+Typical workflow:
+
+1. create the container first
+2. generate the unit file
+3. move the unit file into `/etc/systemd/system/`
+4. run `sudo systemctl daemon-reload`
+5. enable the generated unit
+
+Example:
+
+```bash
+sudo podman run -d --name web -p 8080:80 quay.io/httpd/httpd-24
+sudo podman generate systemd --name web --files
+sudo mv container-web.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now container-web.service
+systemctl status container-web.service
+```
+
+#### Pattern 2: Quadlet for systemd-managed Containers
+
+Quadlet lets you describe a container in a systemd-friendly file.
+
+Common location:
+
+- `/etc/containers/systemd/`
+
+Example `web.container`:
+
+```ini
+[Unit]
+Description=HTTP container
+After=network-online.target
+
+[Container]
+Image=quay.io/httpd/httpd-24
+PublishPort=8080:80
+Volume=/webcontent:/var/www/html:Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Typical workflow:
+
+1. save file as `/etc/containers/systemd/web.container`
+2. run `sudo systemctl daemon-reload`
+3. run `sudo systemctl enable --now web.service`
+4. verify with `systemctl status web.service`
+5. verify ports with `ss -tuln`
+
+### SELinux With Container Volumes
+
+When binding host directories into containers on SELinux systems:
+
+- use `:Z` for a private relabel
+- use `:z` for shared relabel across multiple containers
+
+Example:
+
+```bash
+sudo podman run -d --name web -p 8080:80 -v /webcontent:/var/www/html:Z quay.io/httpd/httpd-24
+```
+
+### Container Plus systemd Fast Verification Pattern
+
+| Task | Command |
+|---|---|
+| Prove unit exists | `systemctl status web.service` |
+| Prove it starts at boot | `systemctl is-enabled web.service` |
+| Prove container runs | `podman ps` |
+| Prove app port is listening | `ss -tuln | grep :8080` |
+| Prove logs | `journalctl -u web.service -b` and `podman logs web` |
+
 ## Verification Commands You Should Use Constantly
 
 | Command | Best use |
@@ -461,6 +682,8 @@ Example service-side config reminder:
 | `semanage port -l | grep TYPE` | prove SELinux port label exists |
 | `journalctl -u SERVICE -b` | inspect current boot logs for a service |
 | `getent hosts HOST` | prove name resolution |
+| `podman ps` | prove container runs now |
+| `podman logs NAME` | inspect container logs |
 
 ## Exam Habits for Using This Sheet
 
@@ -470,3 +693,72 @@ Example service-side config reminder:
 4. Run the command.
 5. Use one verification command immediately.
 6. If persistence matters, reboot and verify again.
+
+## High-Value Task Recipes
+
+### Create User With Custom Home and Bash Shell
+
+```bash
+sudo useradd -m -d /srv/alice -s /bin/bash alice
+id alice
+ls -ld /srv/alice
+```
+
+### Create tar.gz Backup
+
+```bash
+tar -czvf /tmp/backup.tar.gz /etc/ssh
+tar -tzvf /tmp/backup.tar.gz
+```
+
+### Create GPT, PV, VG, LV, ext4, and Mount
+
+```bash
+sudo parted /dev/vdb
+sudo pvcreate /dev/vdb1
+sudo vgcreate vgdata /dev/vdb1
+sudo lvcreate -n lvfiles -L 1G vgdata
+sudo mkfs.ext4 /dev/vgdata/lvfiles
+sudo mkdir -p /data
+sudo mount /dev/vgdata/lvfiles /data
+findmnt /data
+```
+
+### Mount NFS Share
+
+```bash
+sudo mkdir -p /mnt/share
+sudo mount -t nfs servera:/share /mnt/share
+findmnt /mnt/share
+```
+
+### Open HTTPD on Port 85 with SELinux and Firewall
+
+```bash
+sudo semanage port -a -t http_port_t -p tcp 85
+sudo firewall-cmd --add-port=85/tcp --permanent
+sudo firewall-cmd --reload
+sudo ss -tuln | grep :85
+sudo semanage port -l | grep http_port_t
+```
+
+### Create and Enable a Custom systemd Service
+
+```bash
+sudo vi /etc/systemd/system/report.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now report.service
+systemctl status report.service
+journalctl -u report.service -b
+```
+
+### Run a Container Through systemd
+
+```bash
+sudo podman run -d --name web -p 8080:80 quay.io/httpd/httpd-24
+sudo podman generate systemd --name web --files
+sudo mv container-web.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now container-web.service
+systemctl status container-web.service
+```
