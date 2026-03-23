@@ -119,6 +119,15 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `bzip2 FILE` | Compresses a file with bzip2 | `bzip2 report.log` |
 | `bunzip2 FILE.bz2` | Uncompresses bzip2 file | `bunzip2 report.log.bz2` |
 
+### Common Tar and Gzip Patterns
+
+| Task | Command |
+|---|---|
+| Create plain tar archive | `tar -cvf backup.tar DIR/` |
+| Create tar gzip archive | `tar -czvf backup.tar.gz DIR/` |
+| Extract tar gzip archive | `tar -xzvf backup.tar.gz` |
+| List tar gzip archive contents | `tar -tzvf backup.tar.gz` |
+
 ## SSH and Secure File Transfer
 
 | Command | What it does | Example with parameters |
@@ -151,6 +160,36 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `chmod o-r FILE` | Removes others read permission | `chmod o-r secret.txt` |
 | `umask` | Shows current default permission mask | `umask` |
 | `umask -S` | Shows symbolic mask | `umask -S` |
+
+### Directory Permission Patterns
+
+| Mode | What it means on a directory | Example |
+|---|---|---|
+| `r` | can list names in the directory | `chmod u+r DIR` |
+| `w` | can create, rename, or remove entries | `chmod g+w DIR` |
+| `x` | can enter or traverse the directory | `chmod o+x DIR` |
+| `700` | only owner can access it | `chmod 700 private-dir` |
+| `755` | owner full, others can read and enter | `chmod 755 webroot` |
+| `775` | owner and group full, others read and enter | `chmod 775 shared-dir` |
+
+### Special Permissions
+
+| Command or Mode | What it does | Example with parameters |
+|---|---|---|
+| `chmod u+s FILE` | Sets setuid bit | `chmod u+s /usr/local/bin/helper` |
+| `chmod g+s DIR` | Sets setgid bit on directory | `chmod g+s /srv/projects` |
+| `chmod +t DIR` | Sets sticky bit on directory | `chmod +t /shared/tmp` |
+| `chmod 4755 FILE` | Numeric setuid example | `chmod 4755 helper` |
+| `chmod 2775 DIR` | Numeric setgid directory example | `chmod 2775 /srv/projects` |
+| `chmod 1777 DIR` | Numeric sticky directory example | `chmod 1777 /shared/tmp` |
+
+### Special Permission Meaning
+
+| Bit | Meaning | Typical use |
+|---|---|---|
+| setuid | file runs with owner identity | rare, usually system binaries |
+| setgid on dir | new files inherit directory group | shared project directories |
+| sticky bit on dir | users cannot delete each other's files unless allowed | `/tmp`-style shared directory |
 
 ### Common Numeric Modes
 
@@ -228,6 +267,9 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `lsblk` | Lists block devices and layout | `lsblk` |
 | `blkid` | Shows UUIDs and filesystem info | `blkid` |
 | `parted DEVICE` | Opens interactive partition editor | `sudo parted /dev/vdb` |
+| `mklabel gpt` | Creates GPT partition table inside `parted` | `mklabel gpt` |
+| `mkpart primary START END` | Creates partition inside `parted` | `mkpart primary 1MiB 1GiB` |
+| `print` | Shows partition layout inside `parted` | `print` |
 | `pvcreate DEVICE` | Creates physical volume | `sudo pvcreate /dev/vdb1` |
 | `pvs` | Lists physical volumes | `pvs` |
 | `vgcreate VG DEVICE` | Creates volume group | `sudo vgcreate vgdata /dev/vdb1` |
@@ -244,6 +286,15 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `swapon --show` | Shows active swap devices | `swapon --show` |
 | `free -h` | Shows memory and swap usage | `free -h` |
 
+### LVM Names You Must Recognize
+
+| Term | Meaning | Example |
+|---|---|---|
+| `PV` | physical volume | `/dev/vdb1` |
+| `VG` | volume group | `vgdata` |
+| `LV` | logical volume | `lvfiles` |
+| LV path | full LV device path | `/dev/vgdata/lvfiles` |
+
 ## Filesystems, Mounts, NFS, and autofs
 
 | Command | What it does | Example with parameters |
@@ -258,10 +309,19 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `mount -a` | Tests `/etc/fstab` mounts | `sudo mount -a` |
 | `xfs_growfs MOUNTPOINT` | Grows mounted XFS filesystem | `sudo xfs_growfs /data` |
 | `resize2fs DEVICE` | Grows ext filesystem | `sudo resize2fs /dev/vgdata/lvfiles` |
+| `mount -t nfs HOST:PATH MOUNTPOINT` | Mounts NFS share now | `sudo mount -t nfs servera:/share /mnt/share` |
+| `umount MOUNTPOINT` | Unmounts NFS share too | `sudo umount /mnt/share` |
 | `exportfs -rav` | Re-exports NFS exports | `sudo exportfs -rav` |
 | `showmount -e HOST` | Lists NFS exports from server | `showmount -e servera` |
 | `systemctl enable --now nfs-server` | Starts and enables NFS server | `sudo systemctl enable --now nfs-server` |
 | `systemctl enable --now autofs` | Starts and enables autofs | `sudo systemctl enable --now autofs` |
+
+### ext4 and GPT Quick Reminder
+
+| Term | What it means | Example |
+|---|---|---|
+| `ext4` | common Linux filesystem | `sudo mkfs.ext4 /dev/vdb1` |
+| `GPT` | modern partition table format | create with `mklabel gpt` in `parted` |
 
 ## Scheduling, Time, and Bootloader
 
@@ -287,8 +347,12 @@ This is a fast command reference for revision. It is not a replacement for the l
 |---|---|---|
 | `ip addr` | Shows IP addresses | `ip addr` |
 | `ip route` | Shows routing table | `ip route` |
+| `ping HOST` | Tests basic network reachability | `ping -c 4 serverb` |
 | `nmcli connection show` | Lists NetworkManager profiles | `nmcli connection show` |
 | `nmcli connection modify NAME KEY VALUE` | Changes connection setting | `sudo nmcli connection modify eth0 ipv4.addresses 192.168.122.50/24` |
+| `nmcli connection modify NAME ipv4.method manual` | Sets static IPv4 mode | `sudo nmcli connection modify eth0 ipv4.method manual` |
+| `nmcli connection modify NAME ipv4.gateway GW` | Sets IPv4 gateway | `sudo nmcli connection modify eth0 ipv4.gateway 192.168.122.1` |
+| `nmcli connection modify NAME ipv4.dns DNS` | Sets DNS server | `sudo nmcli connection modify eth0 ipv4.dns 8.8.8.8` |
 | `nmcli connection up NAME` | Brings connection up | `sudo nmcli connection up eth0` |
 | `hostnamectl set-hostname NAME` | Sets system hostname | `sudo hostnamectl set-hostname servera.lab.example` |
 | `getent hosts NAME` | Tests hostname resolution | `getent hosts servera.lab.example` |
@@ -303,8 +367,15 @@ This is a fast command reference for revision. It is not a replacement for the l
 
 | Command | What it does | Example with parameters |
 |---|---|---|
-| `useradd USER` | Creates user | `sudo useradd -m alice` |
+| `useradd USER` | Creates user with system defaults | `sudo useradd alice` |
+| `useradd -m USER` | Creates user and home directory | `sudo useradd -m alice` |
+| `useradd -M USER` | Creates user without home directory | `sudo useradd -M svcbackup` |
+| `useradd -d DIR USER` | Sets custom home directory path | `sudo useradd -d /srv/alice alice` |
+| `useradd -m -d DIR USER` | Creates user with custom home directory | `sudo useradd -m -d /srv/alice alice` |
+| `useradd -s SHELL USER` | Sets login shell | `sudo useradd -m -s /bin/bash alice` |
 | `usermod -aG GROUP USER` | Adds user to supplementary group | `sudo usermod -aG admins alice` |
+| `usermod -d DIR USER` | Changes home directory path setting | `sudo usermod -d /srv/alice alice` |
+| `usermod -d DIR -m USER` | Moves user content to new home | `sudo usermod -d /srv/alice -m alice` |
 | `userdel USER` | Deletes user, keeps home by default | `sudo userdel alice` |
 | `userdel -r USER` | Deletes user and home directory | `sudo userdel -r alice` |
 | `groupadd GROUP` | Creates group | `sudo groupadd admins` |
@@ -315,6 +386,15 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `groups USER` | Shows user's groups | `groups alice` |
 | `visudo` | Safely edits sudoers | `sudo visudo` |
 | `visudo -c` | Checks sudoers syntax | `sudo visudo -c` |
+
+### User Home Directory Patterns
+
+| Task | Command |
+|---|---|
+| Create user with default home | `sudo useradd -m USER` |
+| Create user without home | `sudo useradd -M USER` |
+| Create user with custom home | `sudo useradd -m -d /custom/home USER` |
+| Move an existing user to a new home | `sudo usermod -d /custom/home -m USER` |
 
 ## SELinux and SSH Keys
 
@@ -331,8 +411,36 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `setsebool -P BOOLEAN on` | Sets boolean persistently | `sudo setsebool -P httpd_can_network_connect on` |
 | `semanage port -l` | Lists SELinux port labels | `sudo semanage port -l | grep http` |
 | `semanage port -a -t TYPE -p proto PORT` | Adds SELinux port label | `sudo semanage port -a -t http_port_t -p tcp 8080` |
+| `semanage port -m -t TYPE -p proto PORT` | Modifies existing port label | `sudo semanage port -m -t http_port_t -p tcp 85` |
+| `semanage port -d -t TYPE -p proto PORT` | Deletes port label | `sudo semanage port -d -t http_port_t -p tcp 8080` |
 | `ssh-keygen` | Creates SSH key pair | `ssh-keygen` |
 | `ssh-copy-id USER@HOST` | Installs public key remotely | `ssh-copy-id student@serverb` |
+
+### HTTPD on Custom Port 85 with SELinux and firewalld
+
+Use this pattern when Apache should listen on `85/tcp` and SELinux plus firewall must both allow it.
+
+| Step | Command | What it does |
+|---|---|---|
+| 1 | `sudo semanage port -a -t http_port_t -p tcp 85` | allows SELinux to treat port 85 as an HTTP port |
+| 2 | `sudo firewall-cmd --add-port=85/tcp --permanent` | opens port 85 permanently in firewalld |
+| 3 | `sudo firewall-cmd --reload` | loads the permanent firewall change |
+| 4 | `sudo ss -tuln | grep :85` | verifies a service is listening on port 85 |
+| 5 | `sudo semanage port -l | grep http_port_t` | verifies SELinux port mapping |
+| 6 | `sudo firewall-cmd --list-ports` | verifies firewall allows the port |
+
+Example service-side config reminder:
+
+- if `httpd` should actually use port `85`, the Apache config must also be changed to listen on `85`
+- SELinux and firewalld do not make the service listen by themselves
+
+### SELinux Runtime and Boot Reminder
+
+| Task | Command |
+|---|---|
+| Check runtime mode | `getenforce` |
+| Check full status | `sestatus` |
+| Check configured boot mode | `cat /etc/selinux/config` |
 
 ## Verification Commands You Should Use Constantly
 
@@ -347,8 +455,10 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `mount -a` | test fstab without reboot |
 | `swapon --show` | prove swap is active |
 | `firewall-cmd --list-all` | prove firewall rules are loaded |
+| `ss -tuln` | prove a service is listening on the expected port |
 | `getenforce` | prove SELinux runtime mode |
 | `ls -Z PATH` | prove SELinux file labels |
+| `semanage port -l | grep TYPE` | prove SELinux port label exists |
 | `journalctl -u SERVICE -b` | inspect current boot logs for a service |
 | `getent hosts HOST` | prove name resolution |
 
