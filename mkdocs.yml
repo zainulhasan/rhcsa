@@ -1,8 +1,5 @@
 site_name: RHCSA Self-Study Course
 site_description: Beginner-friendly RHCSA self-study handbook with labs, verification, troubleshooting, and mock exams.
-site_url: ""
-repo_name: ex200
-repo_url: ""
 docs_dir: docs
 site_dir: site
 use_directory_urls: true
@@ -12,6 +9,7 @@ theme:
   features:
     - navigation.sections
     - navigation.expand
+    - navigation.footer
     - navigation.top
     - search.suggest
     - search.highlight
@@ -32,7 +30,11 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
 
