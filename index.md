@@ -39,6 +39,10 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
   Treat every change as unfinished until you verify it with commands and confirm it survives reboot.
 
+- __Jump Straight To Labs__
+
+  If you already know some Linux, start with the [Labs Track Guide](22-labs-track-and-skill-check-guide.md) and use the question-first files to test real skill.
+
 </div>
 
 ## What This Site Covers
@@ -56,6 +60,10 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 - __Exam Execution__
 
   Persistence checks, troubleshooting workflows, final review, and two mock exams with separate solutions.
+
+- __Labs Track__
+
+  VM setup, skill-check questions, and section-based hands-on labs for fast self-assessment.
 
 </div>
 
@@ -102,6 +110,15 @@ Use this map as a quick reminder of what the exam expects: command-line confiden
 4. Use [Final Review and Cheat Sheets](17-final-review-cheat-sheets.md) after finishing lessons `00-16`.
 5. Attempt [Mock Exam 1](18-mock-exam-1.md) and [Mock Exam 2](20-mock-exam-2.md) only after the full lesson track.
 
+## Fast Lab Path For Experienced Learners
+
+1. Start with [Labs Track and Skill Check Guide](22-labs-track-and-skill-check-guide.md).
+2. Build or verify your lab with [VM Lab Setup and Baseline Checks](23-vm-lab-setup-and-baseline-checks.md).
+3. Test shell, text, archive, SSH, and permissions skills in [Foundations Labs](24-foundations-labs.md).
+4. Test software, scripting, storage, filesystems, scheduling, and systemd in [Administration Core Labs](25-administration-core-labs.md).
+5. Test networking, users, firewalld, SSH keys, and SELinux in [Networking, Users, and Security Labs](26-networking-users-and-security-labs.md).
+6. Return to the lesson files only where your lab results show weakness.
+
 ## Recommended Study Path
 
 Use the sections below as a practical training sequence, not just a reading list.
@@ -137,6 +154,14 @@ Use the sections below as a practical training sequence, not just a reading list
 - [19 Mock Exam 1 Solutions](19-mock-exam-1-solutions.md)
 - [20 Mock Exam 2](20-mock-exam-2.md)
 - [21 Mock Exam 2 Solutions](21-mock-exam-2-solutions.md)
+
+### Labs Track
+
+- [22 Labs Track and Skill Check Guide](22-labs-track-and-skill-check-guide.md)
+- [23 VM Lab Setup and Baseline Checks](23-vm-lab-setup-and-baseline-checks.md)
+- [24 Foundations Labs](24-foundations-labs.md)
+- [25 Administration Core Labs](25-administration-core-labs.md)
+- [26 Networking, Users, and Security Labs](26-networking-users-and-security-labs.md)
 
 ## Study Rules
 

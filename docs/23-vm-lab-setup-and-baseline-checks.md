@@ -1,0 +1,1 @@
+../23-vm-lab-setup-and-baseline-checks.md

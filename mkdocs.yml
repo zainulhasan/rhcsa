@@ -84,6 +84,12 @@ nav:
       - 14 Users, Groups, Passwords, and Sudo: 14-users-groups-passwords-and-sudo.md
       - 15 SELinux, SSH Keys, and Security: 15-selinux-ssh-keys-and-security.md
       - 16 Persistence, Reboot Checks, and Troubleshooting: 16-persistence-reboot-checks-and-troubleshooting.md
+  - Labs Track:
+      - 22 Labs Track and Skill Check Guide: 22-labs-track-and-skill-check-guide.md
+      - 23 VM Lab Setup and Baseline Checks: 23-vm-lab-setup-and-baseline-checks.md
+      - 24 Foundations Labs: 24-foundations-labs.md
+      - 25 Administration Core Labs: 25-administration-core-labs.md
+      - 26 Networking, Users, and Security Labs: 26-networking-users-and-security-labs.md
   - Review and Mock Exams:
       - 17a RHCSA Command Reference Cheat Sheet: 17a-rhcsa-command-reference-cheat-sheet.md
       - 17 Final Review and Cheat Sheets: 17-final-review-cheat-sheets.md

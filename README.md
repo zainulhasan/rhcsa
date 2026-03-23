@@ -44,12 +44,17 @@ Study loop for every lesson:
 15. `14-users-groups-passwords-and-sudo.md`
 16. `15-selinux-ssh-keys-and-security.md`
 17. `16-persistence-reboot-checks-and-troubleshooting.md`
-18. `17a-rhcsa-command-reference-cheat-sheet.md`
-19. `17-final-review-cheat-sheets.md`
-20. `18-mock-exam-1.md`
-21. `19-mock-exam-1-solutions.md`
-22. `20-mock-exam-2.md`
-23. `21-mock-exam-2-solutions.md`
+18. `22-labs-track-and-skill-check-guide.md`
+19. `23-vm-lab-setup-and-baseline-checks.md`
+20. `24-foundations-labs.md`
+21. `25-administration-core-labs.md`
+22. `26-networking-users-and-security-labs.md`
+23. `17a-rhcsa-command-reference-cheat-sheet.md`
+24. `17-final-review-cheat-sheets.md`
+25. `18-mock-exam-1.md`
+26. `19-mock-exam-1-solutions.md`
+27. `20-mock-exam-2.md`
+28. `21-mock-exam-2-solutions.md`
 
 ## How To Use The Files
 
@@ -59,6 +64,18 @@ Study loop for every lesson:
 - Mark commands you repeatedly forget.
 - Keep a handwritten or plain-text mistake log.
 - Revisit lessons where verification failed or took too long.
+
+## Fast Lab Path For Learners With Some Experience
+
+If you already know basic Linux and want to test yourself first, use this order:
+
+1. `22-labs-track-and-skill-check-guide.md`
+2. `23-vm-lab-setup-and-baseline-checks.md`
+3. `24-foundations-labs.md`
+4. `25-administration-core-labs.md`
+5. `26-networking-users-and-security-labs.md`
+
+Then return to the lesson files only for weak areas you discover during the labs.
 
 ## Lab Setup
 
@@ -113,6 +130,16 @@ Best method:
 4. Use only built-in help such as `man`, `--help`, and local docs.
 5. Reboot when the task requires persistent configuration.
 6. Grade yourself using the provided checklists before reading solutions.
+
+## Labs Track
+
+The labs track is a second route through the course.
+
+- It starts with local VM setup and baseline checks.
+- It is designed for learners who want question-first practice.
+- Each lab file follows the same study structure as the lesson files.
+- Each lab file includes worked examples, guided labs, independent tasks, verification, troubleshooting, quiz questions, and exam-style tasks.
+- Use it after each major lesson section or as a fast diagnostic path if you already know some Linux.
 
 ## Offline Help Rule
 
