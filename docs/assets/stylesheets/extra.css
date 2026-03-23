@@ -1,0 +1,52 @@
+.md-typeset .mermaid-figure {
+  margin: 1.5rem 0;
+}
+
+.md-typeset .mermaid-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.md-typeset .mermaid-toolbar button {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  border-radius: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.md-typeset .mermaid-toolbar button:hover {
+  background: var(--md-code-bg-color);
+}
+
+.md-typeset .mermaid-frame {
+  overflow: auto;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: var(--md-code-bg-color);
+}
+
+.md-typeset .mermaid {
+  text-align: center;
+}
+
+.md-typeset .mermaid svg {
+  display: block;
+  width: min(100%, 1400px) !important;
+  min-width: 900px;
+  height: auto !important;
+  margin: 0 auto;
+  transform-origin: top center;
+  transition: transform 0.15s ease;
+}
+
+@media screen and (max-width: 900px) {
+  .md-typeset .mermaid svg {
+    min-width: 720px;
+  }
+}
