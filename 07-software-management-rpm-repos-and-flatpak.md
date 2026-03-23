@@ -75,6 +75,10 @@ Software management is a little different from service configuration:
 
 Still, on exam practice, verify after reboot when you change software sources or install a tool you will depend on later.
 
+!!! warning "Exam Focus"
+    Be comfortable reading and creating `.repo` files under `/etc/yum.repos.d/`.
+    Even if `yum` exists as a compatibility command, think in `dnf` terms first.
+
 ## Command Breakdowns
 
 ### List repositories
@@ -82,6 +86,7 @@ Still, on exam practice, verify after reboot when you change software sources or
 ```bash
 sudo dnf repolist
 sudo dnf repolist all
+sudo yum repolist
 ```
 
 ### Install and remove packages
@@ -89,6 +94,7 @@ sudo dnf repolist all
 ```bash
 sudo dnf install httpd
 sudo dnf remove httpd
+sudo yum install httpd
 ```
 
 ### Install from local RPM file
@@ -110,6 +116,31 @@ dnf list installed
 ```bash
 dnf info bash
 rpm -qi bash
+```
+
+### Repository file example
+
+Common repo file location:
+
+```text
+/etc/yum.repos.d/example.repo
+```
+
+Example content:
+
+```ini
+[baseos-local]
+name=BaseOS Local Repo
+baseurl=http://repo.example.com/baseos/
+enabled=1
+gpgcheck=0
+```
+
+After creating or editing a repo file:
+
+```bash
+sudo dnf repolist
+sudo dnf repolist all
 ```
 
 ### Flatpak basics
@@ -157,6 +188,17 @@ Verification:
 
 - `flathub` should appear in the remote list
 
+### Worked Example 4: Inspect a `.repo` File
+
+```bash
+ls /etc/yum.repos.d/
+cat /etc/yum.repos.d/*.repo
+```
+
+Verification:
+
+- identify `baseurl`, `enabled`, and `gpgcheck` settings in at least one repo file
+
 ## Guided Hands-On Lab
 
 ### Lab Goal
@@ -179,6 +221,7 @@ You need root privileges. Internet or a local repository source may be required 
 8. If a local RPM file is available, install it with `dnf install ./package.rpm`.
 9. List Flatpak remotes.
 10. If allowed in your lab, add a Flatpak remote and install then remove one small application.
+11. If your lab provides a practice repository URL, create a `.repo` file for it and verify it appears in `dnf repolist`.
 
 ### Expected Result
 
@@ -201,6 +244,8 @@ flatpak remotes
 5. Query package information before installing.
 6. Add a Flatpak remote if your lab supports it.
 7. Install and uninstall one Flatpak package.
+8. Compare `dnf repolist` and `dnf repolist all`.
+9. Read one `.repo` file and explain what `baseurl`, `enabled`, and `gpgcheck` mean.
 
 ## Verification Steps
 
@@ -209,6 +254,7 @@ flatpak remotes
 3. Verify a removed package no longer appears in queries.
 4. Verify Flatpak remotes and installed apps separately from RPM packages.
 5. Reboot after major repository or software changes in lab practice and confirm the package and repo configuration still exist.
+6. Verify new repo files are readable and actually recognized by `dnf`.
 
 ## Troubleshooting Section
 

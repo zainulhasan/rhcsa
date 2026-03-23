@@ -117,6 +117,31 @@ Example cron line:
 */5 * * * * date >> /tmp/cron-test.txt
 ```
 
+Cron field order:
+
+```text
+minute hour day-of-month month day-of-week command
+```
+
+Example:
+
+```text
+0 2 * * * /usr/bin/date >> /tmp/nightly.txt
+```
+
+This means:
+
+- minute `0`
+- hour `2`
+- every day of month
+- every month
+- every day of week
+- run the command at `02:00`
+
+!!! info "Exam Focus"
+    For cron jobs, use full command paths when you are unsure.
+    Cron runs with a smaller environment than your normal shell.
+
 ### Simple systemd timer view
 
 ```bash
@@ -128,6 +153,13 @@ systemctl list-timers
 ```bash
 sudo systemctl enable --now chronyd
 sudo systemctl disable service
+```
+
+### Scheduler daemons
+
+```bash
+systemctl status crond
+systemctl status atd
 ```
 
 ### Time sync status
@@ -183,7 +215,20 @@ Verification:
 
 - identify whether NTP synchronization is active
 
-### Worked Example 4: Inspect Current Bootloader Defaults Safely
+### Worked Example 4: Read a Cron Entry Correctly
+
+Cron line:
+
+```text
+*/10 * * * * /usr/bin/echo hello >> /tmp/cron-hello.txt
+```
+
+Verification:
+
+- explain that the job runs every 10 minutes
+- explain why `/usr/bin/echo` is safer than plain `echo` in a cron example
+
+### Worked Example 5: Inspect Current Bootloader Defaults Safely
 
 ```bash
 sudo grubby --info=ALL
@@ -211,12 +256,13 @@ Use a lab system where scheduled test files in `/tmp` are safe.
 3. Create a user cron job that appends the date to a file every few minutes.
 4. List your cron jobs.
 5. View active timers with `systemctl list-timers`.
-6. Check whether `chronyd` is active and enabled.
-7. Enable and start `chronyd` if needed.
-8. Check `timedatectl` status.
-9. Inspect bootloader entries with `grubby` or the version-appropriate tool in your lab.
-10. If you make a bootloader change, document it and verify carefully.
-11. Reboot and confirm any service or bootloader-related persistent change behaves as expected.
+6. Check whether `crond` and `atd` are running.
+7. Check whether `chronyd` is active and enabled.
+8. Enable and start `chronyd` if needed.
+9. Check `timedatectl` status.
+10. Inspect bootloader entries with `grubby` or the version-appropriate tool in your lab.
+11. If you make a bootloader change, document it and verify carefully.
+12. Reboot and confirm any service or bootloader-related persistent change behaves as expected.
 
 ### Expected Result
 

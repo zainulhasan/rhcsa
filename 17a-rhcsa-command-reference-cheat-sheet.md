@@ -53,6 +53,10 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `apropos KEYWORD` | Searches manuals by keyword | `apropos password` |
 | `man -k KEYWORD` | Same idea as `apropos` | `man -k directory` |
 
+!!! info "High-Value Help Commands"
+    Use `apropos` and `man -k` when you know the topic but not the exact command name.
+    Use `type`, `help`, and `command -v` when you are not sure whether something is a shell builtin or a normal command.
+
 ## Files, Directories, and Text Viewing
 
 | Command | What it does | Example with parameters |
@@ -92,6 +96,8 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `sort FILE` | Sorts lines | `sort names.txt` |
 | `uniq FILE` | Removes adjacent duplicates | `sort names.txt | uniq` |
 | `cut` | Extracts fields or characters | `cut -d: -f1 /etc/passwd` |
+| `sed` | Edits or prints text streams | `sed -n '1,5p' file.txt` |
+| `awk` | Processes structured text by fields and patterns | `awk -F: '{print $1}' /etc/passwd` |
 
 ### Useful Regex Patterns
 
@@ -103,6 +109,16 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `.*` | zero or more characters | `grep 'root.*bash' file.txt` |
 | `[0-9]` | one digit | `grep '[0-9]' file.txt` |
 | `[^#]` | one non-`#` character | `grep '^[^#]' file.conf` |
+
+### sed and awk Quick Patterns
+
+| Task | Command |
+|---|---|
+| Print lines 1 to 5 | `sed -n '1,5p' FILE` |
+| Replace first match on each line | `sed 's/old/new/' FILE` |
+| Replace globally on each line | `sed 's/old/new/g' FILE` |
+| Print first field from colon-separated file | `awk -F: '{print $1}' FILE` |
+| Print fields 1 and 7 when line matches | `awk -F: '/bash$/ {print $1, $7}' FILE` |
 
 ## Archives and Compression
 
@@ -207,6 +223,7 @@ This is a fast command reference for revision. It is not a replacement for the l
 |---|---|---|
 | `dnf repolist` | Lists enabled repositories | `sudo dnf repolist` |
 | `dnf repolist all` | Lists all repos including disabled | `sudo dnf repolist all` |
+| `yum repolist` | Compatibility form on systems where `yum` exists | `sudo yum repolist` |
 | `dnf search TEXT` | Searches for package names/descriptions | `dnf search nginx` |
 | `dnf install PKG` | Installs a package | `sudo dnf install tree` |
 | `dnf remove PKG` | Removes a package | `sudo dnf remove tree` |
@@ -221,6 +238,24 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `flatpak install REMOTE APPID` | Installs Flatpak app | `flatpak install flathub org.gnome.gedit` |
 | `flatpak uninstall APPID` | Removes Flatpak app | `flatpak uninstall org.gnome.gedit` |
 
+### Add a `.repo` File Quickly
+
+| Task | Command or file |
+|---|---|
+| Repo file location | `/etc/yum.repos.d/custom.repo` |
+| Check all repos | `sudo dnf repolist all` |
+| Check only enabled repos | `sudo dnf repolist` |
+
+Example file:
+
+```ini
+[custom-baseos]
+name=Custom BaseOS
+baseurl=http://repo.example.com/baseos/
+enabled=1
+gpgcheck=0
+```
+
 ## Scripting Basics
 
 | Command or Pattern | What it does | Example with parameters |
@@ -233,6 +268,8 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `for ITEM in LIST; do ... done` | Loops over items | `for f in "$@"; do echo "$f"; done` |
 | `$(COMMAND)` | Uses command output inside a script | `today=$(date +%F)` |
 | `id USER >/dev/null 2>&1` | Checks whether a user exists silently | `if id "$1" >/dev/null 2>&1; then echo exists; fi` |
+| `<<<` | Sends one short string as standard input | `grep root <<< "root:x:0:0"` |
+| `bc` | Command-line calculator | `bc <<< '2 + 3'` |
 
 ## Boot, Targets, Processes, and Logs
 
@@ -370,6 +407,10 @@ This is a fast command reference for revision. It is not a replacement for the l
 | `/usr/lib/systemd/system/` | package-provided unit files |
 | `/etc/systemd/system/` | administrator overrides and custom units |
 | `/etc/systemd/system/multi-user.target.wants/` | symlinks showing enabled units |
+
+!!! warning "High-Value systemd Commands"
+    Be fast with `enable --now`, `daemon-reload`, `is-active`, `is-enabled`, `status`, and `journalctl -u`.
+    These commands prove both current behavior and reboot persistence.
 
 ### Custom systemd Service Unit Example
 

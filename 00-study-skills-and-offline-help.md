@@ -179,6 +179,10 @@ Useful recovery habits:
 
 You do not need internet to keep learning basic administration if you know how to use local help. Linux systems already ship with documentation, examples, option summaries, and shell help.
 
+!!! info "Exam Focus"
+    Be fast with both `apropos keyword` and `man -k keyword`.
+    They solve the same kind of problem: finding commands when you only remember the topic, not the exact command name.
+
 Your offline help ladder:
 
 1. `command --help`
@@ -186,7 +190,8 @@ Your offline help ladder:
 3. `info command`
 4. `help builtin` for shell builtins
 5. `apropos keyword`
-6. `/usr/share/doc/package-name`
+6. `man -k keyword`
+7. `/usr/share/doc/package-name`
 
 ### Notes That Are Useful In A Command-Line Exam
 

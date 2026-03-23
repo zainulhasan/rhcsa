@@ -26,10 +26,11 @@ Admins automate repetitive checks, generate reports, process files, and reduce t
 - Use looping constructs (`for`, and simple iteration)
 - Process script inputs (`$1`, `$2`, and related variables)
 - Process output of shell commands within a script
+- Use here-strings and simple calculation tools when helpful in scripts
 
 # 7. Commands/tools used
 
-`bash`, `echo`, `test`, `[ ]`, `for`, `if`, `read`, `grep`, `id`, `date`, `chmod`
+`bash`, `echo`, `test`, `[ ]`, `for`, `if`, `read`, `grep`, `id`, `date`, `chmod`, `awk`, `bc`
 
 # 8. Offline help references for this topic
 
@@ -38,6 +39,7 @@ Admins automate repetitive checks, generate reports, process files, and reduce t
 - `help [`
 - `help for`
 - `man bash`
+- `man bc`
 
 # 9. Estimated study time
 
@@ -90,6 +92,38 @@ today=$(date +%F)
 echo "$today"
 ```
 
+### Here-Strings
+
+A here-string sends one short piece of text into a command as input.
+
+Example:
+
+```bash
+grep root <<< "root:x:0:0:root:/root:/bin/bash"
+```
+
+This is useful when you want to test a command quickly without creating a file first.
+
+### Simple Calculations With `bc`
+
+`bc` is a command-line calculator. It is useful when shell arithmetic is not enough or when you want clear calculator-style input.
+
+Example:
+
+```bash
+echo '2 + 3' | bc
+```
+
+Or with a here-string:
+
+```bash
+bc <<< '2 + 3'
+```
+
+!!! info "Exam Focus"
+    `<<<`, `bc`, `awk`, and small command substitutions are not advanced programming.
+    They are fast admin tools for small text and math tasks.
+
 ## Command Breakdowns
 
 ### Small script example
@@ -122,6 +156,18 @@ done
 ```bash
 host=$(hostname)
 echo "$host"
+```
+
+### Here-string example
+
+```bash
+grep alice <<< "alice:x:1000:1000:Alice:/home/alice:/bin/bash"
+```
+
+### Simple `bc` example
+
+```bash
+bc <<< '10 + 25'
 ```
 
 ## Worked Examples
@@ -178,6 +224,21 @@ Verification:
 
 - run it with a mix of real and fake file names
 
+### Worked Example 4: Use `bc` and a Here-String
+
+Script:
+
+```bash
+#!/bin/bash
+echo "sum=$(bc <<< '4 + 6')"
+grep root <<< "root:x:0:0:root:/root:/bin/bash"
+```
+
+Verification:
+
+- confirm the output shows `sum=10`
+- confirm `grep` matches `root`
+
 ## Guided Hands-On Lab
 
 ### Lab Goal
@@ -202,6 +263,8 @@ cd rhcsa-script-lab
 6. Create `loopfiles.sh` that loops over all arguments and reports whether each is a regular file.
 7. Use command substitution in a script to save the current date to a variable and print it.
 8. Add clear messages so you can read output quickly.
+9. Use `bc` in a script to calculate a small sum.
+10. Use a here-string with `grep` or `awk` in a script.
 
 ### Expected Result
 
@@ -224,6 +287,8 @@ ls -l *.sh
 4. Write a script that prints "missing argument" if no first argument is given.
 5. Write a script that uses `grep` output inside the script.
 6. Write a script that creates a dated report file name using `$(date ...)`.
+7. Write a script that uses `bc` to add two numbers.
+8. Write a script that uses `grep <<< "text"` to test a pattern without a file.
 
 ## Verification Steps
 
@@ -231,6 +296,7 @@ ls -l *.sh
 2. Confirm it is executable or run it with `bash scriptname`.
 3. Confirm the script behaves differently for true and false conditions where expected.
 4. Confirm script inputs map correctly to `$1`, `$2`, and `$#`.
+5. Confirm you can explain what a here-string `<<<` sends into a command.
 
 ## Troubleshooting Section
 
@@ -302,6 +368,8 @@ Fix:
 4. What keyword starts a conditional block?
 5. What loop is commonly used to process a list of items?
 6. What does `$(date)` do?
+7. What does `<<<` do?
+8. What command can calculate `2 + 3` from standard input?
 
 ## Exam-Style Tasks
 
@@ -336,6 +404,8 @@ Create `/usr/local/bin/filecheck.sh` that accepts one or more file paths as argu
 4. `if`
 5. `for`
 6. It runs `date` and substitutes its output.
+7. It sends a short string into a command as input.
+8. `bc`
 
 ### Exam-Style Task 1 Example Solution
 

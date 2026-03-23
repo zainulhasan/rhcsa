@@ -25,10 +25,11 @@ Administrators constantly inspect logs, search configuration files, capture erro
 - Use input-output redirection (`>`, `>>`, `|`, `2>`, and related forms)
 - Use `grep` and regular expressions to analyze text
 - Create and edit text files
+- Use `sed` and `awk` for quick text extraction and transformation
 
 # 7. Commands/tools used
 
-`echo`, `cat`, `grep`, `egrep` or `grep -E`, `head`, `tail`, `wc`, `sort`, `uniq`, `cut`, `tee`, `less`
+`echo`, `cat`, `grep`, `egrep` or `grep -E`, `head`, `tail`, `wc`, `sort`, `uniq`, `cut`, `tee`, `less`, `sed`, `awk`
 
 # 8. Offline help references for this topic
 
@@ -38,6 +39,8 @@ Administrators constantly inspect logs, search configuration files, capture erro
 - `grep --help`
 - `man tee`
 - `man cut`
+- `man sed`
+- `man awk`
 
 # 9. Estimated study time
 
@@ -100,6 +103,12 @@ Common patterns:
 
 For RHCSA, basic pattern matching is usually enough.
 
+`sed` and `awk` are also important revision tools. They help when you need to change text quickly or print specific fields from structured output.
+
+!!! info "Exam Focus"
+    `grep`, `cut`, `sed`, and `awk` form a practical text-processing toolkit.
+    You do not need advanced scripting to gain value from them.
+
 ## Command Breakdowns
 
 ### Redirect output
@@ -140,6 +149,28 @@ grep -v '^#' file.conf
 grep -E 'root|student' /etc/passwd
 grep -E '^[a-z].*bash$' /etc/passwd
 ```
+
+### Replace text with `sed`
+
+```bash
+sed 's/http/https/' file.txt
+sed -n '1,5p' file.txt
+```
+
+- `s/old/new/` substitutes text
+- `-n` suppresses automatic printing
+- `p` prints selected lines
+
+### Extract fields with `awk`
+
+```bash
+awk -F: '{print $1}' /etc/passwd
+awk '/bash$/ {print $1, $7}' /etc/passwd
+```
+
+- `-F:` sets `:` as the field separator
+- `$1` means first field
+- `$7` means seventh field
 
 ## Worked Examples
 
@@ -190,6 +221,20 @@ Verification:
 
 - explain why `$` is useful here
 
+### Worked Example 4: Print User Names With `awk`
+
+```bash
+awk -F: '{print $1}' /etc/passwd | head
+```
+
+Expected result:
+
+- first field of each `/etc/passwd` line should be printed
+
+Verification:
+
+- confirm the output matches usernames only, not full lines
+
 ## Guided Hands-On Lab
 
 ### Lab Goal
@@ -216,6 +261,8 @@ cd rhcsa-redirection-lab
 8. Use `grep -E` to match either `bash` or `nologin`.
 9. Pipe `/etc/passwd` into `grep` and count matching lines with `wc -l`.
 10. Use `tee` to both view and save filtered output.
+11. Use `sed -n '1,3p'` to print only the first three lines of a file.
+12. Use `awk -F:` to print only usernames from `/etc/passwd`.
 
 ### Expected Result
 
@@ -239,6 +286,8 @@ grep -n root users.txt
 5. Count how many non-comment lines exist in a sample file.
 6. Use `sort` and `uniq` on a file with repeated words.
 7. Pipe the output of `ls -l /etc` into `less`.
+8. Use `sed` to replace one word with another in sample text.
+9. Use `awk` to print the first and seventh fields from `/etc/passwd`.
 
 ## Verification Steps
 
@@ -246,6 +295,7 @@ grep -n root users.txt
 2. Confirm you can capture errors separately with `2>`.
 3. Confirm you can explain what `^` and `$` mean in basic regex.
 4. Confirm a pipeline result by checking the final output carefully.
+5. Confirm you can explain when `sed` is better for substitution and when `awk` is better for fields.
 
 ## Troubleshooting Section
 
@@ -317,6 +367,8 @@ grep -E 'root|student' file
 4. What does `^root` mean in `grep`?
 5. What does `bash$` mean in `grep`?
 6. What does `grep -v` do?
+7. What does `awk -F:` change?
+8. What does `sed 's/old/new/'` do?
 
 ## Exam-Style Tasks
 
@@ -350,6 +402,8 @@ Run a command that lists `/tmp` and also attempts to list `/no-such-dir`. Save s
 4. A line starting with `root`.
 5. A line ending with `bash`.
 6. It shows non-matching lines.
+7. It sets the field separator to `:`.
+8. It substitutes the first matching `old` text on each line with `new`.
 
 ### Exam-Style Task 1 Example Solution
 
