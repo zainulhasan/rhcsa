@@ -4,8 +4,7 @@
       return;
     }
 
-    var svg = block.querySelector("svg");
-    if (!svg) {
+    if (!block.querySelector("svg")) {
       return;
     }
 
@@ -41,8 +40,26 @@
 
     var scale = 1;
 
+    function currentSvg() {
+      return block.querySelector("svg");
+    }
+
+    function resetFrameScroll() {
+      frame.scrollLeft = 0;
+      frame.scrollTop = 0;
+    }
+
     function applyScale() {
+      var svg = currentSvg();
+      if (!svg) {
+        return;
+      }
+
       svg.style.transform = "scale(" + scale + ")";
+
+      if (scale === 1) {
+        resetFrameScroll();
+      }
     }
 
     zoomIn.addEventListener("click", function () {
@@ -58,6 +75,7 @@
     reset.addEventListener("click", function () {
       scale = 1;
       applyScale();
+      resetFrameScroll();
     });
 
     block.dataset.zoomReady = "true";
