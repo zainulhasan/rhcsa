@@ -20,16 +20,13 @@
   max-width: 82rem;
 }
 
-.md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item--section {
-  margin-bottom: 20px;
-}
-
 .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item--section > .md-nav__link {
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.01em;
   padding-top: 0.5rem;
   padding-bottom: 0.45rem;
+  margin-bottom: 20px;
 }
 
 .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item--section > .md-nav__link .md-ellipsis {
@@ -55,8 +52,8 @@
 
 .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item--section > .md-nav .md-nav__item > .md-nav__link {
   font-size: 0.68rem;
-  padding-top: 0.26rem;
-  padding-bottom: 0.26rem;
+  padding-top: 0.12rem;
+  padding-bottom: 0.12rem;
   padding-left: 0.95rem;
 }
 
@@ -306,12 +303,9 @@
 }
 
 @media screen and (max-width: 900px) {
-  .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item--section {
-    margin-bottom: 20px;
-  }
-
   .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item--section > .md-nav__link {
     font-size: 0.86rem;
+    margin-bottom: 20px;
   }
 
   .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item--section > .md-nav > .md-nav__list {
