@@ -1,6 +1,63 @@
+<div class="hero-panel" markdown>
+<p class="hero-eyebrow">RHEL / EX200 • Beginner-first • Offline-friendly • Practice-heavy</p>
+
 # RHCSA Self-Study Course
 
-This site turns the course into a browsable handbook for GitHub Pages. The source lessons remain as plain Markdown files in the repository root so they still render cleanly on GitHub and stay easy to edit offline.
+Build Linux administration skill from zero to exam-ready using one self-contained course. The site is designed for focused self-study: clear lesson order, command-heavy examples, verification after every major task, and mock exams when you are ready to simulate the real pressure.
+
+<div class="hero-actions" markdown="1">
+
+[Start With Lesson 00](00-study-skills-and-offline-help.md){ .md-button .md-button--primary }
+[Open Command Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md){ .md-button }
+
+</div>
+
+<div class="hero-badges">
+  <span class="hero-badge">Hands-on labs</span>
+  <span class="hero-badge">Offline help habits</span>
+  <span class="hero-badge">Reboot-safe verification</span>
+  <span class="hero-badge">Beginner explanations</span>
+  <span class="hero-badge">Mock exams included</span>
+</div>
+</div>
+
+<div class="grid cards homepage-cards" markdown>
+
+- __Start Here__
+
+  Begin with study habits, command-line mindset, and offline help in [Lesson 00](00-study-skills-and-offline-help.md).
+
+- __Build Command Speed__
+
+  Use the [RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md) section by section to build muscle memory.
+
+- __Follow The Full Path__
+
+  Work in order from foundations to administration core, then finish with [mock exams](18-mock-exam-1.md).
+
+- __Study Like The Exam__
+
+  Treat every change as unfinished until you verify it with commands and confirm it survives reboot.
+
+</div>
+
+## What This Site Covers
+
+<div class="grid cards objective-cards" markdown>
+
+- __Essential Tools__
+
+  Shell use, files, text processing, archives, SSH, links, permissions, and offline documentation.
+
+- __Administration Core__
+
+  Software, scripting, processes, storage, filesystems, mounts, scheduling, systemd, networking, users, and SELinux.
+
+- __Exam Execution__
+
+  Persistence checks, troubleshooting workflows, final review, and two mock exams with separate solutions.
+
+</div>
 
 ## RHCSA Exam Map
 
@@ -33,18 +90,21 @@ flowchart TD
     D --> D4["Mock exam 2"]
 ```
 
+<div class="map-callout" markdown>
 Use this map as a quick reminder of what the exam expects: command-line confidence, system administration execution, and proof that your changes still work after reboot.
+</div>
 
-## How To Use This Site
+## Fast Start
 
-1. Start with [Study Skills and Offline Help](00-study-skills-and-offline-help.md).
+1. Begin with [Study Skills and Offline Help](00-study-skills-and-offline-help.md).
 2. Work through the numbered lessons in order.
-3. Use the [RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md) when you need fast recall by command family.
-4. Use [Final Review and Cheat Sheets](17-final-review-cheat-sheets.md) after finishing the lesson track.
-5. Attempt [Mock Exam 1](18-mock-exam-1.md) and [Mock Exam 2](20-mock-exam-2.md) only after completing lessons `00-16`.
-6. Open the mock exam solution files only after you finish the exam attempt.
+3. Revisit the [RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md) after each major section.
+4. Use [Final Review and Cheat Sheets](17-final-review-cheat-sheets.md) after finishing lessons `00-16`.
+5. Attempt [Mock Exam 1](18-mock-exam-1.md) and [Mock Exam 2](20-mock-exam-2.md) only after the full lesson track.
 
 ## Recommended Study Path
+
+Use the sections below as a practical training sequence, not just a reading list.
 
 ### Foundations
 

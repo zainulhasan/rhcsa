@@ -1,28 +1,35 @@
 site_name: RHCSA Self-Study Course
 site_description: Beginner-friendly RHCSA self-study handbook with labs, verification, troubleshooting, and mock exams.
+site_url: https://zainulhasan.github.io/rhcsa/
 docs_dir: docs
 site_dir: site
 use_directory_urls: true
 
 theme:
   name: material
+  logo: assets/images/rhcsa-mark.svg
+  favicon: assets/images/rhcsa-favicon.svg
   features:
+    - navigation.instant
     - navigation.sections
     - navigation.expand
     - navigation.footer
     - navigation.top
+    - navigation.tracking
+    - toc.follow
     - search.suggest
     - search.highlight
     - content.code.copy
   palette:
     - scheme: default
-      primary: blue grey
-      accent: teal
+      primary: teal
+      accent: amber
 
 markdown_extensions:
   - admonition
   - attr_list
   - def_list
+  - md_in_html
   - tables
   - toc:
       permalink: true
@@ -51,10 +58,13 @@ extra_javascript:
 
 extra:
   generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/zainulhasan/rhcsa
 
 nav:
   - Home: index.md
-  - Repository Guide: repository-guide.md
+  - How To Study: repository-guide.md
   - Foundations:
       - 00 Study Skills and Offline Help: 00-study-skills-and-offline-help.md
       - 01 Shell Basics and Command Syntax: 01-shell-basics-and-command-syntax.md
