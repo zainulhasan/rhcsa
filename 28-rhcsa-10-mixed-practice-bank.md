@@ -1,12 +1,12 @@
-# RHCSA 10 Mixed Practice Bank From Playlist Analysis
+# RHCSA 10 Mixed Practice Bank
 
-> Use this file when you want extra mixed RHCSA 10 practice drawn from repeated topic patterns in the supplied YouTube playlists, but rewritten for learning, verification, and exam safety.
+> Use this file when you want extra mixed RHCSA 10 practice built from repeated real-world exam-style patterns, but rewritten for learning, verification, and exam safety.
 
 ## At a Glance
 
 **Purpose**
 
-Give you an extra bank of mixed RHCSA 10 drills based on repeated themes found across the supplied playlists and subtitle material.
+Give you an extra bank of mixed RHCSA 10 drills based on repeated high-value exam themes and administrative task patterns.
 
 **Why this matters for RHCSA**
 
@@ -66,7 +66,9 @@ Administrators rarely get tasks one chapter at a time. They are asked to create 
 
 This file is not another full course. It is a pressure-tested reinforcement bank.
 
-The supplied playlists repeat the same RHCSA patterns over and over:
+If you are a total beginner, do not start here. Finish the lesson path and section labs first, then return here for mixed-pressure practice.
+
+The most useful RHCSA practice patterns repeat the same ideas over and over:
 
 - find the right command without panic
 - create and verify users and permissions
@@ -75,7 +77,7 @@ The supplied playlists repeat the same RHCSA patterns over and over:
 - make the result survive reboot
 - prove access through both firewall and SELinux
 
-That repetition is useful, but raw video material can become noisy. This file turns the repeated ideas into clean RHCSA 10 practice tasks with three rules:
+That repetition is useful, but raw source material can become noisy. This file turns the repeated ideas into clean RHCSA 10 practice tasks with three rules:
 
 1. every task must be explainable in plain English
 2. every task must be verifiable with commands
@@ -275,6 +277,40 @@ Keep the archive and storage if you want to reuse them. Remove the user, group, 
 
 ## Independent practice tasks
 
+### Priority Core question set
+
+Start with these first. They cover the highest-value mixed RHCSA task flow.
+
+1. Configure a static network connection with `nmcli`, set hostname resolution correctly for your lab, and verify the profile is active after reconnect or reboot.
+2. Configure a working software repository, prove `dnf repolist` works, then install a required package.
+3. Configure a web service so access succeeds only when service state, firewall rules, and SELinux settings are all correct.
+4. Create a local user and group, set the required shell and home directory, and verify account data with commands instead of assumptions.
+5. Create a collaborative directory for one group, apply SGID, and verify that new files inherit the correct group.
+6. Configure `autofs` to mount an NFS path on demand and verify that the mount appears only when accessed.
+7. Create a user-specific cron job, verify the right user owns it, and make sure the command uses safe full paths.
+8. Grant one user access to another directory using ACLs, and make the rule apply to future files too.
+9. Verify time synchronization using both `timedatectl` and `chronyc`, and confirm the time service is active and enabled.
+10. Find files by age or name pattern, then copy only the intended matches to a staging directory.
+11. Create a user with a specific UID and verify both the UID and the intended account properties.
+12. Create a compressed archive with `tar`, then list its contents without extracting it.
+13. Set a custom `umask`, create a test file, and explain the resulting default permissions.
+14. Configure password or account expiration with `chage`, then prove the settings with `chage -l`.
+15. Configure privileged access safely with `visudo` or a validated sudoers drop-in.
+16. Write a simple shell script using positional parameters and at least one conditional or loop, then test it with different inputs.
+17. Practice the root-password recovery workflow in your lab notes, but do it only on a disposable system snapshot.
+18. Create and activate a new swap area, then make it persistent.
+19. Build storage from PV to VG to LV, create a filesystem, mount it persistently, and verify it with `findmnt` and `/etc/fstab`.
+20. Extend an existing logical volume and grow the filesystem without breaking the mount.
+
+### Optional or version-sensitive question set
+
+Use these after the core tasks.
+
+21. If your lab and exam version expect it, create or manage a VDO-backed volume.
+22. If your build includes container objectives, run a container task separately and label it `Version-specific` in your notes.
+
+### Extra speed drills
+
 1. Use `apropos` and `man -k` to find the command family for scheduled jobs, then open the relevant manual pages.
 2. Print only usernames and home directories from `/etc/passwd` using `awk`.
 3. Print the first ten lines of `/etc/services` with `sed`.
@@ -451,13 +487,38 @@ journalctl -u httpd -n 20
 
 ### Independent practice guidance
 
-For tasks 1 to 15, grade yourself this way:
+For the priority core question set and the extra speed drills, grade yourself this way:
 
 - `2` if you completed it correctly without notes
 - `1` if you needed help or retries
 - `0` if you could not complete it
 
 Write the score next to each task in your notes so you can see which objective group still needs repetition.
+
+### Priority question planning guide
+
+Use this as a command-direction hint, not as a substitute for solving the task yourself.
+
+- Network config: `nmcli connection show` -> `nmcli connection modify ...` -> `nmcli connection up NAME` -> `ip addr` -> `ip route`
+- Repository config: inspect `/etc/yum.repos.d/` -> `dnf repolist` -> `dnf install PACKAGE`
+- SELinux and firewall: `systemctl status SERVICE` -> `firewall-cmd` checks -> `semanage` checks -> `ss -tuln` -> client test
+- Users and groups: `useradd` or `usermod` -> `id USER` -> `getent passwd USER`
+- Collaborative directory: `groupadd` -> `mkdir` -> `chgrp` -> `chmod 2770` or similar -> `ls -ld`
+- Autofs: install and enable `autofs` -> map file -> `systemctl restart autofs` -> access mount path -> `mount` or `findmnt`
+- Cron: `crontab -e -u USER` or `crontab -u USER -l` -> confirm `crond` is active
+- ACL: `setfacl` -> `getfacl`
+- Time sync: `systemctl status chronyd` -> `timedatectl` -> `chronyc sources`
+- Find and copy: `find` -> `cp` or `-exec cp`
+- Specific UID user: `useradd -u UID` -> `id USER`
+- Tar: `tar -czvf` -> `tar -tzvf`
+- Umask: `umask` -> create file -> `ls -l`
+- Expiration: `chage -E` or related option -> `chage -l`
+- Sudo: `visudo` or drop-in -> `visudo -c`
+- Script: shebang -> positional parameters -> `if` or `for` -> test with multiple arguments
+- Root reset: document the recovery path for your exact lab build and practice only on snapshots
+- Swap: `mkswap` -> `swapon` -> `/etc/fstab` -> `swapon --show`
+- LVM: `pvcreate` -> `vgcreate` -> `lvcreate` -> `mkfs` -> `/etc/fstab` -> `mount -a`
+- Extend LV: `lvextend` -> `xfs_growfs` or `resize2fs` -> verify with `lvs` and `df -h`
 
 ### Exam-Style Task 1 example solution
 

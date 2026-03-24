@@ -36,6 +36,8 @@ Study loop for every lesson:
 
 ### Beginner route
 
+If you are starting from zero, follow this route exactly and ignore optional reference pages until the end.
+
 1. `00-study-skills-and-offline-help.md`
 2. `01-shell-basics-and-command-syntax.md`
 3. `02-files-directories-and-text-editing.md`
@@ -61,11 +63,10 @@ Study loop for every lesson:
 23. `28-rhcsa-10-mixed-practice-bank.md`
 24. `17a-rhcsa-command-reference-cheat-sheet.md`
 25. `17-final-review-cheat-sheets.md`
-26. `27-youtube-playlist-checklists.md` for optional source-based revision
-27. `18-mock-exam-1.md`
-28. `19-mock-exam-1-solutions.md`
-29. `20-mock-exam-2.md`
-30. `21-mock-exam-2-solutions.md`
+26. `18-mock-exam-1.md`
+27. `19-mock-exam-1-solutions.md`
+28. `20-mock-exam-2.md`
+29. `21-mock-exam-2-solutions.md`
 
 ### Experienced route
 
@@ -77,8 +78,16 @@ Study loop for every lesson:
 6. `28-rhcsa-10-mixed-practice-bank.md`
 7. Return to the matching lesson files for weak areas.
 8. Use `17a-rhcsa-command-reference-cheat-sheet.md` for speed review.
-9. Use `27-youtube-playlist-checklists.md` only when you want topic-based video reinforcement.
-10. Finish with `18-mock-exam-1.md` and `20-mock-exam-2.md`.
+9. Finish with `18-mock-exam-1.md` and `20-mock-exam-2.md`.
+
+## Stay On One Path
+
+Do not try to use every file at once.
+
+- If you are a beginner, stay on this path: lessons `00-16` -> labs `22-26` -> `28-rhcsa-10-mixed-practice-bank.md` -> command review -> mock exams.
+- If you already know some Linux, stay on this path: labs `22-26` -> weak-topic lessons -> mixed practice -> mock exams.
+- Use optional reference material only after you already know where your weak areas are.
+- If a file feels too advanced, go back one step in the path instead of collecting more outside material.
 
 ## How To Use The Files
 
@@ -166,6 +175,14 @@ Weak-topic signals:
 - You fix errors by guessing.
 - Your configuration disappears after reboot.
 
+## Optional Reference Material
+
+These files are not part of the main beginner study path.
+
+- `27-optional-topic-video-map.md` is a topic-based reference map for late-stage reinforcement only.
+- Use it after lessons, labs, and mixed practice, not before.
+- Treat it as a way to revisit weak topics, not as the core course.
+
 ## How To Use The Mock Exams
 
 Use the mock exams only after finishing lessons `00-16`.
@@ -187,7 +204,7 @@ The labs track is a second route through the course.
 - It is designed for learners who want question-first practice.
 - Each lab file follows the same study structure as the lesson files.
 - Each lab file includes worked examples, guided labs, independent tasks, verification, troubleshooting, quiz questions, and exam-style tasks.
-- `28-rhcsa-10-mixed-practice-bank.md` adds one more mixed drill bank built from repeated patterns in the supplied playlist material, but filtered back to RHCSA 10 scope.
+- `28-rhcsa-10-mixed-practice-bank.md` adds one more mixed drill bank built from repeated RHCSA-style task patterns, but filtered back to RHCSA 10 scope.
 - Use it after each major lesson section or as a fast diagnostic path if you already know some Linux.
 
 ## Offline Help Rule

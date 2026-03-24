@@ -1,18 +1,19 @@
-# YouTube Playlist Checklists and RHCSA Topic Map
+# Optional Topic Video Map
 
-This page inventories the supplied YouTube playlists and turns them into a study checklist.
+This page is an optional topic-based source map for late-stage revision. It is not part of the main beginner path.
 
-- Every video is listed under its original playlist.
+- It lists external video resources grouped by topic and source set.
 - `RHCSA tags` are derived mainly from the video title and are adjusted when subtitle clues are available.
 - `Caption cues` are taken from extracted English subtitles when available during this pass. If none were available yet, the cue falls back to the most useful title keywords.
-- Treat this page as a source map and progress tracker. Do the actual hands-on learning in the lesson files, lab files, cheat sheets, and mock exams.
+- Do the actual learning and hands-on practice in the lesson files, lab files, cheat sheets, and mock exams. Use this page only when you need extra reinforcement for one weak topic.
 
 ## How To Use This Page
 
-1. Pick one weak topic from your lab scores.
-2. Use the matching RHCSA tag to find related videos quickly.
-3. Mark what you reviewed with the checkbox if you want coverage tracking.
-4. Return to the course labs and redo the matching hands-on tasks without notes.
+1. If you are a beginner, skip this page on your first pass.
+2. Finish lessons `00-16`, labs `22-26`, and the mixed practice bank first.
+3. Pick one weak topic from your lab scores.
+4. Use the matching RHCSA tag to find related material quickly.
+5. Return to the course labs and redo the matching hands-on tasks without notes.
 
 ## Version Watch
 
@@ -576,4 +577,3 @@ These playlists mix `RHEL 8`, `RHEL 9`, and `RHEL 10` material. Keep the current
 - Networking: 2
 - Archives and transfer: 1
 - Users and sudo: 1
-

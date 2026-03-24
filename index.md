@@ -48,9 +48,9 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
   If you already know some Linux, start with the [Labs Track Guide](22-labs-track-and-skill-check-guide.md) and use the question-first files to test real skill.
 
-- __Use Source-Based Reinforcement__
+- __Use Optional Reinforcement__
 
-  Use the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for extra mixed drills, and the [playlist checklist page](27-youtube-playlist-checklists.md) only when you want topic-based video revision.
+  Use the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for extra mixed drills. Keep the [optional topic video map](27-optional-topic-video-map.md) for late-stage weak-topic review only.
 
 </div>
 
@@ -74,9 +74,9 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
   VM setup, skill-check questions, and section-based hands-on labs for fast self-assessment.
 
-- __Source-Based Reinforcement__
+- __Optional Reinforcement__
 
-  A subtitle-aware playlist checklist and an extra mixed practice bank, both filtered back to RHCSA 10 scope so the site stays organized.
+  Extra mixed practice and an optional topic map are available, but the main course path stays lesson-first and lab-first for beginners.
 
 </div>
 
@@ -137,6 +137,18 @@ Use this map as a quick reminder of what the exam expects: command-line confiden
 ## Best Study Routes
 
 Choose one route and stick to it long enough to see where you are weak.
+
+## Beginner Rule
+
+If you are new to Linux, keep the path simple:
+
+1. lessons `00-16`
+2. labs `22-26`
+3. [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md)
+4. [RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md) and [Final Review](17-final-review-cheat-sheets.md)
+5. mock exams
+
+Use optional reference material only after that path is complete.
 
 ### Route 1: Total beginner
 
@@ -210,9 +222,9 @@ Use the sections below as a practical training sequence, not just a reading list
 - [26 Networking, Users, and Security Labs](26-networking-users-and-security-labs.md)
 - [28 RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md)
 
-### Source Reference
+### Optional Reference
 
-- [27 YouTube Playlist Checklists and Topic Map](27-youtube-playlist-checklists.md)
+- [27 Optional Topic Video Map](27-optional-topic-video-map.md)
 
 ## Study Rules
 

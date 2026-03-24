@@ -75,9 +75,9 @@ The labs track uses a question-first design:
 
 This matters because RHCSA rewards execution, not recognition.
 
-The three main lab files now include extra question banks taken from additional training prompts and filtered against current RHCSA scope:
+The three main lab files now include extra question banks built from repeated RHCSA practice patterns and filtered against current RHCSA scope:
 
-- `24-foundations-labs.md` adds subtitle-derived and repo-derived drills for `grep`, archives, `find`, ACLs, SGID, sticky bit, and text processing
+- `24-foundations-labs.md` adds extra drills for `grep`, archives, `find`, ACLs, SGID, sticky bit, and text processing
 - `25-administration-core-labs.md` adds extra partition, swap, `journald`, shell-script, LVM, VFAT, chrony, bootloader, and service drills
 - `26-networking-users-and-security-labs.md` adds extra user, `nmcli`, hostname, ACL, firewalld, SSH, and SELinux drills
 
@@ -100,7 +100,7 @@ Use the labs in this order if you want the cleanest path:
 The related support files are:
 
 - `28-rhcsa-10-mixed-practice-bank.md` for extra mixed RHCSA 10 drills
-- `27-youtube-playlist-checklists.md` for source tracking and topic-based video review
+- `27-optional-topic-video-map.md` for late-stage topic reinforcement only
 
 ## Command breakdowns
 
