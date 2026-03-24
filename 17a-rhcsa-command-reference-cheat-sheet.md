@@ -277,6 +277,10 @@ Use this sheet in the same order you would build exam muscle memory:
 | `rpm -qa` | Lists installed packages | `rpm -qa | head` |
 | `rpm -qi PKG` | Shows installed package info | `rpm -qi bash` |
 | `rpm -qf FILE` | Shows package owning a file | `rpm -qf /bin/ls` |
+| `subscription-manager identity` | Shows registration identity | `sudo subscription-manager identity` |
+| `subscription-manager status` | Shows current subscription state | `sudo subscription-manager status` |
+| `subscription-manager repos --list-enabled` | Lists enabled CDN repositories | `sudo subscription-manager repos --list-enabled` |
+| `subscription-manager refresh` | Refreshes subscription data | `sudo subscription-manager refresh` |
 | `flatpak remotes` | Lists Flatpak remotes | `flatpak remotes` |
 | `flatpak remote-add --if-not-exists NAME URL` | Adds Flatpak remote | `flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo` |
 | `flatpak install REMOTE APPID` | Installs Flatpak app | `flatpak install flathub org.gnome.gedit` |
@@ -299,6 +303,15 @@ baseurl=http://repo.example.com/baseos/
 enabled=1
 gpgcheck=0
 ```
+
+### CDN and Repo Verification Pattern
+
+| Goal | Command |
+|---|---|
+| Check registration identity | `sudo subscription-manager identity` |
+| Check subscription state | `sudo subscription-manager status` |
+| Compare enabled CDN repos to DNF repos | `sudo subscription-manager repos --list-enabled` then `sudo dnf repolist` |
+| Refresh subscription metadata | `sudo subscription-manager refresh` |
 
 ### Software Muscle Memory Drill
 
@@ -368,6 +381,20 @@ gpgcheck=0
 | `tuned-adm list` | Lists tuning profiles | `tuned-adm list` |
 | `tuned-adm active` | Shows active tuning profile | `sudo tuned-adm active` |
 | `tuned-adm profile NAME` | Sets tuning profile | `sudo tuned-adm profile balanced` |
+| `mount -o remount,rw /sysroot` | Makes the recovery root writable | `mount -o remount,rw /sysroot` |
+| `chroot /sysroot` | Enters the repaired system root | `chroot /sysroot` |
+| `touch /.autorelabel` | Forces SELinux relabel on next boot | `touch /.autorelabel` |
+
+### Root Password Reset Pattern
+
+| Step | Command or action |
+|---|---|
+| Enter recovery boot | `rd.break` or the recovery method documented by your lab |
+| Make the repaired root writable | `mount -o remount,rw /sysroot` |
+| Enter the repaired system | `chroot /sysroot` |
+| Reset root password | `passwd` |
+| Prepare SELinux relabel | `touch /.autorelabel` |
+| Leave and reboot | `exit` -> `exit` -> reboot |
 
 ### Running Systems Muscle Memory Drill
 
@@ -396,8 +423,10 @@ gpgcheck=0
 | `pvcreate DEVICE` | Creates physical volume | `sudo pvcreate /dev/vdb1` |
 | `pvs` | Lists physical volumes | `pvs` |
 | `vgcreate VG DEVICE` | Creates volume group | `sudo vgcreate vgdata /dev/vdb1` |
+| `vgcreate -s SIZE VG DEVICE` | Creates volume group with custom PE size | `sudo vgcreate -s 16M vgi /dev/vdb1` |
 | `vgs` | Lists volume groups | `vgs` |
 | `lvcreate -n LV -L SIZE VG` | Creates logical volume | `sudo lvcreate -n lvdata -L 500M vgdata` |
+| `lvcreate -l EXTENTS -n LV VG` | Creates logical volume by extent count | `sudo lvcreate -l 60 -n lvi vgi` |
 | `lvs` | Lists logical volumes | `lvs` |
 | `lvextend -L +SIZE LVPATH` | Extends logical volume | `sudo lvextend -L +200M /dev/vgdata/lvdata` |
 | `lvremove LVPATH` | Removes logical volume | `sudo lvremove /dev/vgdata/lvdata` |
@@ -416,6 +445,8 @@ gpgcheck=0
 | `PV` | physical volume | `/dev/vdb1` |
 | `VG` | volume group | `vgdata` |
 | `LV` | logical volume | `lvfiles` |
+| `PE` | physical extent in a VG | often `4 MiB` by default |
+| `LE` | logical extent in an LV | one LV chunk mapped to a PE |
 | LV path | full LV device path | `/dev/vgdata/lvfiles` |
 
 ### Storage Muscle Memory Drill
@@ -452,6 +483,8 @@ gpgcheck=0
 | `showmount -e HOST` | Lists NFS exports from server | `showmount -e servera` |
 | `systemctl enable --now nfs-server` | Starts and enables NFS server | `sudo systemctl enable --now nfs-server` |
 | `systemctl enable --now autofs` | Starts and enables autofs | `sudo systemctl enable --now autofs` |
+| `cat /etc/auto.master` | Shows autofs master map | `cat /etc/auto.master` |
+| `cat /etc/auto.misc` | Shows a common autofs indirect map | `cat /etc/auto.misc` |
 
 ### ext4 and GPT Quick Reminder
 
@@ -459,6 +492,16 @@ gpgcheck=0
 |---|---|---|
 | `ext4` | common Linux filesystem | `sudo mkfs.ext4 /dev/vdb1` |
 | `GPT` | modern partition table format | create with `mklabel gpt` in `parted` |
+
+### autofs Home-Style Mapping Pattern
+
+| Goal | Command or file |
+|---|---|
+| Add indirect map mountpoint | `echo '/remoteuser /etc/auto.remoteuser' | sudo tee -a /etc/auto.master` |
+| Map one user path | `echo 'user20 -rw server:/remoteuser/user20' | sudo tee /etc/auto.remoteuser` |
+| Enable autofs | `sudo systemctl enable --now autofs` |
+| Trigger the mount | `ls /remoteuser/user20` |
+| Verify the result | `mount | grep remoteuser` |
 
 ### Filesystems and Mounts Muscle Memory Drill
 
@@ -483,6 +526,8 @@ gpgcheck=0
 | `atrm JOBID` | Removes queued `at` job | `atrm 3` |
 | `crontab -e` | Edits current user's cron jobs | `crontab -e` |
 | `crontab -l` | Lists current user's cron jobs | `crontab -l` |
+| `crontab -e -u USER` | Edits another user's cron jobs | `sudo crontab -e -u natasha` |
+| `crontab -l -u USER` | Lists another user's cron jobs | `sudo crontab -l -u natasha` |
 | `systemctl list-timers` | Lists timer units | `systemctl list-timers` |
 | `timedatectl` | Shows time and sync status | `timedatectl` |
 | `chronyc sources` | Shows time sources | `chronyc sources` |
@@ -491,6 +536,24 @@ gpgcheck=0
 | `grubby --default-kernel` | Shows current default kernel | `sudo grubby --default-kernel` |
 | `grubby --update-kernel=ALL --args="ARG"` | Adds kernel argument | `sudo grubby --update-kernel=ALL --args="quiet"` |
 | `grubby --update-kernel=ALL --remove-args="ARG"` | Removes kernel argument | `sudo grubby --update-kernel=ALL --remove-args="quiet"` |
+
+### Common Cron Patterns
+
+| Goal | Entry |
+|---|---|
+| Run every 5 minutes | `*/5 * * * * COMMAND` |
+| Run at reboot | `@reboot /bin/bash /usr/local/bin/startup-check.sh` |
+| Edit another user's cron | `sudo crontab -e -u natasha` |
+
+### Chrony Client Pattern
+
+| Goal | Command |
+|---|---|
+| Enable and start client | `sudo systemctl enable --now chronyd` |
+| Inspect configured servers | `grep -E '^(server|pool)' /etc/chrony.conf` |
+| Restart after edit | `sudo systemctl restart chronyd` |
+| Verify sources | `chronyc sources -v` |
+| Verify overall state | `chronyc tracking` and `timedatectl` |
 
 ### Scheduling, Time, and Bootloader Muscle Memory Drill
 
@@ -676,6 +739,7 @@ Meaning:
 | Create user without home | `sudo useradd -M USER` |
 | Create user with custom home | `sudo useradd -m -d /custom/home USER` |
 | Move an existing user to a new home | `sudo usermod -d /custom/home -m USER` |
+| Create non-login account | `sudo useradd -s /sbin/nologin USER` |
 
 ### Users and Groups Muscle Memory Drill
 
@@ -728,6 +792,17 @@ Example service-side config reminder:
 
 - if `httpd` should actually use port `85`, the Apache config must also be changed to listen on `85`
 - SELinux and firewalld do not make the service listen by themselves
+
+### HTTPD on Custom Port and DocumentRoot Pattern
+
+| Goal | Command |
+|---|---|
+| Change listening port | edit `/etc/httpd/conf/httpd.conf` and set `Listen 93` |
+| Label new SELinux port | `sudo semanage port -a -t http_port_t -p tcp 93` |
+| Label custom content root | `sudo semanage fcontext -a -t httpd_sys_content_t '/tekup/html(/.*)?'` |
+| Apply labels | `sudo restorecon -Rv /tekup/html` |
+| Open firewall | `sudo firewall-cmd --add-port=93/tcp --permanent` then `sudo firewall-cmd --reload` |
+| Verify locally | `curl http://localhost:93/` |
 
 ### SELinux Runtime and Boot Reminder
 
@@ -945,12 +1020,46 @@ sudo mount /dev/vgdata/lvfiles /data
 findmnt /data
 ```
 
+### Create LV by Extents and Mount
+
+```bash
+sudo vgcreate -s 16M vgi /dev/vdb1
+sudo lvcreate -l 60 -n lvi vgi
+sudo mkfs.ext4 /dev/vgi/lvi
+sudo mkdir -p /record
+UUID=$(sudo blkid -s UUID -o value /dev/vgi/lvi)
+echo "UUID=$UUID /record ext4 defaults 0 0" | sudo tee -a /etc/fstab
+sudo mount -a
+vgs vgi
+lvs /dev/vgi/lvi
+findmnt /record
+```
+
 ### Mount NFS Share
 
 ```bash
 sudo mkdir -p /mnt/share
 sudo mount -t nfs servera:/share /mnt/share
 findmnt /mnt/share
+```
+
+### Configure autofs for Home-Style Mount
+
+```bash
+echo '/remoteuser /etc/auto.remoteuser' | sudo tee -a /etc/auto.master
+echo 'user20 -rw serverb:/remoteuser/user20' | sudo tee /etc/auto.remoteuser
+sudo systemctl enable --now autofs
+ls /remoteuser/user20
+mount | grep remoteuser
+```
+
+### Check CDN Registration and Enabled Repositories
+
+```bash
+sudo subscription-manager identity
+sudo subscription-manager status
+sudo subscription-manager repos --list-enabled
+sudo dnf repolist
 ```
 
 ### Open HTTPD on Port 85 with SELinux and Firewall

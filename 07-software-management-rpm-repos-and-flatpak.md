@@ -141,6 +141,23 @@ sudo dnf repolist
 sudo dnf repolist all
 ```
 
+### CDN and subscription checks
+
+If your lab uses real Red Hat subscription access instead of a simple local repo, these commands matter:
+
+```bash
+sudo subscription-manager identity
+sudo subscription-manager status
+sudo subscription-manager repos --list-enabled
+sudo subscription-manager refresh
+```
+
+Use them to answer basic questions such as:
+
+- is this system registered?
+- is the subscription valid?
+- which CDN-backed repositories are enabled?
+
 ### Flatpak basics
 
 ```bash
@@ -197,6 +214,20 @@ Verification:
 
 - identify `baseurl`, `enabled`, and `gpgcheck` settings in at least one repo file
 
+### Worked Example 5: Check Red Hat Subscription State
+
+```bash
+sudo subscription-manager identity
+sudo subscription-manager status
+sudo subscription-manager repos --list-enabled
+```
+
+Verification:
+
+- identify whether the system is registered
+- identify whether access is current or unavailable
+- explain that CDN-backed installs depend on this state
+
 ## Guided Hands-On Lab
 
 ### Lab Goal
@@ -211,15 +242,16 @@ You need root privileges. Internet or a local repository source may be required 
 
 1. List configured RPM repositories.
 2. Inspect the files under `/etc/yum.repos.d/`.
-3. Query whether `bash`, `tar`, and `vim` are installed.
-4. Install a small package such as `tree` or `wget`.
-5. Verify installation with both `rpm -q` and `command -v` if the package provides a command.
-6. Remove the package.
-7. Re-verify removal.
-8. If a local RPM file is available, install it with `dnf install ./package.rpm`.
-9. List Flatpak remotes.
-10. If allowed in your lab, add a Flatpak remote and install then remove one small application.
-11. If your lab provides a practice repository URL, create a `.repo` file for it and verify it appears in `dnf repolist`.
+3. If your lab uses Red Hat CDN access, check subscription identity and status.
+4. Query whether `bash`, `tar`, and `vim` are installed.
+5. Install a small package such as `tree` or `wget`.
+6. Verify installation with both `rpm -q` and `command -v` if the package provides a command.
+7. Remove the package.
+8. Re-verify removal.
+9. If a local RPM file is available, install it with `dnf install ./package.rpm`.
+10. List Flatpak remotes.
+11. If allowed in your lab, add a Flatpak remote and install then remove one small application.
+12. If your lab provides a practice repository URL, create a `.repo` file for it and verify it appears in `dnf repolist`.
 
 ### Expected Result
 
@@ -244,6 +276,7 @@ flatpak remotes
 7. Install and uninstall one Flatpak package.
 8. Compare `dnf repolist` and `dnf repolist all`.
 9. Read one `.repo` file and explain what `baseurl`, `enabled`, and `gpgcheck` mean.
+10. If your system is registered, run `subscription-manager repos --list-enabled` and compare the result with `dnf repolist`.
 
 ## Verification Steps
 
@@ -253,6 +286,7 @@ flatpak remotes
 4. Verify Flatpak remotes and installed apps separately from RPM packages.
 5. Reboot after major repository or software changes in lab practice and confirm the package and repo configuration still exist.
 6. Verify new repo files are readable and actually recognized by `dnf`.
+7. If using CDN-backed repos, verify registration and enabled repositories separately from package-install commands.
 
 ## Troubleshooting Section
 
@@ -393,6 +427,9 @@ dnf install ./package.rpm
 rpm -q package
 rpm -qa
 rpm -qf /path/to/file
+subscription-manager identity
+subscription-manager status
+subscription-manager repos --list-enabled
 flatpak remotes
 flatpak install remote appid
 flatpak uninstall appid

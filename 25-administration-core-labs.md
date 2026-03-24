@@ -198,6 +198,178 @@ You may keep the filesystem and script if they are useful for later labs.
 7. Create a cron line that appends the date to a file.
 8. Check bootloader defaults safely with `grubby`.
 
+## Subtitle-derived practice set
+
+These drills convert spoken RHCSA question patterns into clean, exam-usable tasks with persistence checks.
+
+### Drill 1: Create a 1 GiB XFS partition and mount it persistently
+
+As `root`, use an extra free disk such as `/dev/vdb`.
+
+1. Create a GPT label if the disk is empty.
+2. Create one 1 GiB partition.
+3. Build an XFS filesystem on that partition.
+4. Mount it at `/par1`.
+5. Make the mount persistent using `UUID=`.
+6. Test the entry without rebooting.
+
+What to check before moving on:
+
+- `lsblk -f` shows the partition and filesystem
+- `findmnt /par1` shows the live mount
+- `/etc/fstab` contains the right UUID and filesystem type
+
+### Drill 2: Add swap without removing current swap
+
+As `root`:
+
+1. Create a new partition of about `750 MiB` on a free disk.
+2. Mark it for swap use if your tool requires that step.
+3. Create swap on it.
+4. Activate it.
+5. Make it persistent in `/etc/fstab`.
+
+What to check before moving on:
+
+- existing swap remains active
+- the new swap area appears in `swapon --show`
+- `/etc/fstab` contains a correct swap entry
+
+### Drill 3: Argument-based script with directory test
+
+As a regular user, create `~/bin/checkdir.sh`.
+
+Requirements:
+
+1. Accept two command-line arguments.
+2. If the first argument is an existing directory, print `directory exists`.
+3. Otherwise create a new directory using the second argument and print `directory created`.
+
+What to check before moving on:
+
+- the script is executable
+- it behaves differently for existing and non-existing directories
+- you can explain `$1`, `$2`, and `-d`
+
+### Drill 4: Count arguments and warn if there are too many
+
+As a regular user, create `~/bin/argcount.sh`.
+
+Requirements:
+
+1. Count total command-line arguments.
+2. If the count is greater than five, print `too many arguments`.
+3. Otherwise print the count.
+
+What to check before moving on:
+
+- you can explain `$#`
+- the greater-than-five case works
+- the smaller case works too
+
+### Drill 5: For-loop file processing
+
+As a regular user, create `~/bin/fileloop.sh`.
+
+Requirements:
+
+1. Loop over all arguments passed to the script.
+2. Print a long listing only for arguments that are regular files.
+3. Count how many valid regular files were found.
+4. Print the final count.
+
+What to check before moving on:
+
+- the script uses a `for` loop
+- non-file arguments do not break it
+- the final count is correct
+
+## Repo-derived RHCSA 10 practice set
+
+These drills were selected from external RHCSA study repos and kept only when they still match the current RHCSA 10 objective set.
+
+### Drill 6: User-specific cron and `@reboot`
+
+As `root`:
+
+1. Create a cron entry for user `natasha` that writes `exam in progress` to the system log every 5 minutes.
+2. Add a second cron entry for the same user that runs a simple script at reboot.
+3. Verify the user-specific crontab without editing the wrong account.
+
+What to check before moving on:
+
+- the crontab belongs to `natasha`
+- the `@reboot` entry uses a full command path
+- `crond` is active
+
+### Drill 7: Configure a chrony client
+
+As `root`:
+
+1. Ensure `chronyd` is installed if your lab requires that step.
+2. Enable and start `chronyd`.
+3. Inspect `/etc/chrony.conf` and identify the active `server` or `pool` lines.
+4. Restart `chronyd`.
+5. Verify time-source visibility with `chronyc`.
+
+What to check before moving on:
+
+- `chronyd` is active and enabled
+- `chronyc sources` shows usable source information
+- `timedatectl` reflects NTP use
+
+### Drill 8: Create an LV by extents and custom PE size
+
+As `root`, use a spare disk or partition.
+
+1. Create a volume group named `vgi` with PE size `16M`.
+2. Create a logical volume named `lvi` with `60` extents.
+3. Format it as `ext4`.
+4. Mount it persistently at `/record`.
+
+What to check before moving on:
+
+- `vgs` shows the PE size you intended
+- `lvs` shows the LV
+- `/etc/fstab` and `findmnt /record` both confirm the mount
+
+### Drill 9: `httpd` on custom port and custom document root
+
+As `root`:
+
+1. Install `httpd` if it is not already installed.
+2. Reconfigure Apache to listen on port `93`.
+3. Use `/tekup/html` as the content directory.
+4. Label the content correctly with SELinux.
+5. Open port `93` permanently in the firewall.
+6. Restart `httpd` and verify with `curl`.
+
+What to check before moving on:
+
+- `ss -tuln` shows port `93`
+- `semanage port -l` shows the HTTP SELinux port label
+- `curl http://localhost:93/` returns your test page
+
+### Drill 10: Autofs home-style mount
+
+Use two VMs if possible, a server and a client.
+
+Server side:
+
+1. Export `/remoteuser` by NFS.
+
+Client side:
+
+1. Install `autofs`.
+2. Create a map so `user20` is automatically mounted under `/remoteuser/user20`.
+3. Ensure `autofs` starts automatically at boot.
+
+What to check before moving on:
+
+- the NFS export exists on the server
+- `autofs` is active and enabled on the client
+- accessing `/remoteuser/user20` triggers the mount
+
 ## Verification steps
 
 1. Confirm you can distinguish between package install, package query, and repo query.
@@ -341,6 +513,227 @@ systemctl is-active sshd
 (crontab -l 2>/dev/null; echo "*/5 * * * * /bin/bash $HOME/hostreport.sh") | crontab -
 crontab -l
 ```
+
+### Subtitle-derived practice set solutions
+
+#### Drill 1 example solution
+
+```bash
+sudo parted /dev/vdb --script mklabel gpt mkpart primary xfs 1MiB 1025MiB
+sudo mkfs.xfs /dev/vdb1
+sudo mkdir -p /par1
+UUID=$(sudo blkid -s UUID -o value /dev/vdb1)
+echo "UUID=$UUID /par1 xfs defaults 0 0" | sudo tee -a /etc/fstab
+sudo mount -a
+findmnt /par1
+lsblk -f /dev/vdb
+```
+
+Verification:
+
+- `findmnt /par1` should show the mounted filesystem
+- `grep /par1 /etc/fstab` should show the persistent entry
+
+#### Drill 2 example solution
+
+```bash
+sudo parted /dev/vdb --script mkpart primary linux-swap 1025MiB 1775MiB
+sudo mkswap /dev/vdb2
+sudo swapon /dev/vdb2
+UUID=$(sudo blkid -s UUID -o value /dev/vdb2)
+echo "UUID=$UUID none swap defaults 0 0" | sudo tee -a /etc/fstab
+swapon --show
+free -h
+```
+
+Verification:
+
+- `swapon --show` should list both old and new swap if one already existed
+- `grep swap /etc/fstab` should show the new persistent line
+
+#### Drill 3 example solution
+
+```bash
+mkdir -p ~/bin
+cat > ~/bin/checkdir.sh <<'EOF'
+#!/bin/bash
+if [ -d "$1" ]; then
+  echo "directory exists"
+else
+  mkdir -p "$2"
+  echo "directory created"
+fi
+EOF
+chmod +x ~/bin/checkdir.sh
+~/bin/checkdir.sh /tmp /tmp/unused
+~/bin/checkdir.sh /tmp/not-there /tmp/newdir
+```
+
+Verification:
+
+- the first run should print `directory exists`
+- the second run should create `/tmp/newdir`
+
+#### Drill 4 example solution
+
+```bash
+cat > ~/bin/argcount.sh <<'EOF'
+#!/bin/bash
+if [ "$#" -gt 5 ]; then
+  echo "too many arguments"
+else
+  echo "$#"
+fi
+EOF
+chmod +x ~/bin/argcount.sh
+~/bin/argcount.sh one two
+~/bin/argcount.sh one two three four five six
+```
+
+Verification:
+
+- small input should print the count
+- more than five args should print `too many arguments`
+
+#### Drill 5 example solution
+
+```bash
+cat > ~/bin/fileloop.sh <<'EOF'
+#!/bin/bash
+count=0
+for item in "$@"; do
+  if [ -f "$item" ]; then
+    ls -l "$item"
+    count=$((count + 1))
+  fi
+done
+echo "file count: $count"
+EOF
+chmod +x ~/bin/fileloop.sh
+touch /tmp/a /tmp/b
+~/bin/fileloop.sh /tmp/a /tmp/b /tmp/nope /etc/passwd
+```
+
+Verification:
+
+- only real files should be listed
+- the final count should match the listed files
+
+### Repo-derived RHCSA 10 practice set solutions
+
+#### Drill 6 example solution
+
+```bash
+sudo systemctl is-active crond
+sudo crontab -e -u natasha
+sudo crontab -l -u natasha
+```
+
+Example entries:
+
+```text
+*/5 * * * * /usr/bin/logger "exam in progress"
+@reboot /bin/bash /usr/local/bin/startup-check.sh
+```
+
+Verification:
+
+- `sudo crontab -l -u natasha` should show both entries
+- `systemctl is-active crond` should report `active`
+
+#### Drill 7 example solution
+
+```bash
+sudo dnf install -y chrony
+sudo systemctl enable --now chronyd
+grep -E '^(server|pool)' /etc/chrony.conf
+sudo systemctl restart chronyd
+chronyc sources -v
+chronyc tracking
+timedatectl
+```
+
+Verification:
+
+- `systemctl is-enabled chronyd` should report `enabled`
+- `chronyc` commands should show source and tracking data
+
+#### Drill 8 example solution
+
+```bash
+sudo vgcreate -s 16M vgi /dev/vdb1
+sudo lvcreate -l 60 -n lvi vgi
+sudo mkfs.ext4 /dev/vgi/lvi
+sudo mkdir -p /record
+UUID=$(sudo blkid -s UUID -o value /dev/vgi/lvi)
+echo "UUID=$UUID /record ext4 defaults 0 0" | sudo tee -a /etc/fstab
+sudo mount -a
+vgs vgi
+lvs /dev/vgi/lvi
+findmnt /record
+```
+
+Verification:
+
+- `vgs` should show PE size `16.00m`
+- `findmnt /record` should show the mounted LV
+
+#### Drill 9 example solution
+
+```bash
+sudo dnf install -y httpd
+sudo sed -i 's/^Listen 80$/Listen 93/' /etc/httpd/conf/httpd.conf
+sudo mkdir -p /tekup/html
+echo "RHCSA custom web root" | sudo tee /tekup/html/index.html
+sudo semanage port -a -t http_port_t -p tcp 93
+sudo semanage fcontext -a -t httpd_sys_content_t '/tekup/html(/.*)?'
+sudo restorecon -Rv /tekup/html
+sudo firewall-cmd --add-port=93/tcp --permanent
+sudo firewall-cmd --reload
+sudo systemctl enable --now httpd
+sudo systemctl restart httpd
+curl http://localhost:93/
+```
+
+Note:
+
+- if your lab question explicitly requires a `DocumentRoot` change, update `/etc/httpd/conf/httpd.conf` and its matching `<Directory>` block as well
+
+Verification:
+
+- `ss -tuln | grep :93` should show a listener
+- `curl` should return your test page content
+
+#### Drill 10 example solution
+
+Server:
+
+```bash
+sudo dnf install -y nfs-utils
+sudo mkdir -p /remoteuser/user20
+echo '/remoteuser *(rw,no_root_squash)' | sudo tee -a /etc/exports
+sudo firewall-cmd --add-service={rpc-bind,mountd,nfs} --permanent
+sudo firewall-cmd --reload
+sudo exportfs -arv
+sudo systemctl enable --now nfs-server
+```
+
+Client:
+
+```bash
+sudo dnf install -y nfs-utils autofs
+echo '/remoteuser /etc/auto.remoteuser' | sudo tee -a /etc/auto.master
+echo 'user20 -rw SERVER:/remoteuser/user20' | sudo tee /etc/auto.remoteuser
+sudo systemctl enable --now autofs
+ls /remoteuser/user20
+mount | grep remoteuser
+```
+
+Verification:
+
+- replace `SERVER` with the real server hostname or IP
+- `systemctl is-enabled autofs` should report `enabled`
+- accessing the path should trigger the automount
 
 ## Recap / memory anchors
 

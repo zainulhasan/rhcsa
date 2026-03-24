@@ -107,6 +107,7 @@ atq
 ```bash
 crontab -e
 crontab -l
+sudo crontab -e -u natasha
 ```
 
 Example cron line:
@@ -140,6 +141,15 @@ This means:
     For cron jobs, use full command paths when you are unsure.
     Cron runs with a smaller environment than your normal shell.
 
+### `@reboot` cron example
+
+```text
+@reboot /bin/bash /usr/local/bin/startup-check.sh
+```
+
+Use `@reboot` when the question clearly asks for a cron-managed job that runs when the system boots.
+If the task is really about managing a service, `systemctl enable` is usually the better fit.
+
 ### Simple systemd timer view
 
 ```bash
@@ -166,6 +176,20 @@ systemctl status atd
 timedatectl
 chronyc sources
 ```
+
+### Basic chrony client configuration
+
+Typical client-side workflow:
+
+```bash
+sudo systemctl enable --now chronyd
+sudoedit /etc/chrony.conf
+sudo systemctl restart chronyd
+chronyc sources -v
+chronyc tracking
+```
+
+In lab practice, look for a `server` or `pool` line in `/etc/chrony.conf`, restart `chronyd`, and then verify with `chronyc`.
 
 ### Bootloader examples
 
@@ -237,6 +261,30 @@ Verification:
 
 - identify the current default kernel before attempting any bootloader change
 
+### Worked Example 6: Edit Another User's Crontab Safely
+
+```bash
+sudo crontab -e -u natasha
+sudo crontab -l -u natasha
+```
+
+Verification:
+
+- explain that this edits `natasha`'s cron table, not root's
+
+### Worked Example 7: Verify Chrony Client Health
+
+```bash
+systemctl is-active chronyd
+chronyc sources -v
+chronyc tracking
+```
+
+Verification:
+
+- confirm the service is active
+- identify whether a time source is visible
+
 ## Guided Hands-On Lab
 
 ### Lab Goal
@@ -252,15 +300,18 @@ Use a lab system where scheduled test files in `/tmp` are safe.
 1. Schedule a one-time `at` job to create a file in `/tmp`.
 2. View the queued jobs.
 3. Create a user cron job that appends the date to a file every few minutes.
-4. List your cron jobs.
-5. View active timers with `systemctl list-timers`.
-6. Check whether `crond` and `atd` are running.
-7. Check whether `chronyd` is active and enabled.
-8. Enable and start `chronyd` if needed.
-9. Check `timedatectl` status.
-10. Inspect bootloader entries with `grubby` or the version-appropriate tool in your lab.
-11. If you make a bootloader change, document it and verify carefully.
-12. Reboot and confirm any service or bootloader-related persistent change behaves as expected.
+4. If possible in your lab, edit another user's cron table with `crontab -u`.
+5. Add one `@reboot` cron entry that writes a boot marker to a file.
+6. List your cron jobs.
+7. View active timers with `systemctl list-timers`.
+8. Check whether `crond` and `atd` are running.
+9. Check whether `chronyd` is active and enabled.
+10. Enable and start `chronyd` if needed.
+11. Inspect `/etc/chrony.conf` and identify the configured time source.
+12. Check `timedatectl` status.
+13. Inspect bootloader entries with `grubby` or the version-appropriate tool in your lab.
+14. If you make a bootloader change, document it and verify carefully.
+15. Reboot and confirm any service or bootloader-related persistent change behaves as expected.
 
 ### Expected Result
 
@@ -281,11 +332,13 @@ timedatectl
 1. Create an `at` job that writes the hostname to a file.
 2. Remove a queued `at` job.
 3. Add a cron job and verify it appears in `crontab -l`.
-4. Inspect existing systemd timers.
-5. Enable a service at boot and verify it.
-6. Check time synchronization state.
-7. Inspect the current bootloader settings.
-8. Add and then remove a harmless kernel argument in a disposable lab, documenting the before and after state.
+4. Edit another user's crontab with `sudo crontab -e -u USER` and verify it with `sudo crontab -l -u USER`.
+5. Add an `@reboot` cron line that writes to a lab file.
+6. Inspect existing systemd timers.
+7. Enable a service at boot and verify it.
+8. Check time synchronization state.
+9. Inspect the current bootloader settings.
+10. Add and then remove a harmless kernel argument in a disposable lab, documenting the before and after state.
 
 ## Verification Steps
 
@@ -451,9 +504,12 @@ atq
 atrm JOBID
 crontab -e
 crontab -l
+sudo crontab -e -u USER
+@reboot /bin/bash /usr/local/bin/startup-check.sh
 systemctl list-timers
 systemctl enable --now service
 timedatectl
+chronyc sources -v
 chronyc tracking
 grubby --info=ALL
 ```

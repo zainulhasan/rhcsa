@@ -157,6 +157,27 @@ After recovery work:
 - relabel if SELinux-sensitive changes were made
 - reboot normally
 
+### Root password reset recovery pattern
+
+One common lab scenario is resetting the root password from an interrupted boot.
+
+Typical RHEL-style flow:
+
+```text
+GRUB edit -> temporary break into recovery shell -> remount writable -> repair -> SELinux relabel -> reboot
+```
+
+A common variant uses:
+
+- `rd.break` on the kernel line
+- `mount -o remount,rw /sysroot`
+- `chroot /sysroot`
+- `passwd`
+- `touch /.autorelabel`
+- `exit` twice, then reboot
+
+Treat the exact boot arguments as version-sensitive lab details. The stable part is the repair logic after you reach the recovery shell.
+
 ### Process inspection
 
 ```bash
@@ -239,6 +260,22 @@ Verification:
 
 - identify one recent event involving `sshd`
 
+### Worked Example 4: Explain the Root Password Reset Flow
+
+Command sequence:
+
+```bash
+mount -o remount,rw /sysroot
+chroot /sysroot
+passwd
+touch /.autorelabel
+```
+
+Verification:
+
+- explain why `/sysroot` must become writable
+- explain why `touch /.autorelabel` matters after password recovery
+
 ## Guided Hands-On Lab
 
 ### Lab Goal
@@ -258,10 +295,12 @@ Use root privileges where needed.
 5. Use `ps` or `top` to identify a few processes.
 6. Start a harmless test process such as `sleep 300` and find its PID.
 7. Change its priority if allowed.
-8. Kill the test process.
-9. Enable persistent journaling if it is not already configured.
-10. List tuning profiles and check the active profile.
-11. Review the local documentation for your system's recovery boot workflow and write down the exact recovery steps for your lab version.
+8. Write down a root-password-reset recovery flow from memory without rebooting the VM yet.
+9. If your lab is disposable and you are comfortable, practice the recovery workflow once and document the exact steps that worked on your system.
+10. Kill the test process.
+11. Enable persistent journaling if it is not already configured.
+12. List tuning profiles and check the active profile.
+13. Review the local documentation for your system's recovery boot workflow and write down the exact recovery steps for your lab version.
 
 ### Expected Result
 
@@ -434,6 +473,9 @@ systemctl is-enabled service
 systemctl get-default
 systemctl set-default multi-user.target
 systemctl isolate rescue.target
+mount -o remount,rw /sysroot
+chroot /sysroot
+touch /.autorelabel
 ps aux --sort=-%cpu | head
 kill PID
 pkill name
