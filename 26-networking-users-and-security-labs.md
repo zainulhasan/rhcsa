@@ -206,6 +206,98 @@ You may keep the user, rules, and key pair if they support later practice.
 9. Restore the default context on a changed directory.
 10. Configure port `85` for `httpd` with both SELinux and firewalld.
 
+## Subtitle-derived practice set
+
+These drills are adapted from subtitle question banks and rewritten so the commands are correct for real RHCSA practice.
+
+### Drill 1: Users, supplementary groups, and non-login shell
+
+As `root`:
+
+1. Create a group named `newgroup`.
+2. Create user `harsh` and add `newgroup` as a supplementary group.
+3. Create user `nitin` with shell `/sbin/nologin`.
+4. Verify both users fully.
+
+What to check before moving on:
+
+- `harsh` exists
+- `newgroup` appears as a supplementary group, not a replacement primary group
+- `nitin` shows `/sbin/nologin` in account data
+
+### Drill 2: Static NetworkManager profile
+
+As `root`, create a new connection profile named `net`.
+
+Requirements:
+
+1. Use your real interface name, not a guessed one.
+2. Configure static IPv4 address `192.168.122.50/24`.
+3. Set gateway `192.168.122.1`.
+4. Set DNS `8.8.8.8`.
+5. Activate the profile.
+
+What to check before moving on:
+
+- `nmcli connection show net` displays the expected values
+- `nmcli connection up net` succeeds
+- `ip addr` reflects the intended address
+
+### Drill 3: Hostname and local name resolution
+
+As `root`:
+
+1. Set the hostname to `servera.lab.example`.
+2. Add an `/etc/hosts` entry so the system can resolve that name locally.
+3. Verify hostname resolution.
+
+What to check before moving on:
+
+- `hostnamectl` shows the new hostname
+- `getent hosts servera.lab.example` returns the expected mapping
+
+### Drill 4: SELinux boolean for HTTP home directories
+
+As `root`, ensure `httpd` is allowed to access user home directories.
+
+What to check before moving on:
+
+- you identify the right boolean
+- the change is persistent
+- the value stays enabled after reboot
+
+### Drill 5: Allow `httpd` on custom port `82`
+
+As `root`:
+
+1. Add the SELinux port label so `httpd` can use TCP `82`.
+2. Open TCP `82` permanently in `firewalld`.
+3. Reload the firewall.
+4. Verify both layers separately.
+
+What to check before moving on:
+
+- the SELinux port label exists
+- the firewall port rule exists
+- you understand that firewall success alone is not enough
+
+### Drill 6: Serve content from a nonstandard directory with SELinux
+
+Assume `httpd` should be allowed to serve content from `/test`.
+
+As `root`:
+
+1. Create `/test` and an `index.html` file inside it.
+2. Add a persistent SELinux file-context rule for `/test` and its contents.
+3. Apply the correct labels with `restorecon`.
+4. Verify the resulting contexts.
+
+What to check before moving on:
+
+- the rule is stored in SELinux policy, not only changed once with `chcon`
+- the context on `/test` matches web content use
+- the rule survives relabeling and reboot
+
 ## Verification steps
 
 1. Confirm you can verify a user with `id`, `getent passwd`, and directory checks.
@@ -336,6 +428,97 @@ sudo semanage port -l | grep http_port_t
 sudo firewall-cmd --list-ports
 ss -tuln | grep :85
 ```
+
+### Subtitle-derived practice set solutions
+
+#### Drill 1 example solution
+
+```bash
+sudo groupadd newgroup
+sudo useradd harsh
+sudo usermod -aG newgroup harsh
+sudo useradd -s /sbin/nologin nitin
+id harsh
+getent group newgroup
+getent passwd nitin
+```
+
+Verification:
+
+- `id harsh` should list `newgroup` as a supplementary group
+- `getent passwd nitin` should end with `/sbin/nologin`
+
+#### Drill 2 example solution
+
+```bash
+nmcli device status
+sudo nmcli connection add con-name net type ethernet ifname ens160 ipv4.addresses 192.168.122.50/24 ipv4.gateway 192.168.122.1 ipv4.method manual
+sudo nmcli connection modify net ipv4.dns 8.8.8.8
+sudo nmcli connection up net
+nmcli connection show net
+ip addr show ens160
+```
+
+Note:
+
+- replace `ens160` with the real interface name from your VM such as `eth0`, `ens3`, or `enp1s0`
+
+#### Drill 3 example solution
+
+```bash
+sudo hostnamectl set-hostname servera.lab.example
+echo "127.0.0.1 servera.lab.example servera" | sudo tee -a /etc/hosts
+hostnamectl
+getent hosts servera.lab.example
+```
+
+Verification:
+
+- both commands should show the new name consistently
+
+#### Drill 4 example solution
+
+```bash
+getsebool -a | grep httpd | grep home
+sudo setsebool -P httpd_enable_homedirs on
+getsebool httpd_enable_homedirs
+```
+
+Verification:
+
+- the boolean should show `on`
+- `-P` makes it persistent
+
+#### Drill 5 example solution
+
+```bash
+sudo semanage port -a -t http_port_t -p tcp 82
+sudo firewall-cmd --add-port=82/tcp --permanent
+sudo firewall-cmd --reload
+sudo semanage port -l | grep http_port_t | grep 82
+sudo firewall-cmd --list-ports
+```
+
+Verification:
+
+- the SELinux port list should include `82`
+- the firewall rule should include `82/tcp`
+
+#### Drill 6 example solution
+
+```bash
+sudo mkdir -p /test
+echo "RHCSA lab page" | sudo tee /test/index.html
+sudo semanage fcontext -a -t httpd_sys_content_t '/test(/.*)?'
+sudo restorecon -Rv /test
+ls -Zd /test
+ls -Z /test/index.html
+```
+
+Verification:
+
+- `/test` and its contents should show `httpd_sys_content_t`
+- `restorecon` should be the step that applies the persistent rule
 
 ## Recap / memory anchors
 

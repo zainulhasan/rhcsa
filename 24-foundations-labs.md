@@ -189,6 +189,69 @@ Remove only temporary files if you want. Keep useful lab notes.
 6. Create a symbolic link that breaks, then fix it.
 7. Create a directory with sticky bit behavior and explain why it is useful.
 
+## Subtitle-derived practice set
+
+These drills come from RHCSA-style question patterns collected from subtitle notes and then corrected into safe, exam-usable commands.
+
+### Drill 1: ACL check on a copied system file
+
+As `root`, copy `/etc/fstab` to `/var/tmp/fstab.practice`.
+
+Then:
+
+1. Give user `natasha` read and write access.
+2. Make sure group `mac` has no access.
+3. Verify the ACL entries explicitly.
+
+What to check before moving on:
+
+- the file exists
+- standard ownership still makes sense
+- ACL entries show the exact user and group rules
+
+### Drill 2: Shared project directory with SGID
+
+As `root`:
+
+1. Create a group named `projectops`.
+2. Create `/srv/projectops`.
+3. Change the group owner of the directory to `projectops`.
+4. Set permissions so members can create files collaboratively and new files inherit the group automatically.
+
+What to check before moving on:
+
+- `ls -ld /srv/projectops` shows the group correctly
+- the mode includes the SGID bit
+- new files created inside inherit the `projectops` group
+
+### Drill 3: Sticky-bit drop zone
+
+As `root`:
+
+1. Create `/srv/dropbox`.
+2. Set it so everyone can create files there.
+3. Prevent normal users from deleting each other's files.
+
+What to check before moving on:
+
+- the mode ends with a sticky-bit indicator such as `t`
+- write access exists for all intended users
+- the directory purpose is clear from the permissions
+
+### Drill 4: Text extraction speed drill
+
+As a regular user:
+
+1. Print only usernames from `/etc/passwd` using `awk`.
+2. Print only the first five lines of `/etc/services` using `sed`.
+3. Find all lines in `/etc/passwd` that end with `/bin/bash`.
+
+What to check before moving on:
+
+- each command prints only the requested data
+- you can explain the separator or regex used
+- you can repeat the commands from memory
+
 ## Verification steps
 
 1. Confirm you can explain the difference between `>` and `>>`.
@@ -328,6 +391,67 @@ ln -s ~/foundations-lab/original.txt ~/foundations-lab/original.soft
 ls -li ~/foundations-lab
 ls -ld /srv/projectshare
 ```
+
+### Subtitle-derived practice set solutions
+
+#### Drill 1 example solution
+
+```bash
+sudo cp /etc/fstab /var/tmp/fstab.practice
+sudo setfacl -m u:natasha:rw /var/tmp/fstab.practice
+sudo setfacl -m g:mac:--- /var/tmp/fstab.practice
+getfacl /var/tmp/fstab.practice
+ls -l /var/tmp/fstab.practice
+```
+
+Verification:
+
+- `getfacl /var/tmp/fstab.practice` should show `user:natasha:rw-`
+- `getfacl /var/tmp/fstab.practice` should show `group:mac:---`
+
+#### Drill 2 example solution
+
+```bash
+sudo groupadd projectops
+sudo mkdir -p /srv/projectops
+sudo chgrp projectops /srv/projectops
+sudo chmod 2775 /srv/projectops
+ls -ld /srv/projectops
+touch /srv/projectops/testfile
+ls -l /srv/projectops/testfile
+```
+
+Verification:
+
+- the directory mode should include `rwxrwsr-x`
+- new files should inherit group `projectops`
+
+#### Drill 3 example solution
+
+```bash
+sudo mkdir -p /srv/dropbox
+sudo chmod 1777 /srv/dropbox
+ls -ld /srv/dropbox
+```
+
+Verification:
+
+- the mode should look similar to `drwxrwxrwt`
+- the trailing `t` confirms sticky-bit behavior
+
+#### Drill 4 example solution
+
+```bash
+awk -F: '{print $1}' /etc/passwd
+sed -n '1,5p' /etc/services
+grep '/bin/bash$' /etc/passwd
+```
+
+Verification:
+
+- `awk` should print usernames only
+- `sed` should print exactly five lines
+- `grep` should match only Bash-shell entries
 
 ## Recap / memory anchors
 

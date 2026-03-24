@@ -71,6 +71,12 @@ The labs track uses a question-first design:
 
 This matters because RHCSA rewards execution, not recognition.
 
+The three main lab files now also include subtitle-derived question banks:
+
+- `24-foundations-labs.md` adds extra ACL, SGID, sticky-bit, and text-processing drills
+- `25-administration-core-labs.md` adds extra partition, swap, and shell-script drills
+- `26-networking-users-and-security-labs.md` adds extra user, `nmcli`, hostname, and SELinux drills
+
 Use this lab track like a pressure test:
 
 - can you finish the task?
