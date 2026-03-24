@@ -33,7 +33,7 @@ Administrators constantly assign IP settings, control access, create users, mana
 
 ## Commands/Tools Used
 
-`ip`, `nmcli`, `hostnamectl`, `getent`, `ss`, `firewall-cmd`, `useradd`, `usermod`, `groupadd`, `passwd`, `chage`, `visudo`, `ssh-keygen`, `ssh-copy-id`, `getenforce`, `sestatus`, `restorecon`, `setsebool`, `getsebool`, `semanage`
+`ip`, `nmcli`, `hostnamectl`, `getent`, `ss`, `firewall-cmd`, `useradd`, `usermod`, `groupadd`, `passwd`, `chage`, `visudo`, `ssh-keygen`, `ssh-copy-id`, `getenforce`, `sestatus`, `restorecon`, `setsebool`, `getsebool`, `semanage`, `setfacl`, `getfacl`, `chmod`, `chgrp`
 
 ## Offline Help References For This Topic
 
@@ -45,6 +45,7 @@ Administrators constantly assign IP settings, control access, create users, mana
 - `man ssh-keygen`
 - `man ssh-copy-id`
 - `man semanage`
+- `man setfacl`
 
 ## Common Beginner Mistakes
 
@@ -298,6 +299,74 @@ What to check before moving on:
 - the context on `/test` matches web content use
 - the rule survives relabeling and reboot
 
+## Repo-derived practice set
+
+These drills come from additional RHCSA practice-question sources and were rewritten with clearer verification and recovery steps.
+
+### Drill 7: Create users with specific UIDs and expiration policy
+
+As `root`:
+
+1. Create user `john` with UID `2000`.
+2. Create user `davis` with UID `3000`.
+3. Set passwords interactively.
+4. Configure `davis` so the account expires in 30 days.
+
+What to check before moving on:
+
+- the UIDs are correct in account data
+- the account-expiration date is visible with `chage`
+- you can explain the difference between password aging and account expiration
+
+### Drill 8: Give one user access to another user's home
+
+As `root`:
+
+1. Make sure users `john` and `davis` exist.
+2. Give `davis` full access to `/home/john`.
+3. Make that access apply to new files created later as well.
+4. Verify with ACL inspection.
+
+What to check before moving on:
+
+- `john` still owns the home directory
+- `davis` access is granted with ACL, not by changing ownership
+- default ACLs are present for future content
+
+### Drill 9: Create a collaborative directory for one group only
+
+As `root`:
+
+1. Create group `sysgrp` if needed.
+2. Create `/redhat/sysgrp`.
+3. Give group ownership to `sysgrp`.
+4. Let group members collaborate there.
+5. Make new files inherit the group automatically.
+6. Deny access to users outside the group.
+
+What to check before moving on:
+
+- the directory group is correct
+- SGID is set
+- others do not have access
+
+### Drill 10: Apply home-directory SELinux context to a custom path
+
+Assume a task asks you to use the same SELinux file type used by home directories on `/xfs`.
+
+As `root`:
+
+1. Inspect the context type used on `/home`.
+2. Add a persistent SELinux file-context rule for `/xfs` and its contents.
+3. Apply the labels.
+4. Verify the result.
+
+What to check before moving on:
+
+- the file type matches the home-directory type
+- the policy change is persistent
+- `restorecon` applies the label correctly
+
 ## Verification steps
 
 1. Confirm you can verify a user with `id`, `getent passwd`, and directory checks.
@@ -519,6 +588,68 @@ Verification:
 
 - `/test` and its contents should show `httpd_sys_content_t`
 - `restorecon` should be the step that applies the persistent rule
+
+### Repo-derived practice set solutions
+
+#### Drill 7 example solution
+
+```bash
+sudo useradd -u 2000 john
+sudo useradd -u 3000 davis
+sudo passwd john
+sudo passwd davis
+sudo chage -E "$(date -d '+30 days' +%Y-%m-%d)" davis
+getent passwd john
+getent passwd davis
+sudo chage -l davis
+```
+
+Verification:
+
+- `getent passwd` should show the target UIDs
+- `chage -l davis` should show a real account-expiration date
+
+#### Drill 8 example solution
+
+```bash
+sudo setfacl -R -m u:davis:rwx /home/john
+sudo setfacl -R -m d:u:davis:rwx /home/john
+getfacl /home/john
+```
+
+Verification:
+
+- `u:davis:rwx` grants current access
+- `d:u:davis:rwx` becomes the default ACL for new files and directories
+
+#### Drill 9 example solution
+
+```bash
+sudo groupadd sysgrp
+sudo mkdir -p /redhat/sysgrp
+sudo chgrp sysgrp /redhat/sysgrp
+sudo chmod 2770 /redhat/sysgrp
+ls -ld /redhat/sysgrp
+```
+
+Verification:
+
+- the mode should show SGID with something like `drwxrws---`
+- only owner and group should have access
+
+#### Drill 10 example solution
+
+```bash
+ls -Zd /home
+sudo semanage fcontext -a -t user_home_dir_t '/xfs(/.*)?'
+sudo restorecon -Rv /xfs
+ls -Zd /xfs
+```
+
+Verification:
+
+- the type should match the home-directory style context such as `user_home_dir_t`
+- use `restorecon`, not `chcon`, when the task requires persistence
 
 ## Recap / memory anchors
 

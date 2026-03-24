@@ -33,7 +33,7 @@ Admins install packages, automate checks, inspect logs, extend storage, mount fi
 
 ## Commands/Tools Used
 
-`dnf`, `rpm`, `bash`, `grep`, `awk`, `bc`, `systemctl`, `journalctl`, `ps`, `kill`, `tuned-adm`, `parted`, `pvcreate`, `vgcreate`, `lvcreate`, `mkfs`, `mount`, `findmnt`, `blkid`, `crontab`, `at`, `timedatectl`, `chronyc`, `grubby`
+`dnf`, `rpm`, `bash`, `grep`, `awk`, `bc`, `systemctl`, `journalctl`, `ps`, `kill`, `tuned-adm`, `parted`, `pvcreate`, `vgcreate`, `lvcreate`, `mkfs`, `mkfs.vfat`, `mount`, `findmnt`, `blkid`, `crontab`, `at`, `timedatectl`, `chronyc`, `grubby`, `sudoedit`
 
 ## Offline Help References For This Topic
 
@@ -46,6 +46,7 @@ Admins install packages, automate checks, inspect logs, extend storage, mount fi
 - `man fstab`
 - `man crontab`
 - `man systemctl`
+- `man journald.conf`
 
 ## Common Beginner Mistakes
 
@@ -369,6 +370,50 @@ What to check before moving on:
 - the NFS export exists on the server
 - `autofs` is active and enabled on the client
 - accessing `/remoteuser/user20` triggers the mount
+
+### Drill 11: Make journald persistent with configuration
+
+As `root`:
+
+1. Edit `journald` configuration so logs are stored persistently.
+2. Restart the journal service.
+3. Verify both the configuration file and the resulting storage behavior.
+
+What to check before moving on:
+
+- the config explicitly requests persistent storage
+- `journalctl -b` still works
+- logs still exist after reboot
+
+### Drill 12: Create a VFAT LV by extents and mount it
+
+As `root`, use a spare partition or disk.
+
+1. Create a volume group named `datacontainer` with PE size `16M`.
+2. Create logical volume `datacopy` with `50` extents.
+3. Format it as `vfat`.
+4. Mount it persistently at `/datasource`.
+
+What to check before moving on:
+
+- `vgs` shows the intended PE size
+- `lvs` shows the LV
+- `findmnt /datasource` proves the mount
+
+### Drill 13: Change the default boot kernel safely
+
+If your lab already has more than one installed kernel:
+
+1. List all bootable kernels.
+2. Identify the current default.
+3. Change the default to another already-installed kernel.
+4. Verify the selection before rebooting.
+
+What to check before moving on:
+
+- you do not remove the older kernel
+- you can prove the default selection before reboot
+- you can restore the original default if needed
 
 ## Verification steps
 
@@ -734,6 +779,72 @@ Verification:
 - replace `SERVER` with the real server hostname or IP
 - `systemctl is-enabled autofs` should report `enabled`
 - accessing the path should trigger the automount
+
+#### Drill 11 example solution
+
+```bash
+sudoedit /etc/systemd/journald.conf
+```
+
+Set:
+
+```ini
+Storage=persistent
+```
+
+Then:
+
+```bash
+sudo systemctl restart systemd-journald
+grep '^Storage=' /etc/systemd/journald.conf
+ls -ld /var/log/journal
+journalctl -b | tail
+```
+
+Verification:
+
+- `Storage=persistent` should be visible in the config
+- `/var/log/journal` should exist after the restart
+
+#### Drill 12 example solution
+
+```bash
+sudo vgcreate -s 16M datacontainer /dev/vdb1
+sudo lvcreate -l 50 -n datacopy datacontainer
+sudo mkfs.vfat /dev/datacontainer/datacopy
+sudo mkdir -p /datasource
+UUID=$(sudo blkid -s UUID -o value /dev/datacontainer/datacopy)
+echo "UUID=$UUID /datasource vfat defaults 0 0" | sudo tee -a /etc/fstab
+sudo mount -a
+vgs datacontainer
+lvs /dev/datacontainer/datacopy
+findmnt /datasource
+```
+
+Verification:
+
+- `mkfs.vfat` satisfies the VFAT objective
+- the mount should survive reboot because it is in `/etc/fstab`
+
+#### Drill 13 example solution
+
+```bash
+sudo grubby --info=ALL
+sudo grubby --default-kernel
+```
+
+If a second installed kernel is available:
+
+```bash
+sudo grubby --set-default /boot/vmlinuz-VERSION
+sudo grubby --default-kernel
+```
+
+Verification:
+
+- replace `VERSION` with a real installed kernel path from `grubby --info=ALL`
+- verify the new default before rebooting
+- if only one kernel is installed, treat this as an inspection drill and do not force the change
 
 ## Recap / memory anchors
 

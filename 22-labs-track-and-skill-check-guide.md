@@ -8,6 +8,10 @@
 
 RHCSA is a hands-on exam. You need a way to test whether you can actually perform tasks, not just recognize them on paper. A lab track lets you measure real skill under time pressure.
 
+**Version watch**
+
+This labs track is organized for the current public `RHCSA EX200` objective set on `RHEL 10`. If your lab system is a different RHEL-compatible release, command output may vary slightly, but the task flow and verification habits remain the same.
+
 **Real-world use**
 
 Junior administrators often inherit servers and must prove they can perform common tasks quickly. A lab checklist is a practical way to validate that skill before touching production systems.
@@ -71,11 +75,11 @@ The labs track uses a question-first design:
 
 This matters because RHCSA rewards execution, not recognition.
 
-The three main lab files now also include subtitle-derived question banks:
+The three main lab files now include extra question banks taken from additional training prompts and filtered against current RHCSA scope:
 
-- `24-foundations-labs.md` adds extra ACL, SGID, sticky-bit, and text-processing drills
-- `25-administration-core-labs.md` adds extra partition, swap, and shell-script drills
-- `26-networking-users-and-security-labs.md` adds extra user, `nmcli`, hostname, and SELinux drills
+- `24-foundations-labs.md` adds subtitle-derived and repo-derived drills for `grep`, archives, `find`, ACLs, SGID, sticky bit, and text processing
+- `25-administration-core-labs.md` adds extra partition, swap, `journald`, shell-script, LVM, VFAT, chrony, bootloader, and service drills
+- `26-networking-users-and-security-labs.md` adds extra user, `nmcli`, hostname, ACL, firewalld, SSH, and SELinux drills
 
 Use this lab track like a pressure test:
 
@@ -83,6 +87,14 @@ Use this lab track like a pressure test:
 - can you verify it with commands?
 - can you make it survive reboot?
 - can you troubleshoot when it fails?
+
+Use the labs in this order if you want the cleanest path:
+
+1. build the VM baseline
+2. test foundations
+3. test administration core
+4. test networking, users, and security
+5. return to lesson files only where scores are weak
 
 ## Command breakdowns
 

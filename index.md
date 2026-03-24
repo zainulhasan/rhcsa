@@ -1,9 +1,9 @@
 <div class="hero-panel" markdown>
-<p class="hero-eyebrow">RHEL / EX200 • Beginner-first • Offline-friendly • Practice-heavy</p>
+<p class="hero-eyebrow">RHEL 10 / EX200 • RHCSA 10-aligned • Beginner-first • Offline-friendly</p>
 
-# RHCSA Self-Study Course
+# RHCSA 10 Self-Study Course
 
-Build Linux administration skill from zero to exam-ready using one self-contained course. The site is designed for focused self-study: clear lesson order, command-heavy examples, verification after every major task, and mock exams when you are ready to simulate the real pressure.
+Build Linux administration skill from zero to exam-ready using one self-contained course. The site is designed for focused self-study on the current `RHCSA EX200` objective set for `RHEL 10`: clear lesson order, command-heavy examples, verification after every major task, labs for skill testing, and mock exams when you are ready to simulate real pressure.
 
 <div class="hero-actions" markdown="1">
 
@@ -17,6 +17,7 @@ Build Linux administration skill from zero to exam-ready using one self-containe
   <span class="hero-badge">Offline help habits</span>
   <span class="hero-badge">Reboot-safe verification</span>
   <span class="hero-badge">Beginner explanations</span>
+  <span class="hero-badge">RHCSA 10 aligned</span>
   <span class="hero-badge">Mock exams included</span>
 </div>
 </div>
@@ -30,6 +31,10 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 - __Build Command Speed__
 
   Use the [RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md) section by section to build muscle memory.
+
+- __Need Less Googling__
+
+  The lessons, labs, answer keys, and offline-help references are designed to keep most study and troubleshooting inside the course and your local system docs.
 
 - __Follow The Full Path__
 
@@ -67,6 +72,25 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
 </div>
 
+## Built For RHCSA 10
+
+- The course follows the current public `EX200` objective groups for `RHEL 10`.
+- Topic order is designed for learning, then revision, then timed execution.
+- Lessons explain commands in plain language before pushing you into labs.
+- Labs and mock exams are meant to test whether you can finish tasks, verify them, and keep them working after reboot.
+- When a topic varies by release, the course flags it instead of silently assuming one environment.
+
+## Use This Site Without Google
+
+Use this site like a training system, not just a pile of notes.
+
+1. Read the lesson explanation.
+2. Type the worked examples.
+3. Do the guided lab.
+4. Use the verification section.
+5. If stuck, use local help first: `man`, `--help`, `apropos`, `info`, and `/usr/share/doc`.
+6. Use the labs track to measure whether the skill is now real.
+
 ## RHCSA Exam Map
 
 ```mermaid
@@ -101,6 +125,18 @@ flowchart TD
 <div class="map-callout" markdown>
 Use this map as a quick reminder of what the exam expects: command-line confidence, system administration execution, and proof that your changes still work after reboot.
 </div>
+
+## Best Study Routes
+
+Choose one route and stick to it long enough to see where you are weak.
+
+### Route 1: Total beginner
+
+Start with `00`, work through lessons `00-16` in order, then move into the labs, cheat sheet, final review, and mock exams.
+
+### Route 2: Some Linux experience
+
+Start with the labs track, score your weak areas honestly, then go back to the matching lesson files for explanation and repetition.
 
 ## Fast Start
 
@@ -170,6 +206,10 @@ Use the sections below as a practical training sequence, not just a reading list
 - Verify every task with commands, not assumptions.
 - Reboot to confirm persistence whenever the task must survive restart.
 - Keep a mistake log and repeat weak topics intentionally.
+
+## Version Watch
+
+This site is organized around the current public `RHCSA EX200` scope for `RHEL 10`. Some command output and defaults can vary slightly between builds and minor releases, but the core exam habits stay the same: complete the task, verify the result, and confirm it survives reboot when required.
 
 ## Publishing Notes
 

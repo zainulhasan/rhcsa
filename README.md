@@ -1,6 +1,13 @@
-# RHCSA Self-Study Course
+# RHCSA 10 Self-Study Course
 
-This course is a complete beginner-friendly path for the RHCSA exam. It is designed to work offline, to be used mainly from the command line, and to train you for a hands-on performance exam where you must solve tasks without internet access.
+This course is a complete beginner-friendly path for the current RHCSA `EX200` exam on `RHEL 10`. It is designed to work offline, to be used mainly from the command line, and to train you for a hands-on performance exam where you must solve tasks without internet access. The goal is simple: give you one organized study system with enough explanation, practice, verification, and troubleshooting that you do not need to keep searching online for missing steps.
+
+## RHCSA 10 Alignment
+
+- The course is aligned to the current public `EX200` objective list for `RHEL 10`.
+- Your original study points remain the mandatory scope, even when wording or output differs slightly by release.
+- When a workflow is version-sensitive, the material calls it out instead of hiding it.
+- Labs, cheat sheets, and review sections are organized around the same objective groups you will practice on the exam.
 
 ## Who This Course Is For
 
@@ -26,6 +33,8 @@ Study loop for every lesson:
 9. Compare your work to the answer key only after you finish.
 
 ## Recommended Order
+
+### Beginner route
 
 1. `00-study-skills-and-offline-help.md`
 2. `01-shell-basics-and-command-syntax.md`
@@ -56,6 +65,17 @@ Study loop for every lesson:
 27. `20-mock-exam-2.md`
 28. `21-mock-exam-2-solutions.md`
 
+### Experienced route
+
+1. `22-labs-track-and-skill-check-guide.md`
+2. `23-vm-lab-setup-and-baseline-checks.md`
+3. `24-foundations-labs.md`
+4. `25-administration-core-labs.md`
+5. `26-networking-users-and-security-labs.md`
+6. Return to the matching lesson files for weak areas.
+7. Use `17a-rhcsa-command-reference-cheat-sheet.md` for speed review.
+8. Finish with `18-mock-exam-1.md` and `20-mock-exam-2.md`.
+
 ## How To Use The Files
 
 - Read lessons in order unless you are reviewing a weak topic.
@@ -64,6 +84,18 @@ Study loop for every lesson:
 - Mark commands you repeatedly forget.
 - Keep a handwritten or plain-text mistake log.
 - Revisit lessons where verification failed or took too long.
+
+## Why You Should Need Less Googling
+
+This course is built to reduce the need for outside searching.
+
+- Lessons explain the command, the reason, the expected output, common failure modes, and how to verify success.
+- Labs turn the same objectives into question-first practice so you can prove the skill, not just recognize it.
+- The command cheat sheet groups related commands by RHCSA objective so you can revise one section at a time.
+- Troubleshooting sections show what failure looks like and what to check next.
+- Offline help usage is taught from lesson `00` onward so you can solve problems with `man`, `--help`, `apropos`, and local documentation.
+
+You may still need to adapt to your exact lab environment, but you should not have to keep searching for basic syntax, missing setup steps, or how to verify a task.
 
 ## Fast Lab Path For Learners With Some Experience
 
@@ -76,6 +108,18 @@ If you already know basic Linux and want to test yourself first, use this order:
 5. `26-networking-users-and-security-labs.md`
 
 Then return to the lesson files only for weak areas you discover during the labs.
+
+## Clean Study Workflow
+
+Use the same workflow every time so the course stays easy to follow:
+
+1. Read the lesson or lab objective.
+2. Type the worked examples yourself.
+3. Complete the guided task without copy-paste if possible.
+4. Run the verification commands.
+5. Reboot if persistence matters.
+6. Record mistakes and the corrected command.
+7. Repeat weak tasks until they feel routine.
 
 ## Lab Setup
 
@@ -166,6 +210,8 @@ Every lesson is built to train exam behavior:
 - verification after every task
 - persistence after reboot
 - troubleshooting instead of panic
+- objective-based organization for easier revision
+- enough local explanation that offline study remains practical
 
 ## Version Watch
 

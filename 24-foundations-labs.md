@@ -33,16 +33,18 @@ Real administrators read docs, create files, edit configuration, search logs, co
 
 ## Commands/Tools Used
 
-`man`, `apropos`, `pwd`, `ls`, `cp`, `mv`, `rm`, `cat`, `less`, `grep`, `sed`, `awk`, `tar`, `gzip`, `bzip2`, `ssh`, `scp`, `ln`, `chmod`, `umask`, `stat`
+`man`, `apropos`, `pwd`, `ls`, `cp`, `mv`, `rm`, `cat`, `less`, `grep`, `sed`, `awk`, `find`, `tar`, `gzip`, `bzip2`, `ssh`, `scp`, `ln`, `chmod`, `umask`, `stat`, `setfacl`, `getfacl`
 
 ## Offline Help References For This Topic
 
 - `man grep`
 - `man sed`
 - `man awk`
+- `man find`
 - `man tar`
 - `man ssh`
 - `man chmod`
+- `man setfacl`
 - `man umask`
 - `apropos permission`
 
@@ -86,6 +88,12 @@ awk -F: '{print $1}' /etc/passwd
 
 ```bash
 sed 's/servera/serverb/' file.txt
+```
+
+### Find matching files without searching subdirectories
+
+```bash
+find /etc -maxdepth 1 -type f -mtime +180
 ```
 
 ### Create a compressed archive
@@ -251,6 +259,76 @@ What to check before moving on:
 - each command prints only the requested data
 - you can explain the separator or regex used
 - you can repeat the commands from memory
+
+## Repo-derived practice set
+
+These drills were adapted from external RHCSA question collections and rewritten with more explanation so they help you learn, not just memorize answers.
+
+### Drill 5: Search text and save the result to a file
+
+As `root`:
+
+1. Search `/etc/passwd` for the string `sarah`.
+2. Save the result to `/root/lines`.
+3. Explain whether `>` or `>>` is safer for the exact task wording.
+
+What to check before moving on:
+
+- `/root/lines` exists
+- the file contains only the intended output
+- you can explain overwrite versus append
+
+### Drill 6: Create a gzip-compressed archive of `/usr/local`
+
+As `root`, create `/root/local.tgz` containing `/usr/local`.
+
+What to check before moving on:
+
+- the archive file exists
+- `tar -tzvf /root/local.tgz` works
+- you can explain why `tar` and `gzip` are combined here
+
+### Drill 7: Find old files and copy them to a staging directory
+
+As `root`:
+
+1. Create `/var/tmp/pvt`.
+2. Find regular files directly under `/etc` that were modified more than 180 days ago.
+3. Copy them to `/var/tmp/pvt`.
+
+What to check before moving on:
+
+- the search does not descend into subdirectories
+- only regular files are copied
+- `/var/tmp/pvt` contains the results
+
+### Drill 8: Find files that contain a given string
+
+As `root` or a regular user:
+
+1. Search top-level files in `/etc` for the text `chrony`.
+2. Ignore case.
+3. Print only the filenames that contain a match.
+
+What to check before moving on:
+
+- directory errors do not confuse you
+- the result is filenames, not full matching lines
+- case differences do not matter
+
+### Drill 9: Give one user access to another user's home with ACLs
+
+As `root`:
+
+1. Create users `john` and `davis` if they do not already exist.
+2. Give `davis` full access to `/home/john` and its current contents.
+3. Make new files created later under `/home/john` inherit the same ACL for `davis`.
+
+What to check before moving on:
+
+- `john` remains the owner of the home directory
+- ACLs apply both now and for new files
+- `getfacl /home/john` clearly shows the added rules
 
 ## Verification steps
 
@@ -452,6 +530,77 @@ Verification:
 - `awk` should print usernames only
 - `sed` should print exactly five lines
 - `grep` should match only Bash-shell entries
+
+### Repo-derived practice set solutions
+
+#### Drill 5 example solution
+
+```bash
+grep sarah /etc/passwd > /root/lines
+cat /root/lines
+```
+
+Verification:
+
+- use `>` if the task implies a fresh result file
+- use `>>` only when you intentionally want to append
+
+#### Drill 6 example solution
+
+```bash
+sudo tar -cvzf /root/local.tgz /usr/local
+sudo tar -tzvf /root/local.tgz
+```
+
+Verification:
+
+- the archive listing should show `/usr/local` content
+
+#### Drill 7 example solution
+
+```bash
+sudo mkdir -p /var/tmp/pvt
+find /etc -maxdepth 1 -type f -mtime +180 -exec cp {} /var/tmp/pvt \;
+ls -l /var/tmp/pvt
+```
+
+Verification:
+
+- `-maxdepth 1` keeps the search at the top level of `/etc`
+- `-type f` limits the result to regular files
+
+#### Drill 8 example solution
+
+```bash
+grep -d skip -il chrony /etc/*
+```
+
+Alternative:
+
+```bash
+grep -lis chrony /etc/*
+```
+
+Verification:
+
+- `-i` ignores case
+- `-l` prints filenames only
+- `-d skip` avoids directory-content attempts
+
+#### Drill 9 example solution
+
+```bash
+sudo useradd -m john
+sudo useradd -m davis
+sudo setfacl -R -m u:davis:rwx /home/john
+sudo setfacl -R -m d:u:davis:rwx /home/john
+getfacl /home/john
+```
+
+Verification:
+
+- `u:davis:rwx` applies to current content
+- `d:u:davis:rwx` becomes the default ACL for new content
 
 ## Recap / memory anchors
 

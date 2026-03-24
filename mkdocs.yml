@@ -1,5 +1,5 @@
-site_name: RHCSA Self-Study Course
-site_description: RHCSA EX200 self-study course with Linux administration labs, cheat sheets, mock exams, troubleshooting, and offline help for RHEL-style systems.
+site_name: RHCSA 10 Self-Study Course
+site_description: RHCSA 10 EX200 self-study course with beginner-friendly Linux administration lessons, labs, cheat sheets, mock exams, troubleshooting, and offline help for RHEL 10 style systems.
 site_url: https://zainulhasan.github.io/rhcsa/
 docs_dir: docs
 site_dir: site

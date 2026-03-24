@@ -91,6 +91,7 @@ Use this sheet in the same order you would build exam muscle memory:
 | `mv SRC DST` | Moves or renames | `mv oldname newname` |
 | `rm FILE` | Removes file | `rm old.txt` |
 | `rm -r DIR` | Removes directory recursively | `rm -r olddir` |
+| `find DIR OPTIONS` | Searches for files by attributes | `find /etc -maxdepth 1 -type f -mtime +180` |
 | `cat FILE` | Displays file contents | `cat /etc/hostname` |
 | `less FILE` | Views long file one screen at a time | `less /var/log/messages` |
 | `head FILE` | Shows first lines | `head -n 5 /etc/passwd` |
@@ -113,6 +114,7 @@ Use this sheet in the same order you would build exam muscle memory:
 | `grep -n TEXT FILE` | Shows line numbers | `grep -n ssh /etc/services` |
 | `grep -v PATTERN FILE` | Shows non-matching lines | `grep -v '^#' file.conf` |
 | `grep -E REGEX FILE` | Uses extended regex | `grep -E 'bash$|nologin$' /etc/passwd` |
+| `grep -il TEXT FILES` | Prints only filenames with a case-insensitive match | `grep -il chrony /etc/*` |
 | `sort FILE` | Sorts lines | `sort names.txt` |
 | `uniq FILE` | Removes adjacent duplicates | `sort names.txt | uniq` |
 | `cut` | Extracts fields or characters | `cut -d: -f1 /etc/passwd` |
@@ -139,6 +141,15 @@ Use this sheet in the same order you would build exam muscle memory:
 | Replace globally on each line | `sed 's/old/new/g' FILE` |
 | Print first field from colon-separated file | `awk -F: '{print $1}' FILE` |
 | Print fields 1 and 7 when line matches | `awk -F: '/bash$/ {print $1, $7}' FILE` |
+
+### find Quick Patterns
+
+| Task | Command |
+|---|---|
+| Find regular files only | `find DIR -type f` |
+| Stay at top level only | `find DIR -maxdepth 1 -type f` |
+| Find files older than 180 days | `find /etc -maxdepth 1 -type f -mtime +180` |
+| Copy search results somewhere | `find DIR ... -exec cp {} TARGETDIR \\;` |
 
 ## Archives and Compression
 
@@ -206,6 +217,8 @@ Use this sheet in the same order you would build exam muscle memory:
 | `chmod o-r FILE` | Removes others read permission | `chmod o-r secret.txt` |
 | `umask` | Shows current default permission mask | `umask` |
 | `umask -S` | Shows symbolic mask | `umask -S` |
+| `setfacl -m RULE FILE` | Adds or changes ACL entry | `sudo setfacl -m u:alice:rw FILE` |
+| `getfacl FILE` | Displays ACL entries | `getfacl FILE` |
 
 ### Directory Permission Patterns
 
@@ -713,6 +726,7 @@ Meaning:
 |---|---|---|
 | `useradd USER` | Creates user with system defaults | `sudo useradd alice` |
 | `useradd -m USER` | Creates user and home directory | `sudo useradd -m alice` |
+| `useradd -u UID USER` | Creates user with specific UID | `sudo useradd -u 2000 john` |
 | `useradd -M USER` | Creates user without home directory | `sudo useradd -M svcbackup` |
 | `useradd -d DIR USER` | Sets custom home directory path | `sudo useradd -d /srv/alice alice` |
 | `useradd -m -d DIR USER` | Creates user with custom home directory | `sudo useradd -m -d /srv/alice alice` |
@@ -727,6 +741,7 @@ Meaning:
 | `passwd USER` | Sets or changes password | `sudo passwd alice` |
 | `chage -l USER` | Lists password aging | `sudo chage -l alice` |
 | `chage -M DAYS -m DAYS -W DAYS USER` | Sets password aging values | `sudo chage -M 90 -m 7 -W 14 alice` |
+| `chage -E DATE USER` | Sets account expiration date | `sudo chage -E 2026-05-01 alice` |
 | `groups USER` | Shows user's groups | `groups alice` |
 | `visudo` | Safely edits sudoers | `sudo visudo` |
 | `visudo -c` | Checks sudoers syntax | `sudo visudo -c` |
@@ -766,6 +781,7 @@ Meaning:
 | `ls -Z PATH` | Shows file contexts | `ls -Z /var/www/html` |
 | `ps -eZ` | Shows process contexts | `ps -eZ | grep sshd` |
 | `restorecon -Rv PATH` | Restores default contexts recursively | `sudo restorecon -Rv /var/www/html` |
+| `semanage fcontext -a -t TYPE 'REGEX'` | Adds persistent file-context rule | `sudo semanage fcontext -a -t user_home_dir_t '/xfs(/.*)?'` |
 | `getsebool -a` | Lists booleans | `getsebool -a | grep httpd` |
 | `setsebool -P BOOLEAN on` | Sets boolean persistently | `sudo setsebool -P httpd_can_network_connect on` |
 | `semanage port -l` | Lists SELinux port labels | `sudo semanage port -l | grep http` |
@@ -811,6 +827,15 @@ Example service-side config reminder:
 | Check runtime mode | `getenforce` |
 | Check full status | `sestatus` |
 | Check configured boot mode | `cat /etc/selinux/config` |
+
+### Persistent journald Pattern
+
+| Goal | Command or file |
+|---|---|
+| Set persistent storage mode | edit `/etc/systemd/journald.conf` and set `Storage=persistent` |
+| Restart journald | `sudo systemctl restart systemd-journald` |
+| Verify storage path | `ls -ld /var/log/journal` |
+| Verify logs after reboot | `journalctl -b` |
 
 ### Security Muscle Memory Drill
 
@@ -1000,6 +1025,16 @@ id alice
 ls -ld /srv/alice
 ```
 
+### Create User With Specific UID and Expiration
+
+```bash
+sudo useradd -u 2000 john
+sudo useradd -u 3000 davis
+sudo chage -E "$(date -d '+30 days' +%Y-%m-%d)" davis
+getent passwd john
+sudo chage -l davis
+```
+
 ### Create tar.gz Backup
 
 ```bash
@@ -1080,6 +1115,17 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now report.service
 systemctl status report.service
 journalctl -u report.service -b
+```
+
+### Make journald Persistent
+
+```bash
+sudoedit /etc/systemd/journald.conf
+# set Storage=persistent
+sudo systemctl restart systemd-journald
+grep '^Storage=' /etc/systemd/journald.conf
+ls -ld /var/log/journal
+journalctl -b | tail
 ```
 
 ### Run a Container Through systemd
