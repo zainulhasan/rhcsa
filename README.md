@@ -58,12 +58,14 @@ Study loop for every lesson:
 20. `24-foundations-labs.md`
 21. `25-administration-core-labs.md`
 22. `26-networking-users-and-security-labs.md`
-23. `17a-rhcsa-command-reference-cheat-sheet.md`
-24. `17-final-review-cheat-sheets.md`
-25. `18-mock-exam-1.md`
-26. `19-mock-exam-1-solutions.md`
-27. `20-mock-exam-2.md`
-28. `21-mock-exam-2-solutions.md`
+23. `28-rhcsa-10-mixed-practice-bank.md`
+24. `17a-rhcsa-command-reference-cheat-sheet.md`
+25. `17-final-review-cheat-sheets.md`
+26. `27-youtube-playlist-checklists.md` for optional source-based revision
+27. `18-mock-exam-1.md`
+28. `19-mock-exam-1-solutions.md`
+29. `20-mock-exam-2.md`
+30. `21-mock-exam-2-solutions.md`
 
 ### Experienced route
 
@@ -72,9 +74,11 @@ Study loop for every lesson:
 3. `24-foundations-labs.md`
 4. `25-administration-core-labs.md`
 5. `26-networking-users-and-security-labs.md`
-6. Return to the matching lesson files for weak areas.
-7. Use `17a-rhcsa-command-reference-cheat-sheet.md` for speed review.
-8. Finish with `18-mock-exam-1.md` and `20-mock-exam-2.md`.
+6. `28-rhcsa-10-mixed-practice-bank.md`
+7. Return to the matching lesson files for weak areas.
+8. Use `17a-rhcsa-command-reference-cheat-sheet.md` for speed review.
+9. Use `27-youtube-playlist-checklists.md` only when you want topic-based video reinforcement.
+10. Finish with `18-mock-exam-1.md` and `20-mock-exam-2.md`.
 
 ## How To Use The Files
 
@@ -183,6 +187,7 @@ The labs track is a second route through the course.
 - It is designed for learners who want question-first practice.
 - Each lab file follows the same study structure as the lesson files.
 - Each lab file includes worked examples, guided labs, independent tasks, verification, troubleshooting, quiz questions, and exam-style tasks.
+- `28-rhcsa-10-mixed-practice-bank.md` adds one more mixed drill bank built from repeated patterns in the supplied playlist material, but filtered back to RHCSA 10 scope.
 - Use it after each major lesson section or as a fast diagnostic path if you already know some Linux.
 
 ## Offline Help Rule

@@ -94,7 +94,13 @@ Use the labs in this order if you want the cleanest path:
 2. test foundations
 3. test administration core
 4. test networking, users, and security
-5. return to lesson files only where scores are weak
+5. run the mixed practice bank for cross-topic pressure
+6. return to lesson files only where scores are weak
+
+The related support files are:
+
+- `28-rhcsa-10-mixed-practice-bank.md` for extra mixed RHCSA 10 drills
+- `27-youtube-playlist-checklists.md` for source tracking and topic-based video review
 
 ## Command breakdowns
 

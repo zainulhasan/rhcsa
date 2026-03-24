@@ -48,6 +48,10 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
   If you already know some Linux, start with the [Labs Track Guide](22-labs-track-and-skill-check-guide.md) and use the question-first files to test real skill.
 
+- __Use Source-Based Reinforcement__
+
+  Use the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for extra mixed drills, and the [playlist checklist page](27-youtube-playlist-checklists.md) only when you want topic-based video revision.
+
 </div>
 
 ## What This Site Covers
@@ -70,6 +74,10 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
   VM setup, skill-check questions, and section-based hands-on labs for fast self-assessment.
 
+- __Source-Based Reinforcement__
+
+  A subtitle-aware playlist checklist and an extra mixed practice bank, both filtered back to RHCSA 10 scope so the site stays organized.
+
 </div>
 
 ## Built For RHCSA 10
@@ -89,7 +97,7 @@ Use this site like a training system, not just a pile of notes.
 3. Do the guided lab.
 4. Use the verification section.
 5. If stuck, use local help first: `man`, `--help`, `apropos`, `info`, and `/usr/share/doc`.
-6. Use the labs track to measure whether the skill is now real.
+6. Use the labs track and [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) to measure whether the skill is now real.
 
 ## RHCSA Exam Map
 
@@ -144,7 +152,8 @@ Start with the labs track, score your weak areas honestly, then go back to the m
 2. Work through the numbered lessons in order.
 3. Revisit the [RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md) after each major section.
 4. Use [Final Review and Cheat Sheets](17-final-review-cheat-sheets.md) after finishing lessons `00-16`.
-5. Attempt [Mock Exam 1](18-mock-exam-1.md) and [Mock Exam 2](20-mock-exam-2.md) only after the full lesson track.
+5. Use [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) if you want one more mixed-topic pressure pass before the mock exams.
+6. Attempt [Mock Exam 1](18-mock-exam-1.md) and [Mock Exam 2](20-mock-exam-2.md) only after the full lesson track.
 
 ## Fast Lab Path For Experienced Learners
 
@@ -153,7 +162,8 @@ Start with the labs track, score your weak areas honestly, then go back to the m
 3. Test shell, text, archive, SSH, and permissions skills in [Foundations Labs](24-foundations-labs.md).
 4. Test software, scripting, storage, filesystems, scheduling, and systemd in [Administration Core Labs](25-administration-core-labs.md).
 5. Test networking, users, firewalld, SSH keys, and SELinux in [Networking, Users, and Security Labs](26-networking-users-and-security-labs.md).
-6. Return to the lesson files only where your lab results show weakness.
+6. Use [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for one more pressure pass.
+7. Return to the lesson files only where your lab results show weakness.
 
 ## Recommended Study Path
 
@@ -198,6 +208,11 @@ Use the sections below as a practical training sequence, not just a reading list
 - [24 Foundations Labs](24-foundations-labs.md)
 - [25 Administration Core Labs](25-administration-core-labs.md)
 - [26 Networking, Users, and Security Labs](26-networking-users-and-security-labs.md)
+- [28 RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md)
+
+### Source Reference
+
+- [27 YouTube Playlist Checklists and Topic Map](27-youtube-playlist-checklists.md)
 
 ## Study Rules
 
