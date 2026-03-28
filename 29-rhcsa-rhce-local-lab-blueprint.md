@@ -64,7 +64,7 @@ That is close enough to real work that the same lab helps with both exam prep an
 - Not keeping a clean baseline snapshot
 - Using a cloud image without planning how to set the initial user, password, and host keys
 
-## Concept explanation in simple language
+## Concept Explanation In Simple Language
 
 For your goal, the best small lab is:
 
@@ -96,7 +96,7 @@ So the most practical approach is:
 - use the cloud image for fast multi-VM cloning now
 - later, if you want deeper boot and rescue practice, keep one normal installed VM too
 
-## Recommended lab design
+## Recommended Lab Design
 
 ### VM roles
 
@@ -142,7 +142,7 @@ Gateway and DNS depend on your hypervisor, but the key idea is simple:
 - the internal lab network should stay stable
 - your hostnames and `/etc/hosts` should not depend on luck
 
-## Command breakdowns
+## Command Breakdowns
 
 ### Set a hostname
 
@@ -257,9 +257,9 @@ Verification:
 
 - you can explain the difference between internet/package access and lab-only communication
 
-## Guided hands-on lab
+## Guided Hands-On Lab
 
-### Goal
+### Lab Goal
 
 Build three VMs named `servera`, `serverb`, and `serverc` from your downloaded cloud image and make them ready for RHCSA and RHCE practice.
 
@@ -271,7 +271,7 @@ Before you start, decide:
 - where the VM disks will be stored
 - whether you will use a cloud-init seed image or the hypervisor's cloud-image import wizard
 
-### Task steps
+### Task Steps
 
 1. Create `servera` from the cloud image.
 2. Assign at least `2 vCPU`, `4 GB RAM`, and `40 GB` main disk space.
@@ -306,7 +306,7 @@ sudo mkdir -p /srv/nfs/share /srv/nfs/home
 
 17. Take a clean snapshot of all three VMs.
 
-### Expected result
+### Expected Result
 
 At the end:
 
@@ -317,7 +317,7 @@ At the end:
 - `serverc` is ready to act as the NFS server later
 - you have a clean rollback point
 
-## Independent practice tasks
+## Independent Practice Tasks
 
 1. Change the lab IP plan to a different private subnet and update all three systems correctly.
 2. Rebuild one VM from the base cloud image without touching the other two.
@@ -327,7 +327,7 @@ At the end:
 6. Configure `chronyd` on all systems and verify time sync status.
 7. Create a small NFS export on `serverc` and mount it manually on `serverb`.
 
-## Verification steps
+## Verification Steps
 
 1. Confirm hostnames:
 
@@ -371,7 +371,7 @@ sudo reboot
 
 After reboot, repeat `hostnamectl`, `ip -br addr`, `lsblk`, and the SSH checks.
 
-## Troubleshooting section
+## Troubleshooting Section
 
 ### Problem: cloud image boots but you cannot log in
 
@@ -443,7 +443,7 @@ Fix:
 - verify you copied the key to the correct user
 - test with `ssh -v serverb.lab.local`
 
-## Common mistakes and recovery
+## Common Mistakes And Recovery
 
 - Mistake: using random VM names
   - Recovery: rename them now and keep the `servera`, `serverb`, `serverc` pattern for the rest of your practice.
@@ -460,7 +460,7 @@ Fix:
 - Mistake: trying to memorize the whole lab
   - Recovery: memorize the design, not every exact command. The important thing is that you can rebuild the lab and verify it.
 
-## Mini quiz
+## Mini Quiz
 
 1. Which VM should usually be your Ansible control node?
 2. Which VM is the best default NFS server in this 3-VM design?
@@ -469,7 +469,7 @@ Fix:
 5. What commands quickly confirm hostname, IP addresses, and visible disks?
 6. Why should you take a baseline snapshot before serious RHCSA practice?
 
-## Exam-style tasks
+## Exam-Style Tasks
 
 ### Exam-Style Task 1
 
@@ -507,7 +507,7 @@ Grader mindset checklist:
 
 ## Answer key / solution guide
 
-### Exam-Style Task 1 example solution
+### Exam-Style Task 1 Example Solution
 
 One valid solution:
 
@@ -519,7 +519,7 @@ One valid solution:
 6. Create `/srv/nfs/share` and `/srv/nfs/home` on `serverc`.
 7. Reboot each system and re-run `hostnamectl`, `ip -br addr`, and `ssh`.
 
-### Exam-Style Task 2 example solution
+### Exam-Style Task 2 Example Solution
 
 One valid solution:
 
@@ -536,7 +536,7 @@ serverc = managed node 2, NFS and storage node
 
 5. Verify everything still works after reboot.
 
-## Recap / memory anchors
+## Recap / Memory Anchors
 
 - `servera` = main box now, control node later
 - `serverb` = managed node
@@ -545,7 +545,7 @@ serverc = managed node 2, NFS and storage node
 - stable hostnames and stable IPs save time
 - snapshot the clean baseline before you break anything
 
-## Quick command summary
+## Quick Command Summary
 
 ```bash
 hostnamectl set-hostname servera.lab.local
@@ -561,3 +561,8 @@ sudo mkdir -p /srv/nfs/share /srv/nfs/home
 sudo dnf install -y vim bash-completion curl wget tar chrony nfs-utils
 sudo dnf install -y ansible-core
 ```
+
+## Continue In Order
+
+- Return to `24-foundations-labs.md` after this blueprint is built
+- Use the RHCE pieces only when they help the lab; keep the RHCSA section labs as the main path

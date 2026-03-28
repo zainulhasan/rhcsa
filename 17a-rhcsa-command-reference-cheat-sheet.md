@@ -7,6 +7,8 @@ This is a fast command reference for revision. It is not a replacement for the l
 - what the common parameters mean
 - what a practical example looks like
 
+If you are following the beginner route, use this sheet after labs `22-26` and `28-rhcsa-10-mixed-practice-bank.md`, not immediately after lesson `16`.
+
 ## How To Read This Sheet
 
 - Uppercase words like `FILE`, `USER`, `HOST`, and `DEVICE` are placeholders.

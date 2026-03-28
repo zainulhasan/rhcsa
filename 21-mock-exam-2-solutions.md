@@ -1,5 +1,7 @@
 # Mock Exam 2 Solutions
 
+Use this file only after you complete `20-mock-exam-2.md` without help.
+
 ## Solution Strategy
 
 This mock exam mixes almost every major topic. Keep the order practical:

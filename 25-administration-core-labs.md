@@ -56,7 +56,7 @@ Admins install packages, automate checks, inspect logs, extend storage, mount fi
 - Mounting a filesystem but not making it persistent
 - Creating cron entries without checking the daemon or full command paths
 
-## Concept explanation in simple language
+## Concept Explanation In Simple Language
 
 This lab file is about the middle of RHCSA: packages, automation, storage, services, and persistence.
 
@@ -69,7 +69,7 @@ Most failures here come from incomplete workflows. For example:
 
 These labs are built to force complete workflows, not half-finished tasks.
 
-## Command breakdowns
+## Command Breakdowns
 
 ### Check repos and packages
 
@@ -139,9 +139,9 @@ Verification:
 - one command proves current mount
 - one command proves persistent config
 
-## Guided hands-on lab
+## Guided Hands-On Lab
 
-### Lab goal
+### Lab Goal
 
 Perform a complete admin workflow covering packages, scripting, storage, mounts, and services.
 
@@ -149,7 +149,7 @@ Perform a complete admin workflow covering packages, scripting, storage, mounts,
 
 Use a VM with an extra empty disk if possible.
 
-### Task steps
+### Task Steps
 
 1. Query package repositories.
 2. Install one small package if available in your lab.
@@ -167,11 +167,11 @@ Use a VM with an extra empty disk if possible.
 14. Check `chronyd` status.
 15. Reboot and confirm the mount and any enabled service still work.
 
-### Expected result
+### Expected Result
 
 - you can complete a multi-topic admin workflow end to end
 
-### Verification commands
+### Verification Commands
 
 ```bash
 rpm -q PACKAGE
@@ -188,7 +188,7 @@ timedatectl
 
 You may keep the filesystem and script if they are useful for later labs.
 
-## Independent practice tasks
+## Independent Practice Tasks
 
 1. Create a `.repo` file for a lab repository if your environment provides one.
 2. Write a script that accepts one argument and reports whether it is a file.
@@ -199,9 +199,9 @@ You may keep the filesystem and script if they are useful for later labs.
 7. Create a cron line that appends the date to a file.
 8. Check bootloader defaults safely with `grubby`.
 
-## Subtitle-derived practice set
+## Core Pattern Practice Set
 
-These drills convert spoken RHCSA question patterns into clean, exam-usable tasks with persistence checks.
+These drills use repeated RHCSA-style task patterns and turn them into clean, exam-usable tasks with persistence checks.
 
 ### Drill 1: Create a 1 GiB XFS partition and mount it persistently
 
@@ -285,9 +285,9 @@ What to check before moving on:
 - non-file arguments do not break it
 - the final count is correct
 
-## Repo-derived RHCSA 10 practice set
+## Extended Objective Practice Set
 
-These drills were selected from external RHCSA study repos and kept only when they still match the current RHCSA 10 objective set.
+These drills add more objective-matching tasks and stay only where they still fit the current RHCSA 10 scope.
 
 ### Drill 6: User-specific cron and `@reboot`
 
@@ -415,14 +415,14 @@ What to check before moving on:
 - you can prove the default selection before reboot
 - you can restore the original default if needed
 
-## Verification steps
+## Verification Steps
 
 1. Confirm you can distinguish between package install, package query, and repo query.
 2. Confirm you can prove both the current mount and the persistent mount.
 3. Confirm you can explain the order: partition -> PV -> VG -> LV -> filesystem -> mount.
 4. Confirm you can prove service state now and at boot with `systemctl`.
 
-## Troubleshooting section
+## Troubleshooting Section
 
 ### Problem: package install fails
 
@@ -481,7 +481,7 @@ Fix:
 - use full command paths
 - wait enough time for the schedule
 
-## Common mistakes and recovery
+## Common Mistakes And Recovery
 
 - Mistake: forgetting to create the filesystem on a new LV.
   Recovery: run `lsblk -f` and identify missing filesystem signatures.
@@ -490,7 +490,7 @@ Fix:
 - Mistake: reading only `systemctl status` and not checking `is-enabled`.
   Recovery: always verify current state and boot persistence separately.
 
-## Mini quiz
+## Mini Quiz
 
 1. What command queries an installed RPM package?
 2. What command tests `/etc/fstab` without rebooting?
@@ -498,7 +498,7 @@ Fix:
 4. What command checks whether a service is enabled at boot?
 5. Why is `blkid` useful in storage labs?
 
-## Exam-style tasks
+## Exam-Style Tasks
 
 ### Exam-Style Task 1
 
@@ -526,7 +526,7 @@ Grader mindset checklist:
 
 ## Answer key / solution guide
 
-### Mini quiz answers
+### Mini Quiz Answers
 
 1. `rpm -q PACKAGE`
 2. `mount -a`
@@ -534,7 +534,7 @@ Grader mindset checklist:
 4. `systemctl is-enabled SERVICE`
 5. It shows UUIDs and filesystem details for persistent mount work.
 
-### Exam-Style Task 1 example solution
+### Exam-Style Task 1 Example Solution
 
 ```bash
 sudo parted /dev/vdb --script mklabel gpt mkpart primary 1MiB 2GiB
@@ -549,7 +549,7 @@ sudo mount -a
 findmnt /data
 ```
 
-### Exam-Style Task 2 example solution
+### Exam-Style Task 2 Example Solution
 
 ```bash
 printf '#!/bin/bash\necho \"$(date) $(hostname)\" >> /tmp/host-report.txt\n' > ~/hostreport.sh
@@ -559,7 +559,7 @@ systemctl is-active sshd
 crontab -l
 ```
 
-### Subtitle-derived practice set solutions
+### Core Pattern Practice Set Solutions
 
 #### Drill 1 example solution
 
@@ -664,7 +664,7 @@ Verification:
 - only real files should be listed
 - the final count should match the listed files
 
-### Repo-derived RHCSA 10 practice set solutions
+### Extended Objective Practice Set Solutions
 
 #### Drill 6 example solution
 
@@ -846,14 +846,14 @@ Verification:
 - verify the new default before rebooting
 - if only one kernel is installed, treat this as an inspection drill and do not force the change
 
-## Recap / memory anchors
+## Recap / Memory Anchors
 
 - repo, package, script, mount, persistence
 - LVM is a chain, not one command
 - test `/etc/fstab` before reboot
 - verify `is-active` and `is-enabled`
 
-## Quick command summary
+## Quick Command Summary
 
 ```bash
 dnf repolist
@@ -873,3 +873,8 @@ crontab -l
 timedatectl
 grubby --default-kernel
 ```
+
+## Continue In Order
+
+- Next file: `26-networking-users-and-security-labs.md`
+- Move on only when storage, filesystems, services, scheduling, and scripting checks feel stable

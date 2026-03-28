@@ -50,7 +50,7 @@ Administrators often use virtual machines to test package changes, boot settings
 - Not recording hostnames and IP information
 - Skipping reboot tests
 
-## Concept explanation in simple language
+## Concept Explanation In Simple Language
 
 Your lab should be safe, repeatable, and boring in a good way. You want a system you can rebuild, reboot, and damage without risk.
 
@@ -69,7 +69,7 @@ Minimum useful setup:
 
 Do not wait until storage or SELinux lessons to discover that your VM cannot reboot correctly or cannot talk to another host.
 
-## Command breakdowns
+## Command Breakdowns
 
 ### Set or inspect hostname
 
@@ -141,9 +141,9 @@ Verification:
 
 - at least one repository or a known package query should work in your lab
 
-## Guided hands-on lab
+## Guided Hands-On Lab
 
-### Lab goal
+### Lab Goal
 
 Prepare one or two local VMs so they are ready for RHCSA practice.
 
@@ -151,7 +151,7 @@ Prepare one or two local VMs so they are ready for RHCSA practice.
 
 If your VMs already exist, boot them and log in. If not, create them in your local hypervisor first.
 
-### Task steps
+### Task Steps
 
 1. Boot `servera`.
 2. Boot `serverb` if available.
@@ -164,11 +164,11 @@ If your VMs already exist, boot them and log in. If not, create them in your loc
 9. Reboot `servera`.
 10. Log back in and re-check hostname and network status.
 
-### Expected result
+### Expected Result
 
 - your lab is usable for remote access, storage, and reboot-safe practice
 
-### Verification commands
+### Verification Commands
 
 ```bash
 hostnamectl
@@ -184,7 +184,7 @@ dnf repolist
 
 No cleanup is required. This is your permanent lab baseline.
 
-## Independent practice tasks
+## Independent Practice Tasks
 
 1. Give both systems clear hostnames if they do not already have them.
 2. Record the primary IPv4 address of each VM.
@@ -193,13 +193,13 @@ No cleanup is required. This is your permanent lab baseline.
 5. Reboot one VM and confirm you can still log in, use `sudo`, and reach the network.
 6. If you only have one VM, write which later topics will need simulation or adaptation.
 
-## Verification steps
+## Verification Steps
 
 1. Confirm each VM has a known hostname.
 2. Confirm at least one VM has reachable networking.
 3. Confirm at least one VM has an extra disk or a clear storage practice plan.
 
-## Troubleshooting section
+## Troubleshooting Section
 
 ### Problem: service not running
 
@@ -249,7 +249,7 @@ Fix:
 - use `hostnamectl` for hostname changes
 - use `systemctl enable` for services that must start at boot
 
-## Common mistakes and recovery
+## Common Mistakes And Recovery
 
 - Mistake: building only one VM and forgetting remote tasks.
   Recovery: add `serverb` now or note which tasks need adaptation.
@@ -258,7 +258,7 @@ Fix:
 - Mistake: ignoring disk layout until storage practice day.
   Recovery: confirm extra disks now.
 
-## Mini quiz
+## Mini Quiz
 
 1. Why is a second VM useful for RHCSA practice?
 2. What command quickly shows block devices?
@@ -266,7 +266,7 @@ Fix:
 4. Why should you reboot before deeper practice?
 5. What should you record in your notes after lab setup?
 
-## Exam-style tasks
+## Exam-Style Tasks
 
 ### Exam-Style Task 1
 
@@ -292,7 +292,7 @@ Grader mindset checklist:
 
 ## Answer key / solution guide
 
-### Mini quiz answers
+### Mini Quiz Answers
 
 1. For SSH, file transfer, NFS, and other client-server tasks.
 2. `lsblk`
@@ -300,7 +300,7 @@ Grader mindset checklist:
 4. Because RHCSA tasks often require persistence after reboot.
 5. Hostnames, IP addresses, disk layout, and weak areas.
 
-### Exam-Style Task 1 example solution
+### Exam-Style Task 1 Example Solution
 
 ```bash
 sudo hostnamectl set-hostname servera.lab.example
@@ -311,21 +311,21 @@ dnf repolist
 sudo reboot
 ```
 
-### Exam-Style Task 2 example solution
+### Exam-Style Task 2 Example Solution
 
 ```bash
 lsblk
 echo "storage practice disk is /dev/vdb" >> ~/rhcsa-lab-notes/scoreboard.txt
 ```
 
-## Recap / memory anchors
+## Recap / Memory Anchors
 
 - safe lab first, hard labs second
 - two VMs are better than one
 - extra disk matters for storage practice
 - reboot early so the lab is trustworthy
 
-## Quick command summary
+## Quick Command Summary
 
 ```bash
 hostnamectl
@@ -338,3 +338,8 @@ df -h
 dnf repolist
 sudo reboot
 ```
+
+## Continue In Order
+
+- If you want one shared lab for both RHCSA and future RHCE work, open `29-rhcsa-rhce-local-lab-blueprint.md` next
+- If you only want the RHCSA section labs for now, continue to `24-foundations-labs.md`

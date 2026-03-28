@@ -1,5 +1,7 @@
 # Mock Exam 1 Solutions
 
+Use this file only after you complete `18-mock-exam-1.md` without help.
+
 ## Solution Strategy
 
 Work in dependency order:

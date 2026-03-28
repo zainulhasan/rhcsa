@@ -16,6 +16,10 @@ Admins build compact mental checklists so they can work faster under pressure wi
 
 4 hours
 
+**Study sequence note**
+
+If you are following the beginner route, complete labs `22-26` and `28-rhcsa-10-mixed-practice-bank.md` before using this review file. The file number is lower than the lab files, but the study order is not.
+
 ## Prerequisites
 
 - Read lessons `00` through `16`
@@ -308,3 +312,8 @@ getenforce
 restorecon
 ssh-copy-id
 ```
+
+## Continue In Order
+
+- If you have not finished labs `22-26` and `28`, stop here and return to them first
+- If you have finished the labs route, continue to `18-mock-exam-1.md`

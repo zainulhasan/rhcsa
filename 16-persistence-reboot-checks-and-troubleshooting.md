@@ -16,6 +16,10 @@ Real administrators are trusted because their fixes remain stable. Temporary suc
 
 5 hours
 
+**Study sequence note**
+
+If you are following the beginner route, do not jump straight to file `17` just because the number comes next. After this lesson, go to the labs track in this order: `22`, `23`, `24`, `25`, `26`, then `28`.
+
 ## Prerequisites
 
 - Read lessons `00` through `15`
@@ -395,3 +399,9 @@ getenforce
 journalctl -b -p err
 reboot
 ```
+
+## Continue In Order
+
+- Next stop for beginners: `22-labs-track-and-skill-check-guide.md`
+- Use `23-vm-lab-setup-and-baseline-checks.md` right after that to confirm your lab is ready
+- Return to `17a` and `17` only after the labs track and mixed practice bank

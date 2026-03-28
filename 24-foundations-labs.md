@@ -56,7 +56,7 @@ Real administrators read docs, create files, edit configuration, search logs, co
 - Forgetting recursion options
 - Setting file permissions correctly but directory permissions incorrectly
 
-## Concept explanation in simple language
+## Concept Explanation In Simple Language
 
 This lab file is about command fluency. You should be able to do simple work quickly and correctly:
 
@@ -69,7 +69,7 @@ This lab file is about command fluency. You should be able to do simple work qui
 
 These tasks are not “small.” They are the base layer under almost every RHCSA task.
 
-## Command breakdowns
+## Command Breakdowns
 
 ### Search by keyword when you forget a command
 
@@ -143,9 +143,9 @@ Verification:
 
 - `demo.link` should point to `demo.txt`
 
-## Guided hands-on lab
+## Guided Hands-On Lab
 
-### Lab goal
+### Lab Goal
 
 Prove you can perform the main RHCSA foundation tasks without step-by-step instructions.
 
@@ -153,7 +153,7 @@ Prove you can perform the main RHCSA foundation tasks without step-by-step instr
 
 Create a working directory such as `~/foundations-lab`.
 
-### Task steps
+### Task Steps
 
 1. Create `~/foundations-lab`.
 2. Create three files named `app.log`, `users.txt`, and `notes.txt`.
@@ -166,7 +166,7 @@ Create a working directory such as `~/foundations-lab`.
 9. Create one hard link and one symbolic link.
 10. Create a directory named `/tmp/shared-foundations` and set group-sharing style permissions on it.
 
-### Expected result
+### Expected Result
 
 - the lab directory exists
 - text-processing commands work
@@ -174,7 +174,7 @@ Create a working directory such as `~/foundations-lab`.
 - links work
 - permissions are intentional and verifiable
 
-### Verification commands
+### Verification Commands
 
 ```bash
 ls -l ~/foundations-lab
@@ -187,7 +187,7 @@ stat /tmp/shared-foundations
 
 Remove only temporary files if you want. Keep useful lab notes.
 
-## Independent practice tasks
+## Independent Practice Tasks
 
 1. Use `apropos` to find commands related to archives.
 2. Use `grep -n` to search `/etc/services` for `ssh`.
@@ -197,9 +197,9 @@ Remove only temporary files if you want. Keep useful lab notes.
 6. Create a symbolic link that breaks, then fix it.
 7. Create a directory with sticky bit behavior and explain why it is useful.
 
-## Subtitle-derived practice set
+## Core Pattern Practice Set
 
-These drills come from RHCSA-style question patterns collected from subtitle notes and then corrected into safe, exam-usable commands.
+These drills use repeated RHCSA-style task patterns that were cleaned into learner-friendly practice tasks.
 
 ### Drill 1: ACL check on a copied system file
 
@@ -260,9 +260,9 @@ What to check before moving on:
 - you can explain the separator or regex used
 - you can repeat the commands from memory
 
-## Repo-derived practice set
+## Extended Objective Practice Set
 
-These drills were adapted from external RHCSA question collections and rewritten with more explanation so they help you learn, not just memorize answers.
+These drills add more objective-matching practice with clearer verification so they help you learn, not just memorize.
 
 ### Drill 5: Search text and save the result to a file
 
@@ -330,14 +330,14 @@ What to check before moving on:
 - ACLs apply both now and for new files
 - `getfacl /home/john` clearly shows the added rules
 
-## Verification steps
+## Verification Steps
 
 1. Confirm you can explain the difference between `>` and `>>`.
 2. Confirm you can explain hard link versus symbolic link.
 3. Confirm you can verify permissions on both files and directories.
 4. Confirm you can list the contents of a compressed archive without extracting it.
 
-## Troubleshooting section
+## Troubleshooting Section
 
 ### Problem: wrong path
 
@@ -395,7 +395,7 @@ Fix:
 - check `sshd` on the remote host
 - test with plain `ssh` first
 
-## Common mistakes and recovery
+## Common Mistakes And Recovery
 
 - Mistake: using `rm -r` in the wrong directory.
   Recovery: run `pwd` before destructive commands.
@@ -404,7 +404,7 @@ Fix:
 - Mistake: using the wrong archive option.
   Recovery: review `tar -czvf`, `tar -cjvf`, and `tar -xvf`.
 
-## Mini quiz
+## Mini Quiz
 
 1. What does `apropos` help you do?
 2. What does `awk -F:` mean?
@@ -412,7 +412,7 @@ Fix:
 4. What command lists the contents of a `tar.gz` archive without extracting it?
 5. What does `chmod 2775 DIR` do on a shared directory?
 
-## Exam-style tasks
+## Exam-Style Tasks
 
 ### Exam-Style Task 1
 
@@ -438,7 +438,7 @@ Grader mindset checklist:
 
 ## Answer key / solution guide
 
-### Mini quiz answers
+### Mini Quiz Answers
 
 1. Find commands or manuals by keyword.
 2. It sets `:` as the field separator.
@@ -446,7 +446,7 @@ Grader mindset checklist:
 4. `tar -tzvf archive.tar.gz`
 5. It sets group inheritance and standard shared directory permissions.
 
-### Exam-Style Task 1 example solution
+### Exam-Style Task 1 Example Solution
 
 ```bash
 mkdir -p ~/foundations-lab
@@ -457,7 +457,7 @@ tar -czvf /tmp/foundations-lab.tar.gz ~/foundations-lab
 tar -tzvf /tmp/foundations-lab.tar.gz
 ```
 
-### Exam-Style Task 2 example solution
+### Exam-Style Task 2 Example Solution
 
 ```bash
 sudo mkdir -p /srv/projectshare
@@ -470,7 +470,7 @@ ls -li ~/foundations-lab
 ls -ld /srv/projectshare
 ```
 
-### Subtitle-derived practice set solutions
+### Core Pattern Practice Set Solutions
 
 #### Drill 1 example solution
 
@@ -531,7 +531,7 @@ Verification:
 - `sed` should print exactly five lines
 - `grep` should match only Bash-shell entries
 
-### Repo-derived practice set solutions
+### Extended Objective Practice Set Solutions
 
 #### Drill 5 example solution
 
@@ -602,14 +602,14 @@ Verification:
 - `u:davis:rwx` applies to current content
 - `d:u:davis:rwx` becomes the default ACL for new content
 
-## Recap / memory anchors
+## Recap / Memory Anchors
 
 - search help locally before panic
 - use `grep`, `sed`, and `awk` together
 - verify archives before trusting them
 - permissions on directories matter a lot
 
-## Quick command summary
+## Quick Command Summary
 
 ```bash
 apropos archive
@@ -624,3 +624,8 @@ ln file hardlink
 ln -s file symlink
 chmod 2775 DIR
 ```
+
+## Continue In Order
+
+- Next file: `25-administration-core-labs.md`
+- Move on only when shell, file, text, archive, SSH, and permissions tasks feel routine

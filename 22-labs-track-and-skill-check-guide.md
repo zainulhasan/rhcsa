@@ -20,6 +20,10 @@ Junior administrators often inherit servers and must prove they can perform comm
 
 1.5 to 2 hours
 
+**Study sequence note**
+
+If you just finished lesson `16`, this is the correct next file for the beginner route, even though the review files `17-21` appear first in filename order.
+
 ## Prerequisites
 
 - Basic access to a RHEL-compatible VM or physical system
@@ -54,7 +58,7 @@ Junior administrators often inherit servers and must prove they can perform comm
 - Skipping timing practice
 - Looking at solutions too early
 
-## Concept explanation in simple language
+## Concept Explanation In Simple Language
 
 This labs track is for two kinds of learners:
 
@@ -62,6 +66,21 @@ This labs track is for two kinds of learners:
 - learners who already know some Linux and want to test themselves directly
 
 If you are a total beginner, use the lesson track first and use these lab files after each section.
+
+If you opened files `17-21` already because you were following numbers only, stop and return here first. The intended beginner route after lesson `16` is:
+
+1. `22-labs-track-and-skill-check-guide.md`
+2. `23-vm-lab-setup-and-baseline-checks.md`
+3. `24-foundations-labs.md`
+4. `25-administration-core-labs.md`
+5. `26-networking-users-and-security-labs.md`
+6. `28-rhcsa-10-mixed-practice-bank.md`
+7. `17a-rhcsa-command-reference-cheat-sheet.md`
+8. `17-final-review-cheat-sheets.md`
+9. `18-mock-exam-1.md`
+10. `19-mock-exam-1-solutions.md`
+11. `20-mock-exam-2.md`
+12. `21-mock-exam-2-solutions.md`
 
 If you already know some Linux, start here, then move through the lab files in order. When a task feels hard or unclear, go back to the matching lesson file and study that topic in depth.
 
@@ -104,7 +123,7 @@ The related support files are:
 - `28-rhcsa-10-mixed-practice-bank.md` for extra mixed RHCSA 10 drills
 - `27-optional-topic-video-map.md` for late-stage topic reinforcement only
 
-## Command breakdowns
+## Command Breakdowns
 
 ### Record a practice session
 
@@ -183,9 +202,9 @@ Verification:
 
 - you can explain both the temporary mount and the persistent mount workflow
 
-## Guided hands-on lab
+## Guided Hands-On Lab
 
-### Lab goal
+### Lab Goal
 
 Set up your lab method so you can use the rest of the new lab track efficiently.
 
@@ -193,7 +212,7 @@ Set up your lab method so you can use the rest of the new lab track efficiently.
 
 Use a practice VM where rebooting and making changes is safe.
 
-### Task steps
+### Task Steps
 
 1. Create a directory named `~/rhcsa-lab-notes`.
 2. Start a transcript with `script`.
@@ -207,13 +226,13 @@ Use a practice VM where rebooting and making changes is safe.
 6. Add a simple scoring key: `2 = strong`, `1 = partial`, `0 = review`.
 7. Reboot the VM once and confirm you can log back in and continue.
 
-### Expected result
+### Expected Result
 
 - you have a repeatable lab folder
 - you have a place to score weak and strong topics
 - you are comfortable rebooting the lab
 
-### Verification commands
+### Verification Commands
 
 ```bash
 ls -ld ~/rhcsa-lab-notes
@@ -226,7 +245,7 @@ hostnamectl
 
 Keep the notes directory. It is part of your training setup.
 
-## Independent practice tasks
+## Independent Practice Tasks
 
 1. Create a second score file named `~/rhcsa-lab-notes/mistakes.txt`.
 2. Write a three-line rule set for how you will verify work after every lab.
@@ -234,13 +253,13 @@ Keep the notes directory. It is part of your training setup.
 4. Add one line explaining when you should use `man` instead of guessing.
 5. Time yourself for five minutes and list all RHCSA topics you can remember without opening notes.
 
-## Verification steps
+## Verification Steps
 
 1. Confirm `~/rhcsa-lab-notes` exists.
 2. Confirm your scoreboard file contains at least four topic headings.
 3. Confirm you can explain the difference between “works now” and “works after reboot.”
 
-## Troubleshooting section
+## Troubleshooting Section
 
 ### Problem: wrong path
 
@@ -296,7 +315,7 @@ Fix:
 
 - identify whether the task needed `/etc/fstab`, `systemctl enable`, persistent firewall rules, or SELinux persistence
 
-## Common mistakes and recovery
+## Common Mistakes And Recovery
 
 - Mistake: using the labs like reading material only.
   Recovery: treat every lab as a typing exercise.
@@ -305,7 +324,7 @@ Fix:
 - Mistake: not keeping a weak-topic list.
   Recovery: score every lab honestly.
 
-## Mini quiz
+## Mini Quiz
 
 1. Why is a question-first lab useful for RHCSA?
 2. What does `systemctl is-enabled` prove?
@@ -313,7 +332,7 @@ Fix:
 4. Why should you keep a mistakes file?
 5. When should you look at the solution section?
 
-## Exam-style tasks
+## Exam-Style Tasks
 
 ### Exam-Style Task 1
 
@@ -344,7 +363,7 @@ Grader mindset checklist:
 
 ## Answer key / solution guide
 
-### Mini quiz answers
+### Mini Quiz Answers
 
 1. Because RHCSA tests execution, not recognition.
 2. It proves a service is configured to start at boot.
@@ -352,7 +371,7 @@ Grader mindset checklist:
 4. So you can turn repeated failures into a study plan.
 5. Only after attempting the task honestly.
 
-### Exam-Style Task 1 example solution
+### Exam-Style Task 1 Example Solution
 
 ```bash
 mkdir -p ~/rhcsa-lab-notes
@@ -361,7 +380,7 @@ printf "foundations\nsoftware-and-scripting\nsystems-and-storage\nnetworking-use
 printf "mistakes log\n" > ~/rhcsa-lab-notes/mistakes.txt
 ```
 
-### Exam-Style Task 2 example solution
+### Exam-Style Task 2 Example Solution
 
 ```bash
 cat > ~/rhcsa-lab-notes/self-checklist.txt <<'EOF'
@@ -372,14 +391,14 @@ EOF
 cat ~/rhcsa-lab-notes/self-checklist.txt
 ```
 
-## Recap / memory anchors
+## Recap / Memory Anchors
 
 - labs are for proving skill, not reading theory
 - verify current state and persistence separately
 - score weak topics honestly
 - reboot is part of RHCSA practice
 
-## Quick command summary
+## Quick Command Summary
 
 ```bash
 mkdir -p ~/rhcsa-lab-notes
@@ -391,3 +410,8 @@ systemctl is-active sshd
 systemctl is-enabled sshd
 cat ~/rhcsa-lab-notes/scoreboard.txt
 ```
+
+## Continue In Order
+
+- Next file: `23-vm-lab-setup-and-baseline-checks.md`
+- Use that file to make sure the lab is stable before starting section labs

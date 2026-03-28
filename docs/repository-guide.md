@@ -1,1 +1,1 @@
-../README.md
+../repository-guide.md

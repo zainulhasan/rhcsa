@@ -1,5 +1,16 @@
 # Mock Exam 2
 
+## When To Use This Mock Exam
+
+Use this only after you have completed:
+
+- lessons `00-16`
+- labs `22-26`
+- `28-rhcsa-10-mixed-practice-bank.md`
+- `17a-rhcsa-command-reference-cheat-sheet.md`
+- `17-final-review-cheat-sheets.md`
+- `18-mock-exam-1.md`
+
 ## Instructions
 
 - Time limit: 3 hours
@@ -62,3 +73,8 @@ findmnt /webcontent
 ssh -o PreferredAuthentications=publickey webadmin@serverb hostname
 ls -Z /var/www/html
 ```
+
+## Continue In Order
+
+- Grade yourself before reading the answer key
+- Open `21-mock-exam-2-solutions.md` only after you are fully finished

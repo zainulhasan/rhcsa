@@ -54,6 +54,10 @@ Administrators rarely get tasks one chapter at a time. They are asked to create 
 
 3 to 5 hours
 
+**Study sequence note**
+
+For the beginner route, this file comes after labs `22-26` and before the review files `17a` and `17`, even though the file number is higher.
+
 **Common beginner mistakes**
 
 - Solving only the main task and skipping verification
@@ -62,11 +66,20 @@ Administrators rarely get tasks one chapter at a time. They are asked to create 
 - Editing a config file and forgetting to restart or reload the service
 - Creating storage correctly but mounting it only for the current boot
 
-## Concept explanation in simple language
+## Concept Explanation In Simple Language
 
 This file is not another full course. It is a pressure-tested reinforcement bank.
 
 If you are a total beginner, do not start here. Finish the lesson path and section labs first, then return here for mixed-pressure practice.
+
+If you are following the full route in order, the next steps after this file are:
+
+1. `17a-rhcsa-command-reference-cheat-sheet.md`
+2. `17-final-review-cheat-sheets.md`
+3. `18-mock-exam-1.md`
+4. `19-mock-exam-1-solutions.md`
+5. `20-mock-exam-2.md`
+6. `21-mock-exam-2-solutions.md`
 
 The most useful RHCSA practice patterns repeat the same ideas over and over:
 
@@ -85,7 +98,7 @@ That repetition is useful, but raw source material can become noisy. This file t
 
 Use this file when you already know the basics and want more realistic, mixed practice.
 
-## Command breakdowns
+## Command Breakdowns
 
 ### Find the right local help fast
 
@@ -223,9 +236,9 @@ Expected result:
 - SELinux port label exists
 - `curl` returns the page
 
-## Guided hands-on lab
+## Guided Hands-On Lab
 
-### Lab goal
+### Lab Goal
 
 Complete one mixed RHCSA 10 workflow that touches archives, users, storage, and service verification.
 
@@ -235,7 +248,7 @@ Complete one mixed RHCSA 10 workflow that touches archives, users, storage, and 
 - Use a spare disk such as `/dev/vdb` if available
 - If `httpd` is unavailable in your lab, skip only the service portion and still do the archive, user, and storage tasks
 
-### Task steps
+### Task Steps
 
 1. Create `/root/reviewbundle.tgz` containing `/etc/ssh`.
 2. Create group `reviewops`.
@@ -248,7 +261,7 @@ Complete one mixed RHCSA 10 workflow that touches archives, users, storage, and 
 9. Verify the mount with both `findmnt` and `/etc/fstab`.
 10. If `httpd` is installed, verify whether it is active and enabled and inspect its recent logs.
 
-### Expected result
+### Expected Result
 
 - archive exists and can be listed
 - user and group are correct
@@ -256,7 +269,7 @@ Complete one mixed RHCSA 10 workflow that touches archives, users, storage, and 
 - storage is mounted persistently
 - service verification commands are familiar
 
-### Verification commands
+### Verification Commands
 
 ```bash
 tar -tzvf /root/reviewbundle.tgz
@@ -275,9 +288,9 @@ systemctl is-enabled httpd
 
 Keep the archive and storage if you want to reuse them. Remove the user, group, and mount only if you need to reset the lab.
 
-## Independent practice tasks
+## Independent Practice Tasks
 
-### Priority Core question set
+### Priority Core Question Set
 
 Start with these first. They cover the highest-value mixed RHCSA task flow.
 
@@ -302,14 +315,14 @@ Start with these first. They cover the highest-value mixed RHCSA task flow.
 19. Build storage from PV to VG to LV, create a filesystem, mount it persistently, and verify it with `findmnt` and `/etc/fstab`.
 20. Extend an existing logical volume and grow the filesystem without breaking the mount.
 
-### Optional or version-sensitive question set
+### Optional Or Version-Sensitive Question Set
 
 Use these after the core tasks.
 
 21. If your lab and exam version expect it, create or manage a VDO-backed volume.
 22. If your build includes container objectives, run a container task separately and label it `Version-specific` in your notes.
 
-### Extra speed drills
+### Extra Speed Drills
 
 1. Use `apropos` and `man -k` to find the command family for scheduled jobs, then open the relevant manual pages.
 2. Print only usernames and home directories from `/etc/passwd` using `awk`.
@@ -327,7 +340,7 @@ Use these after the core tasks.
 14. Use `journalctl` to inspect the last twenty lines for `sshd` or `httpd`.
 15. Reboot once and repeat the verification commands for any mount, service, or network configuration you changed.
 
-## Verification steps
+## Verification Steps
 
 1. Confirm every user task with `id`, `getent passwd`, and directory checks.
 2. Confirm every storage task with both a live command such as `findmnt` and a persistent check in `/etc/fstab`.
@@ -335,7 +348,7 @@ Use these after the core tasks.
 4. Confirm every security-exposed service with both `firewall-cmd` and the relevant SELinux check.
 5. Confirm every reboot-sensitive task again after reboot, not just before reboot.
 
-## Troubleshooting section
+## Troubleshooting Section
 
 ### Problem: repo or package command fails
 
@@ -399,7 +412,7 @@ Fix:
 - inspect `~/.ssh` permissions on the remote host
 - verify the key exists in `authorized_keys`
 
-## Common mistakes and recovery
+## Common Mistakes And Recovery
 
 - Mistake: solving the storage build but not the persistent mount.
   Recovery: make `blkid`, `/etc/fstab`, `mount -a`, and `findmnt` part of the same workflow every time.
@@ -412,7 +425,7 @@ Fix:
 - Mistake: reading answers too early.
   Recovery: write your own verification commands first, then compare.
 
-## Mini quiz
+## Mini Quiz
 
 1. Which command proves a service is configured to start at boot?
 2. Which command safely tests `/etc/fstab` without rebooting?
@@ -421,7 +434,7 @@ Fix:
 5. Which command checks whether SELinux currently enforces policy?
 6. Which command lists persistent firewall configuration for the current zone?
 
-## Exam-style tasks
+## Exam-Style Tasks
 
 ### Exam-Style Task 1
 
@@ -452,7 +465,7 @@ Grader mindset checklist:
 
 ## Answer key / solution guide
 
-### Guided lab example solution
+### Guided Lab Example Solution
 
 ```bash
 sudo tar -czvf /root/reviewbundle.tgz /etc/ssh
@@ -476,7 +489,7 @@ systemctl is-enabled httpd
 journalctl -u httpd -n 20
 ```
 
-### Mini quiz answers
+### Mini Quiz Answers
 
 1. `systemctl is-enabled SERVICE`
 2. `mount -a`
@@ -485,7 +498,7 @@ journalctl -u httpd -n 20
 5. `getenforce`
 6. `firewall-cmd --list-all --permanent`
 
-### Independent practice guidance
+### Independent Practice Guidance
 
 For the priority core question set and the extra speed drills, grade yourself this way:
 
@@ -495,7 +508,7 @@ For the priority core question set and the extra speed drills, grade yourself th
 
 Write the score next to each task in your notes so you can see which objective group still needs repetition.
 
-### Priority question planning guide
+### Priority Question Planning Guide
 
 Use this as a command-direction hint, not as a substitute for solving the task yourself.
 
@@ -520,7 +533,7 @@ Use this as a command-direction hint, not as a substitute for solving the task y
 - LVM: `pvcreate` -> `vgcreate` -> `lvcreate` -> `mkfs` -> `/etc/fstab` -> `mount -a`
 - Extend LV: `lvextend` -> `xfs_growfs` or `resize2fs` -> verify with `lvs` and `df -h`
 
-### Exam-Style Task 1 example solution
+### Exam-Style Task 1 Example Solution
 
 ```bash
 sudo groupadd examops
@@ -539,7 +552,7 @@ sudo mount -a
 findmnt /srv/examdata
 ```
 
-### Exam-Style Task 2 example solution
+### Exam-Style Task 2 Example Solution
 
 ```bash
 sudo dnf install -y httpd
@@ -555,7 +568,7 @@ curl http://localhost:85/
 
 If `httpd` is configured to listen only on port `80`, also update the service configuration before restarting it.
 
-## Recap / memory anchors
+## Recap / Memory Anchors
 
 - mixed practice matters because the exam mixes topics
 - local help first, guessing last
@@ -563,7 +576,7 @@ If `httpd` is configured to listen only on port `80`, also update the service co
 - firewall and SELinux are separate layers
 - every persistent task needs a reboot-safe mindset
 
-## Quick command summary
+## Quick Command Summary
 
 ```bash
 apropos KEYWORD
@@ -595,3 +608,8 @@ restorecon -Rv PATH
 ssh-keygen
 ssh-copy-id USER@HOST
 ```
+
+## Continue In Order
+
+- Next file for the full beginner route: `17a-rhcsa-command-reference-cheat-sheet.md`
+- Then use `17-final-review-cheat-sheets.md` before starting the mock exams

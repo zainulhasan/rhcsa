@@ -55,7 +55,7 @@ Administrators constantly assign IP settings, control access, create users, mana
 - Editing sudo rules unsafely
 - Changing an SELinux setting at runtime only and forgetting persistence
 
-## Concept explanation in simple language
+## Concept Explanation In Simple Language
 
 This lab file checks whether you can make access work correctly and securely.
 
@@ -74,7 +74,7 @@ The key theme is layered verification:
 3. check persistence
 4. check security side effects
 
-## Command breakdowns
+## Command Breakdowns
 
 ### Change a connection profile
 
@@ -140,9 +140,9 @@ Verification:
 
 - port label and listening state should both make sense
 
-## Guided hands-on lab
+## Guided Hands-On Lab
 
-### Lab goal
+### Lab Goal
 
 Perform a complete networking, access, and SELinux workflow.
 
@@ -150,7 +150,7 @@ Perform a complete networking, access, and SELinux workflow.
 
 Use one or two VMs. Two are better for SSH key testing.
 
-### Task steps
+### Task Steps
 
 1. Check current IP settings.
 2. Modify or review a NetworkManager profile.
@@ -167,14 +167,14 @@ Use one or two VMs. Two are better for SSH key testing.
 13. If `httpd` is available in your lab, prepare it for port `85` with SELinux and firewall settings.
 14. Reboot and verify the important persistent settings.
 
-### Expected result
+### Expected Result
 
 - network configuration is understandable and testable
 - user and group administration is correct
 - SSH keys work or are prepared correctly
 - firewall and SELinux configuration can be verified after reboot
 
-### Verification commands
+### Verification Commands
 
 ```bash
 ip addr
@@ -194,7 +194,7 @@ sudo semanage port -l | grep http_port_t
 
 You may keep the user, rules, and key pair if they support later practice.
 
-## Independent practice tasks
+## Independent Practice Tasks
 
 1. Configure a static IPv4 address on a lab connection profile.
 2. Add DNS settings with `nmcli`.
@@ -207,9 +207,9 @@ You may keep the user, rules, and key pair if they support later practice.
 9. Restore the default context on a changed directory.
 10. Configure port `85` for `httpd` with both SELinux and firewalld.
 
-## Subtitle-derived practice set
+## Core Pattern Practice Set
 
-These drills are adapted from subtitle question banks and rewritten so the commands are correct for real RHCSA practice.
+These drills use repeated RHCSA-style task patterns and rewrite them into safer, clearer practice tasks.
 
 ### Drill 1: Users, supplementary groups, and non-login shell
 
@@ -299,9 +299,9 @@ What to check before moving on:
 - the context on `/test` matches web content use
 - the rule survives relabeling and reboot
 
-## Repo-derived practice set
+## Extended Objective Practice Set
 
-These drills come from additional RHCSA practice-question sources and were rewritten with clearer verification and recovery steps.
+These drills add more objective-matching practice with clearer verification and recovery steps.
 
 ### Drill 7: Create users with specific UIDs and expiration policy
 
@@ -367,14 +367,14 @@ What to check before moving on:
 - the policy change is persistent
 - `restorecon` applies the label correctly
 
-## Verification steps
+## Verification Steps
 
 1. Confirm you can verify a user with `id`, `getent passwd`, and directory checks.
 2. Confirm you can verify both firewall rules and listening ports separately.
 3. Confirm you can verify both SELinux runtime mode and configured boot mode.
 4. Confirm you can explain why firewall success alone does not prove SELinux success.
 
-## Troubleshooting section
+## Troubleshooting Section
 
 ### Problem: network change does not take effect
 
@@ -422,7 +422,7 @@ Fix:
 - inspect port labels with `semanage port -l`
 - inspect relevant booleans with `getsebool -a | grep httpd`
 
-## Common mistakes and recovery
+## Common Mistakes And Recovery
 
 - Mistake: trusting `useradd` without verifying the result.
   Recovery: always run `id`, `getent passwd`, and inspect the home directory.
@@ -431,7 +431,7 @@ Fix:
 - Mistake: using `setenforce 0` as a permanent fix.
   Recovery: fix the policy issue and return to enforcing mode.
 
-## Mini quiz
+## Mini Quiz
 
 1. What command activates a changed connection profile?
 2. What command safely checks sudoers syntax?
@@ -439,7 +439,7 @@ Fix:
 4. What command adds a persistent firewall port rule?
 5. What command maps port `85` to the HTTP SELinux type?
 
-## Exam-style tasks
+## Exam-Style Tasks
 
 ### Exam-Style Task 1
 
@@ -466,7 +466,7 @@ Grader mindset checklist:
 
 ## Answer key / solution guide
 
-### Mini quiz answers
+### Mini Quiz Answers
 
 1. `nmcli connection up NAME`
 2. `visudo -c`
@@ -474,7 +474,7 @@ Grader mindset checklist:
 4. `firewall-cmd --add-port=PORT/proto --permanent`
 5. `semanage port -a -t http_port_t -p tcp 85`
 
-### Exam-Style Task 1 example solution
+### Exam-Style Task 1 Example Solution
 
 ```bash
 sudo groupadd webteam
@@ -487,7 +487,7 @@ getent passwd alice
 ls -ld /srv/alice
 ```
 
-### Exam-Style Task 2 example solution
+### Exam-Style Task 2 Example Solution
 
 ```bash
 sudo semanage port -a -t http_port_t -p tcp 85
@@ -498,7 +498,7 @@ sudo firewall-cmd --list-ports
 ss -tuln | grep :85
 ```
 
-### Subtitle-derived practice set solutions
+### Core Pattern Practice Set Solutions
 
 #### Drill 1 example solution
 
@@ -589,7 +589,7 @@ Verification:
 - `/test` and its contents should show `httpd_sys_content_t`
 - `restorecon` should be the step that applies the persistent rule
 
-### Repo-derived practice set solutions
+### Extended Objective Practice Set Solutions
 
 #### Drill 7 example solution
 
@@ -651,14 +651,14 @@ Verification:
 - the type should match the home-directory style context such as `user_home_dir_t`
 - use `restorecon`, not `chcon`, when the task requires persistence
 
-## Recap / memory anchors
+## Recap / Memory Anchors
 
 - `nmcli` changes need activation
 - verify users from multiple angles
 - firewall and SELinux are separate checks
 - runtime state and boot persistence are not the same
 
-## Quick command summary
+## Quick Command Summary
 
 ```bash
 ip addr
@@ -679,3 +679,8 @@ sestatus
 restorecon -Rv /var/www/html
 semanage port -a -t http_port_t -p tcp 85
 ```
+
+## Continue In Order
+
+- Next file: `28-rhcsa-10-mixed-practice-bank.md`
+- After that, return to `17a-rhcsa-command-reference-cheat-sheet.md` and `17-final-review-cheat-sheets.md`

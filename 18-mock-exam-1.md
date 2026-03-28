@@ -1,5 +1,15 @@
 # Mock Exam 1
 
+## When To Use This Mock Exam
+
+Use this only after you have completed:
+
+- lessons `00-16`
+- labs `22-26`
+- `28-rhcsa-10-mixed-practice-bank.md`
+- `17a-rhcsa-command-reference-cheat-sheet.md`
+- `17-final-review-cheat-sheets.md`
+
 ## Instructions
 
 - Time limit: 3 hours
@@ -65,3 +75,8 @@ firewall-cmd --list-services
 getenforce
 ls -ld /var/log/journal
 ```
+
+## Continue In Order
+
+- Check your own proof commands first
+- Open `19-mock-exam-1-solutions.md` only after you are fully done

@@ -184,7 +184,7 @@ Weak-topic signals:
 
 These files are not part of the main beginner study path.
 
-- `27-optional-topic-video-map.md` is a topic-based reference map for late-stage reinforcement only.
+- `27-optional-topic-video-map.md` is a topic-based reinforcement map for late-stage review only.
 - Use it after lessons, labs, and mixed practice, not before.
 - Treat it as a way to revisit weak topics, not as the core course.
 
@@ -243,7 +243,7 @@ Every lesson is built to train exam behavior:
 
 ## Version Watch
 
-This course follows your required study points as the mandatory scope. The current public EX200 page states that the exam is based on RHEL 10, so some command output and defaults may vary slightly by system version. Core skills remain the same: task completion, verification, troubleshooting, and persistence after reboot.
+This course follows your required study points as the mandatory scope. Red Hat's public [EX200 page](https://www.redhat.com/en/services/training/ex200-red-hat-certified-system-administrator-rhcsa-exam) states that the exam is based on `RHEL 10`, so some command output and defaults may vary slightly by system version. Core skills remain the same: task completion, verification, troubleshooting, and persistence after reboot.
 
 ## GitHub Pages
 

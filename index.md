@@ -54,7 +54,7 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
 - __Use Optional Reinforcement__
 
-  Use the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for extra mixed drills. Keep the [optional topic video map](27-optional-topic-video-map.md) for late-stage weak-topic review only.
+  Use the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for extra mixed drills. Keep the [optional topic reinforcement map](27-optional-topic-video-map.md) for late-stage weak-topic review only.
 
 </div>
 
@@ -80,7 +80,7 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
 - __Optional Reinforcement__
 
-  Extra mixed practice and an optional topic map are available, but the main course path stays lesson-first and lab-first for beginners.
+  Extra mixed practice and an optional topic reinforcement map are available, but the main course path stays lesson-first and lab-first for beginners.
 
 </div>
 
@@ -241,7 +241,7 @@ Use the sections below as a practical training sequence, not just a reading list
 
 ## Version Watch
 
-This site is organized around the current public `RHCSA EX200` scope for `RHEL 10`. Some command output and defaults can vary slightly between builds and minor releases, but the core exam habits stay the same: complete the task, verify the result, and confirm it survives reboot when required.
+This site is organized around Red Hat's public `EX200` scope for `RHEL 10`. Some command output and defaults can vary slightly between builds and minor releases, but the core exam habits stay the same: complete the task, verify the result, and confirm it survives reboot when required.
 
 ## Publishing Notes
 
