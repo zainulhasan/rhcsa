@@ -48,6 +48,10 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
   If you already know some Linux, start with the [Labs Track Guide](22-labs-track-and-skill-check-guide.md) and use the question-first files to test real skill.
 
+- __Build A Real 3-VM Lab__
+
+  Use the [RHCSA and RHCE Local Lab Blueprint](29-rhcsa-rhce-local-lab-blueprint.md) to turn one cloud image into `servera`, `serverb`, and `serverc`.
+
 - __Use Optional Reinforcement__
 
   Use the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for extra mixed drills. Keep the [optional topic video map](27-optional-topic-video-map.md) for late-stage weak-topic review only.
@@ -217,6 +221,7 @@ Use the sections below as a practical training sequence, not just a reading list
 
 - [22 Labs Track and Skill Check Guide](22-labs-track-and-skill-check-guide.md)
 - [23 VM Lab Setup and Baseline Checks](23-vm-lab-setup-and-baseline-checks.md)
+- [29 RHCSA and RHCE Local Lab Blueprint](29-rhcsa-rhce-local-lab-blueprint.md)
 - [24 Foundations Labs](24-foundations-labs.md)
 - [25 Administration Core Labs](25-administration-core-labs.md)
 - [26 Networking, Users, and Security Labs](26-networking-users-and-security-labs.md)

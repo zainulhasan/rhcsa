@@ -149,6 +149,11 @@ Recommended VM names:
 
 - `servera`
 - `serverb`
+- `serverc`
+
+If you want one lab for both RHCSA and RHCE, use the dedicated guide:
+
+- `29-rhcsa-rhce-local-lab-blueprint.md`
 
 Recommended habits:
 
@@ -201,6 +206,7 @@ Best method:
 The labs track is a second route through the course.
 
 - It starts with local VM setup and baseline checks.
+- `29-rhcsa-rhce-local-lab-blueprint.md` extends that into a 3-VM design for RHCSA plus future RHCE work.
 - It is designed for learners who want question-first practice.
 - Each lab file follows the same study structure as the lesson files.
 - Each lab file includes worked examples, guided labs, independent tasks, verification, troubleshooting, quiz questions, and exam-style tasks.

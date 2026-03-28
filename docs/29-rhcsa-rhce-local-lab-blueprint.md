@@ -1,0 +1,1 @@
+../29-rhcsa-rhce-local-lab-blueprint.md

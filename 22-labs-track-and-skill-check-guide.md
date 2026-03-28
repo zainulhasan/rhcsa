@@ -91,14 +91,16 @@ Use this lab track like a pressure test:
 Use the labs in this order if you want the cleanest path:
 
 1. build the VM baseline
-2. test foundations
-3. test administration core
-4. test networking, users, and security
-5. run the mixed practice bank for cross-topic pressure
-6. return to lesson files only where scores are weak
+2. build the 3-VM RHCSA plus RHCE-ready lab if you want one environment for both tracks
+3. test foundations
+4. test administration core
+5. test networking, users, and security
+6. run the mixed practice bank for cross-topic pressure
+7. return to lesson files only where scores are weak
 
 The related support files are:
 
+- `29-rhcsa-rhce-local-lab-blueprint.md` for a practical 3-VM design using one main node and two supporting nodes
 - `28-rhcsa-10-mixed-practice-bank.md` for extra mixed RHCSA 10 drills
 - `27-optional-topic-video-map.md` for late-stage topic reinforcement only
 
