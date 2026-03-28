@@ -54,7 +54,7 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
 - __Use Optional Reinforcement__
 
-  Use the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for extra mixed drills. Keep the [optional topic reinforcement map](27-optional-topic-video-map.md) for late-stage weak-topic review only.
+  Use the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for extra mixed drills. Keep the [optional topic reinforcement map](27-optional-topic-video-map.md) for weak-topic review, and use the [RHEL 9 book exercise adaptation bank](30-rhel9-book-exercise-adaptation-bank.md) only as extra optional hands-on repetition after `28`.
 
 </div>
 
@@ -80,7 +80,7 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
 - __Optional Reinforcement__
 
-  Extra mixed practice and an optional topic reinforcement map are available, but the main course path stays lesson-first and lab-first for beginners.
+  Extra mixed practice, an optional topic reinforcement map, and one optional book-derived exercise bank are available, but the main course path stays lesson-first and lab-first for beginners.
 
 </div>
 

@@ -80,6 +80,7 @@ If the problem is still unclear:
 Use optional reinforcement only after the main path is working.
 
 - `27-optional-topic-video-map.md` is for one weak topic at a time
+- `30-rhel9-book-exercise-adaptation-bank.md` is for extra optional hands-on repetition after `28-rhcsa-10-mixed-practice-bank.md`
 - do not replace hands-on practice with video watching
 - reject resources that focus on dumps, memorized answers, or non-objective topics
 
