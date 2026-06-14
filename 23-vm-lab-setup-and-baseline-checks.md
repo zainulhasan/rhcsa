@@ -22,6 +22,15 @@ Administrators often use virtual machines to test package changes, boot settings
 - Access to a hypervisor such as VirtualBox, VMware, GNOME Boxes, or KVM-based tools
 - A RHEL-compatible installation image or an already installed VM
 
+!!! note "Subscription and offline notes"
+    You can use a free Red Hat Developer subscription for RHEL, or a compatible
+    rebuild such as **AlmaLinux** or **Rocky Linux** if you cannot register —
+    the RHCSA skills are identical. Internet is only needed at **setup time**
+    (downloading the image, first package install). The **exam itself is
+    offline** and installs packages from a **local repository**, so once your
+    lab works, practice as if there is no internet: rely on `man`, `--help`,
+    and local repos rather than online searches.
+
 ## Objectives Covered
 
 - Set up one or two practice VMs locally
@@ -85,6 +94,8 @@ ip addr
 ip route
 ping -c 4 8.8.8.8
 ```
+
+The `ping 8.8.8.8` test only confirms internet for **lab setup**; the exam does not require internet. If you have no outbound access, ping your gateway (from `ip route`) instead to confirm local connectivity.
 
 ### Check storage layout
 

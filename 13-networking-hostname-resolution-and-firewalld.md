@@ -77,6 +77,20 @@ With `firewalld`:
 
 For RHCSA, you must understand both and usually make the change permanent.
 
+### Connection Profile vs Device Name (read this first)
+
+`nmcli` configures **connection profiles**, not interfaces directly. The profile name and the device (interface) name are often different, and this is the single most common networking mistake on the exam.
+
+- The **device** is the hardware/kernel name: `ens160`, `enp1s0`, `eth0`, etc. See it with `nmcli device status` or `ip addr`.
+- The **connection profile** is what NetworkManager stores config in. It may be named after the device (`ens160`) or something else like `System ens160` or `Wired connection 1`. See it with `nmcli connection show`.
+
+**Always look up the real profile name before modifying it.** Never assume it is `eth0`. Throughout this lesson the examples use a shell variable so you copy the correct name once:
+
+```bash
+nmcli connection show          # find the NAME in the first column
+CON="System ens160"            # set CON to YOUR profile name (quote it if it has spaces)
+```
+
 ### Hostname Resolution
 
 Name lookup may use:
@@ -84,26 +98,45 @@ Name lookup may use:
 - `/etc/hosts`
 - DNS servers
 
-In lab work, `/etc/hosts` is often enough to ensure simple hostname resolution.
+On RHEL, `/etc/resolv.conf` is managed by NetworkManager — set DNS through the connection profile (`ipv4.dns`), do not hand-edit `/etc/resolv.conf`. In lab work, `/etc/hosts` is often enough for simple hostname resolution.
 
 ## Command Breakdowns
 
-### Show addresses
+### Show addresses and find the profile name
 
 ```bash
 ip addr
 ip route
-nmcli connection show
+nmcli device status        # device (interface) names + state
+nmcli connection show      # connection PROFILE names
 ```
 
-### Configure connection with `nmcli`
+### Configure an IPv4 connection with `nmcli`
+
+First capture the real profile name, then modify it. `+ipv4.addresses`/`+ipv4.dns` add values; `ipv4.method manual` switches off DHCP:
 
 ```bash
-sudo nmcli connection modify eth0 ipv4.addresses 192.168.122.50/24
-sudo nmcli connection modify eth0 ipv4.gateway 192.168.122.1
-sudo nmcli connection modify eth0 ipv4.method manual
-sudo nmcli connection up eth0
+CON="System ens160"        # replace with YOUR profile name from nmcli connection show
+sudo nmcli connection modify "$CON" ipv4.addresses 192.168.122.50/24
+sudo nmcli connection modify "$CON" ipv4.gateway 192.168.122.1
+sudo nmcli connection modify "$CON" ipv4.dns 192.168.122.1
+sudo nmcli connection modify "$CON" ipv4.method manual
+sudo nmcli connection up "$CON"
 ```
+
+### Configure an IPv6 address
+
+The objective covers IPv6 too. The keys mirror IPv4 with the `ipv6.` prefix:
+
+```bash
+sudo nmcli connection modify "$CON" ipv6.addresses 2001:db8:0:1::50/64
+sudo nmcli connection modify "$CON" ipv6.gateway 2001:db8:0:1::1
+sudo nmcli connection modify "$CON" ipv6.method manual
+sudo nmcli connection up "$CON"
+ip -6 addr
+```
+
+After any change, re-activate the profile with `nmcli connection up "$CON"` so it takes effect, and verify with `ip addr`.
 
 ### Hostname
 
@@ -131,16 +164,19 @@ sudo firewall-cmd --reload
 
 ## Worked Examples
 
-### Worked Example 1: Check Current Addressing
+### Worked Example 1: Check Current Addressing and Profile Name
 
 ```bash
 ip addr
 ip route
+nmcli device status
+nmcli connection show
 ```
 
 Verification:
 
-- identify the active interface and its address
+- identify the active interface (device) and its address
+- note the connection **profile** name — you will use it, not `eth0`, in `nmcli modify`
 
 ### Worked Example 2: Set a Hostname
 
@@ -177,11 +213,11 @@ Use a non-production lab system.
 
 ### Task Steps
 
-1. List active network connections with `nmcli`.
-2. Display current IPv4 and IPv6 addresses.
-3. Record the active interface name.
-4. If your lab requires a static address, configure one with `nmcli`.
-5. Bring the connection up and verify.
+1. List connection profiles with `nmcli connection show` and devices with `nmcli device status`.
+2. Display current IPv4 and IPv6 addresses with `ip addr` and `ip -6 addr`.
+3. Record the active interface name **and** the connection profile name (they may differ).
+4. If your lab requires a static address, configure IPv4 (and IPv6 if asked) on the correct profile with `nmcli`.
+5. Set DNS with `ipv4.dns`, bring the connection up, and verify.
 6. Set the system hostname.
 7. Add a hostname mapping in `/etc/hosts` if needed for your lab.
 8. Check firewall state.
@@ -289,6 +325,9 @@ Fix:
 4. What is the difference between runtime and permanent firewall rules?
 5. What command reloads firewalld permanent changes into runtime?
 6. What file can provide simple local hostname mappings?
+7. Why should you run `nmcli connection show` before modifying a connection?
+8. Which `nmcli` keys set an IPv6 address and switch it to static?
+9. On RHEL, how do you set DNS servers, and why not edit `/etc/resolv.conf` directly?
 
 ## Exam-Style Tasks
 
@@ -324,15 +363,20 @@ Allow network access to a required service using `firewall-cmd` and verify the r
 4. Runtime affects now. Permanent survives reload and reboot.
 5. `firewall-cmd --reload`
 6. `/etc/hosts`
+7. The connection profile name is often not the interface name (and not `eth0`); modifying the wrong name fails or has no effect.
+8. `ipv6.addresses` and `ipv6.method manual` (mirror of the `ipv4.` keys).
+9. Set `ipv4.dns`/`ipv6.dns` on the connection profile; `/etc/resolv.conf` is managed by NetworkManager and hand edits get overwritten.
 
 ### Exam-Style Task 1 Example Solution
 
 ```bash
-nmcli connection show
-sudo nmcli connection modify eth0 ipv4.addresses 192.168.122.50/24
-sudo nmcli connection modify eth0 ipv4.gateway 192.168.122.1
-sudo nmcli connection modify eth0 ipv4.method manual
-sudo nmcli connection up eth0
+nmcli connection show                       # find the real profile NAME
+CON="System ens160"                          # replace with your profile name
+sudo nmcli connection modify "$CON" ipv4.addresses 192.168.122.50/24
+sudo nmcli connection modify "$CON" ipv4.gateway 192.168.122.1
+sudo nmcli connection modify "$CON" ipv4.dns 192.168.122.1
+sudo nmcli connection modify "$CON" ipv4.method manual
+sudo nmcli connection up "$CON"
 ip addr
 sudo reboot
 ip addr
@@ -349,10 +393,12 @@ sudo firewall-cmd --list-all
 ## Recap / Memory Anchors
 
 - inspect with `ip` and `nmcli`
+- find the real profile name with `nmcli connection show` — it is not `eth0`
+- IPv6 keys mirror IPv4 (`ipv6.addresses`, `ipv6.method`)
+- set DNS via `ipv4.dns`, not by editing `/etc/resolv.conf`
 - set hostname with `hostnamectl`
 - use `/etc/hosts` for simple local name mapping
-- firewall runtime is temporary
-- firewall permanent is reboot-safe
+- firewall runtime is temporary; permanent is reboot-safe
 - always verify after reload and reboot
 
 ## Quick Command Summary
@@ -360,9 +406,15 @@ sudo firewall-cmd --list-all
 ```bash
 ip addr
 ip route
+nmcli device status
 nmcli connection show
-nmcli connection modify name key value
-nmcli connection up name
+nmcli connection modify "$CON" ipv4.addresses 192.168.122.50/24
+nmcli connection modify "$CON" ipv4.gateway 192.168.122.1
+nmcli connection modify "$CON" ipv4.dns 192.168.122.1
+nmcli connection modify "$CON" ipv4.method manual
+nmcli connection modify "$CON" ipv6.addresses 2001:db8:0:1::50/64
+nmcli connection modify "$CON" ipv6.method manual
+nmcli connection up "$CON"
 hostnamectl set-hostname host.example.com
 firewall-cmd --list-all
 firewall-cmd --add-service=http --permanent

@@ -89,12 +89,53 @@ cp /etc/hosts /etc/hosts.bak
 
 ### Text Editors
 
-You need at least one command-line editor. Different systems may have different editors available. For RHCSA study, be able to use one of these confidently:
+You need at least one command-line editor. The exam is hands-on and offline, so you must be able to edit a config file without a graphical program. `vi`/`vim` is installed on every RHEL system, so learn it even if you prefer `nano`. `nano` is friendlier but is not guaranteed to be present.
 
-- `vim`
-- `nano`
+#### vim: the minimum you must know
 
-If your exam environment uses `vim`, you should practice `vim` enough to open, insert text, save, and quit.
+`vim` has two states. You start in **Normal mode** (keys are commands), and you switch to **Insert mode** to type text. The single most common beginner problem is typing while still in Normal mode.
+
+```bash
+vim notes.txt
+```
+
+| You want to | Press | What happens |
+|-------------|-------|--------------|
+| Start typing | `i` | Enter Insert mode (insert before the cursor) |
+| Start typing at end of line | `A` | Enter Insert mode at end of line |
+| Stop typing | `Esc` | Return to Normal mode |
+| Save | `:w` then `Enter` | Write the file |
+| Save and quit | `:wq` or `ZZ` | Write and exit |
+| Quit without saving | `:q!` | Discard changes and exit |
+| Undo | `u` (Normal mode) | Undo last change |
+| Delete current line | `dd` (Normal mode) | Cut the whole line |
+| Go to line N | `:N` then `Enter` | Jump to line N |
+| Search | `/text` then `Enter` | Find `text`; `n` for next match |
+
+**The reliable rescue habit:** if you are ever lost, press `Esc` first, then type `:q!` to bail out without saving, or `:wq` to save and leave.
+
+A typical edit session:
+
+1. `vim /etc/hosts`
+2. press `i` to enter Insert mode
+3. type or change the text
+4. press `Esc`
+5. type `:wq` and press `Enter`
+
+#### nano: the simple alternative
+
+```bash
+nano notes.txt
+```
+
+`nano` shows its shortcuts at the bottom of the screen, where `^` means the `Ctrl` key.
+
+- `Ctrl+O` then `Enter` — save (write Out)
+- `Ctrl+X` — exit
+- `Ctrl+K` — cut current line
+- `Ctrl+W` — search
+
+For RHCSA study, practice editing one real config file (for example a copy of `/etc/hosts`) in `vim` until open → insert → save → quit feels automatic.
 
 ## Command Breakdowns
 
@@ -398,6 +439,8 @@ Fix:
 4. Why is `rm -r` dangerous?
 5. What command shows detailed file metadata?
 6. What command is better for reading a long file one screen at a time?
+7. In `vim`, which key enters Insert mode, and how do you save and quit?
+8. In `vim`, you are stuck and do not want to save your changes. What do you type?
 
 ## Exam-Style Tasks
 
@@ -445,6 +488,8 @@ Create `/tmp/editcheck.txt` with at least three lines, then:
 4. It recursively deletes and can remove large directory trees quickly.
 5. `stat`
 6. `less`
+7. Press `i` to enter Insert mode; press `Esc`, then type `:wq` and press `Enter` to save and quit.
+8. Press `Esc`, then type `:q!` and press `Enter`.
 
 ### Exam-Style Task 1 Example Solution
 

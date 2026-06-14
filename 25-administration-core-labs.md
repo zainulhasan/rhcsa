@@ -30,10 +30,11 @@ Admins install packages, automate checks, inspect logs, extend storage, mount fi
 - GPT partitions, PV, VG, LV, and swap
 - Filesystems, mounts, `/etc/fstab`, NFS, and autofs
 - `at`, `cron`, `systemd`, `chronyd`, and bootloader checks
+- Containers with `podman` (run, persist, auto-start)
 
 ## Commands/Tools Used
 
-`dnf`, `rpm`, `bash`, `grep`, `awk`, `bc`, `systemctl`, `journalctl`, `ps`, `kill`, `tuned-adm`, `parted`, `pvcreate`, `vgcreate`, `lvcreate`, `mkfs`, `mkfs.vfat`, `mount`, `findmnt`, `blkid`, `crontab`, `at`, `timedatectl`, `chronyc`, `grubby`, `sudoedit`
+`dnf`, `rpm`, `bash`, `grep`, `awk`, `bc`, `systemctl`, `journalctl`, `ps`, `kill`, `tuned-adm`, `parted`, `pvcreate`, `vgcreate`, `lvcreate`, `mkfs`, `mkfs.vfat`, `mount`, `findmnt`, `blkid`, `crontab`, `at`, `timedatectl`, `chronyc`, `grubby`, `sudoedit`, `podman`, `loginctl`
 
 ## Offline Help References For This Topic
 
@@ -414,6 +415,23 @@ What to check before moving on:
 - you do not remove the older kernel
 - you can prove the default selection before reboot
 - you can restore the original default if needed
+
+### Drill 14: Run a rootless web container with persistent storage and auto-start
+
+As a normal (non-root) user:
+
+1. Pull a web image (or use one already present) and confirm it with `podman images`.
+2. Create a host directory with an `index.html` and run a detached container named `web` that publishes host port `8080` and mounts that directory at the web root with the correct SELinux relabel.
+3. Prove the page is served with `curl http://localhost:8080`.
+4. Write a Quadlet `.container` file so the container starts as a rootless systemd service, enable linger, and start the service.
+5. Verify the service is active.
+
+What to check before moving on:
+
+- the volume option ends in `:Z` (SELinux relabel)
+- the host port is `8080` (rootless cannot use ports below 1024)
+- `loginctl enable-linger` is set so it survives logout/reboot
+- `systemctl --user status web.service` shows active
 
 ## Verification Steps
 
@@ -845,6 +863,48 @@ Verification:
 - replace `VERSION` with a real installed kernel path from `grubby --info=ALL`
 - verify the new default before rebooting
 - if only one kernel is installed, treat this as an inspection drill and do not force the change
+
+#### Drill 14 example solution
+
+```bash
+# as a normal user
+podman pull quay.io/httpd/httpd-24
+podman images
+
+mkdir -p ~/webcontent
+echo "drill 14 container" > ~/webcontent/index.html
+podman run -d --name web -p 8080:80 -v ~/webcontent:/var/www/html:Z quay.io/httpd/httpd-24
+podman ps
+curl http://localhost:8080
+
+# auto-start via Quadlet
+mkdir -p ~/.config/containers/systemd
+cat > ~/.config/containers/systemd/web.container <<'EOF'
+[Unit]
+Description=Web container
+
+[Container]
+Image=quay.io/httpd/httpd-24
+PublishPort=8080:80
+Volume=%h/webcontent:/var/www/html:Z
+
+[Install]
+WantedBy=default.target
+EOF
+
+podman rm -f web
+loginctl enable-linger "$USER"
+systemctl --user daemon-reload
+systemctl --user start web.service
+systemctl --user status web.service
+curl http://localhost:8080
+```
+
+Verification:
+
+- on the exam, pull from the provided registry; the image may already be local
+- `:Z` is required or SELinux blocks the mounted content
+- after reboot, `podman ps` shows the container running without manual start
 
 ## Recap / Memory Anchors
 

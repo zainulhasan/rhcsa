@@ -54,19 +54,20 @@ If you are starting from zero, follow this route exactly and ignore optional ref
 14. `13-networking-hostname-resolution-and-firewalld.md`
 15. `14-users-groups-passwords-and-sudo.md`
 16. `15-selinux-ssh-keys-and-security.md`
-17. `16-persistence-reboot-checks-and-troubleshooting.md`
-18. `22-labs-track-and-skill-check-guide.md`
-19. `23-vm-lab-setup-and-baseline-checks.md`
-20. `24-foundations-labs.md`
-21. `25-administration-core-labs.md`
-22. `26-networking-users-and-security-labs.md`
-23. `28-rhcsa-10-mixed-practice-bank.md`
-24. `17a-rhcsa-command-reference-cheat-sheet.md`
-25. `17-final-review-cheat-sheets.md`
-26. `18-mock-exam-1.md`
-27. `19-mock-exam-1-solutions.md`
-28. `20-mock-exam-2.md`
-29. `21-mock-exam-2-solutions.md`
+17. `15a-containers-with-podman.md`
+18. `16-persistence-reboot-checks-and-troubleshooting.md`
+19. `22-labs-track-and-skill-check-guide.md`
+20. `23-vm-lab-setup-and-baseline-checks.md`
+21. `24-foundations-labs.md`
+22. `25-administration-core-labs.md`
+23. `26-networking-users-and-security-labs.md`
+24. `28-rhcsa-10-mixed-practice-bank.md`
+25. `17a-rhcsa-command-reference-cheat-sheet.md`
+26. `17-final-review-cheat-sheets.md`
+27. `18-mock-exam-1.md`
+28. `19-mock-exam-1-solutions.md`
+29. `20-mock-exam-2.md`
+30. `21-mock-exam-2-solutions.md`
 
 ### Experienced route
 
@@ -187,6 +188,7 @@ These files are not part of the main beginner study path.
 - `27-optional-topic-video-map.md` is a topic-based reinforcement map for late-stage review only.
 - Use it after lessons, labs, and mixed practice, not before.
 - Treat it as a way to revisit weak topics, not as the core course.
+- `30-rhel9-book-exercise-adaptation-bank.md` adapts Asghar Ghori RHEL 9 book exercises into RHEL 10-safe tasks. Use it only after `28-rhcsa-10-mixed-practice-bank.md` for extra optional repetition.
 
 ## How To Use The Mock Exams
 

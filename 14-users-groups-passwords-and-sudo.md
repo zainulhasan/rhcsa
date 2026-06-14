@@ -105,11 +105,42 @@ id alice
 sudo useradd -m -s /bin/bash bob
 ```
 
+### Common `useradd` options
+
+```bash
+sudo useradd -u 1500 -c "App Service" -s /bin/bash -G wheel,developers carol
+```
+
+- `-u 1500` set a specific UID
+- `-c "App Service"` set the comment/GECOS field
+- `-s /bin/bash` set the login shell (`-s /sbin/nologin` for a no-login service account)
+- `-G wheel,developers` add supplementary groups **at creation** time
+- `-m` create the home directory (default behavior on RHEL, but explicit is safe)
+
+System-wide defaults for new accounts come from `/etc/login.defs` (UID ranges, password aging defaults) and `/etc/default/useradd` (default shell, home base, skeleton). View the useradd defaults with:
+
+```bash
+useradd -D
+```
+
 ### Set password
 
 ```bash
 sudo passwd alice
 ```
+
+### Lock, unlock, and expire accounts
+
+```bash
+sudo usermod -L alice          # lock the password (login disabled)
+sudo usermod -U alice          # unlock the password
+sudo usermod -e 2026-12-31 alice   # set account expiration date (account becomes unusable after)
+sudo chage -E 2026-12-31 alice     # same expiry via chage
+sudo chage -E -1 alice         # remove the expiry date (never expires)
+```
+
+- **Locking** (`usermod -L`) disables the password but keeps the account; `passwd -S alice` shows `L` when locked.
+- **Expiring** (`chage -E` / `usermod -e`) disables the whole account after a date — useful for temporary/contractor accounts.
 
 ### Modify groups
 
@@ -166,7 +197,20 @@ Verification:
 
 - aging output should reflect the new policy
 
-### Worked Example 3: Grant Sudo Through a Drop-In File
+### Worked Example 3: Create a Temporary Account That Expires
+
+```bash
+sudo useradd -u 1600 -c "Contractor" -s /bin/bash -m temp1
+sudo chage -E 2026-12-31 temp1
+sudo chage -l temp1
+```
+
+Verification:
+
+- `chage -l temp1` shows "Account expires: Dec 31, 2026"
+- `id temp1` shows UID 1600
+
+### Worked Example 4: Grant Sudo Through a Drop-In File
 
 ```bash
 echo '%developers ALL=(ALL) ALL' | sudo tee /etc/sudoers.d/developers
@@ -297,6 +341,9 @@ Fix:
 4. What tool should you use to validate sudoers syntax?
 5. What is the difference between `userdel user` and `userdel -r user`?
 6. Why is `sudo` often preferred over constant root login?
+7. How do you create a user with a specific UID and a supplementary group in one command?
+8. What is the difference between locking an account (`usermod -L`) and expiring it (`chage -E`)?
+9. Which files hold the system-wide defaults for new user accounts?
 
 ## Exam-Style Tasks
 
@@ -333,6 +380,9 @@ Grant privileged access to a user or group using a safe sudoers configuration me
 4. `visudo -c`
 5. `-r` also removes the home directory and mail spool.
 6. It limits elevated access to needed commands and improves safety.
+7. `sudo useradd -u 1500 -G groupname username` (`-u` sets the UID, `-G` adds supplementary groups).
+8. Locking disables the password but keeps the account; expiring disables the whole account after a date.
+9. `/etc/login.defs` and `/etc/default/useradd` (view with `useradd -D`).
 
 ### Exam-Style Task 1 Example Solution
 
@@ -357,8 +407,9 @@ sudo visudo -c
 - `useradd` creates
 - `usermod` changes
 - `groupadd` manages groups
-- `passwd` sets passwords
-- `chage` manages aging
+- `passwd` sets passwords; `usermod -L`/`-U` lock and unlock
+- `chage` manages aging; `chage -E` / `usermod -e` expire accounts
+- `useradd -u` sets UID, `-G` adds groups at creation; defaults live in `/etc/login.defs`
 - `visudo` protects sudo syntax
 - verify every account change
 
@@ -366,14 +417,21 @@ sudo visudo -c
 
 ```bash
 useradd -m user
+useradd -u 1500 -c "Comment" -s /bin/bash -G grp1,grp2 user
+useradd -D
 usermod -aG group user
+usermod -L user
+usermod -U user
+usermod -e 2026-12-31 user
 userdel user
 userdel -r user
 groupadd group
 groupdel group
 passwd user
+passwd -S user
 chage -l user
 chage -M 90 -m 7 -W 14 user
+chage -E 2026-12-31 user
 id user
 groups user
 visudo -c

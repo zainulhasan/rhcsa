@@ -23,7 +23,7 @@ Admins add disks, create logical volumes for applications, extend storage, and c
 
 ## Objectives Covered
 
-- List, create, and delete partitions on GPT disks
+- List, create, and delete partitions on MBR and GPT disks
 - Create and remove physical volumes
 - Assign physical volumes to volume groups
 - Create and delete logical volumes
@@ -32,7 +32,7 @@ Admins add disks, create logical volumes for applications, extend storage, and c
 
 ## Commands/Tools Used
 
-`lsblk`, `blkid`, `parted`, `fdisk` where available for viewing, `pvcreate`, `pvs`, `vgcreate`, `vgs`, `lvcreate`, `lvs`, `lvremove`, `vgremove`, `pvremove`, `mkswap`, `swapon`, `swapoff`, `free`
+`lsblk`, `blkid`, `parted`, `fdisk`, `partprobe`, `pvcreate`, `pvs`, `vgcreate`, `vgs`, `lvcreate`, `lvs`, `lvremove`, `vgremove`, `pvremove`, `mkswap`, `swapon`, `swapoff`, `free`
 
 ## Offline Help References For This Topic
 
@@ -101,7 +101,9 @@ lsblk
 blkid
 ```
 
-### Create GPT partition with `parted`
+### Create a GPT partition with `parted`
+
+`parted` works on **GPT** (the modern default). You can run it interactively:
 
 ```bash
 sudo parted /dev/vdb
@@ -111,9 +113,44 @@ Common interactive steps:
 
 - `mklabel gpt`
 - `mkpart primary 1MiB 1GiB`
+- `set 1 lvm on` to flag partition 1 for LVM
 - `rm 1` to delete partition 1 when practicing on a disposable lab disk
 - `print`
 - `quit`
+
+Or do it non-interactively with `--script`, which is faster and exam-friendly:
+
+```bash
+sudo parted --script /dev/vdb mklabel gpt
+sudo parted --script /dev/vdb mkpart primary 1MiB 1025MiB
+sudo parted --script /dev/vdb set 1 lvm on
+sudo parted /dev/vdb print
+```
+
+After creating partitions, force the kernel to re-read the partition table so the new device node (e.g. `/dev/vdb1`) appears. Without this, `pvcreate` may fail with "device not found":
+
+```bash
+sudo partprobe /dev/vdb
+lsblk
+```
+
+### Create an MBR partition with `fdisk`
+
+The objective covers **MBR and GPT**. For an MBR (DOS) layout, `fdisk` is the standard tool:
+
+```bash
+sudo fdisk /dev/vdb
+```
+
+Inside `fdisk`, the key single-letter commands are:
+
+- `o` create a new empty **DOS/MBR** partition table (or `g` for GPT)
+- `n` new partition (accept defaults, or give start/size like `+1G`)
+- `t` change the partition type code (`8e` = Linux LVM, `82` = Linux swap)
+- `p` print the table
+- `w` write changes and exit (`q` quits without saving)
+
+`fdisk` writes and re-reads the table on `w`, but run `sudo partprobe` afterward if the new node does not appear.
 
 ### Create LVM objects
 
@@ -122,6 +159,17 @@ sudo pvcreate /dev/vdb1
 sudo vgcreate vgdata /dev/vdb1
 sudo lvcreate -n lvdata -L 500M vgdata
 ```
+
+Sizing logical volumes — exam tasks phrase size in three ways:
+
+```bash
+sudo lvcreate -n lvdata -L 500M vgdata        # absolute size (megabytes)
+sudo lvcreate -n lvdata -l 50 vgdata          # 50 physical extents (-l, lowercase)
+sudo lvcreate -n lvdata -l 100%FREE vgdata    # all remaining free space in the VG
+```
+
+- `-L` (capital) takes a size like `500M` or `2G`.
+- `-l` (lowercase) takes a number of **extents**, or a percentage such as `100%FREE`. A task that says "use all remaining space" means `-l 100%FREE`; one that says "use 50 extents" means `-l 50`.
 
 ### Remove LVM objects safely
 
@@ -221,8 +269,8 @@ You need an unused disk such as `/dev/vdb`. Never practice on a disk that contai
 1. Identify the extra disk with `lsblk`.
 2. Open it with `parted`.
 3. Create a GPT label if the disk is empty.
-4. Create one partition for LVM and one partition for swap.
-5. Verify the partitions.
+4. Create one partition for LVM (set the `lvm` flag) and one partition for swap.
+5. Run `sudo partprobe` and verify the partitions appear in `lsblk`.
 6. Create a PV on the LVM partition.
 7. Create a VG named `vgdata`.
 8. Create an LV named `lvfiles`.
@@ -327,6 +375,9 @@ Fix:
 5. Why is `lsblk` important before storage changes?
 6. Why are storage tasks especially dangerous if rushed?
 7. In what order should you remove LV, VG, and PV objects?
+8. Which command re-reads the partition table so a new partition node appears?
+9. How do you create a logical volume that uses all remaining free space in a volume group?
+10. Which tool creates an MBR partition, and what type code marks a partition as Linux LVM?
 
 ## Exam-Style Tasks
 
@@ -362,12 +413,18 @@ Add a new swap area on an unused partition, activate it, and prepare to make it 
 5. It shows actual device layout so you do not edit the wrong disk.
 6. Because the wrong command can destroy data.
 7. Remove the LV first, then the VG, then the PV.
+8. `partprobe` (run `sudo partprobe /dev/vdb`).
+9. `sudo lvcreate -n NAME -l 100%FREE VGNAME`.
+10. `fdisk` creates MBR partitions; type code `8e` marks Linux LVM (`82` marks swap).
 
 ### Exam-Style Task 1 Example Solution
 
 ```bash
 lsblk
-sudo parted /dev/vdb
+sudo parted --script /dev/vdb mklabel gpt
+sudo parted --script /dev/vdb mkpart primary 1MiB 1025MiB
+sudo parted --script /dev/vdb set 1 lvm on
+sudo partprobe /dev/vdb
 sudo pvcreate /dev/vdb1
 sudo vgcreate vgexam /dev/vdb1
 sudo lvcreate -n lvexam -L 512M vgexam
@@ -386,8 +443,10 @@ blkid /dev/vdb2
 ## Recap / Memory Anchors
 
 - inspect first with `lsblk`
-- partitions live on disks
+- partitions live on disks (`parted` for GPT, `fdisk` for MBR)
+- run `partprobe` after partitioning so the new node appears
 - LVM stack is PV then VG then LV
+- `-L` is a size, `-l` is extents or `100%FREE`
 - swap uses `mkswap` and `swapon`
 - verify every layer separately
 - persistence later depends on correct `/etc/fstab` entries
@@ -397,10 +456,15 @@ blkid /dev/vdb2
 ```bash
 lsblk
 blkid
-parted /dev/vdb
+parted --script /dev/vdb mklabel gpt
+parted --script /dev/vdb mkpart primary 1MiB 1025MiB
+parted --script /dev/vdb set 1 lvm on
+partprobe /dev/vdb
+fdisk /dev/vdb            # alternative, for MBR layouts
 pvcreate /dev/vdb1
 vgcreate vgdata /dev/vdb1
 lvcreate -n lvdata -L 500M vgdata
+lvcreate -n lvall -l 100%FREE vgdata
 pvs
 vgs
 lvs

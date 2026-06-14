@@ -94,6 +94,7 @@ nav:
       - 13 Networking, Hostname Resolution, and firewalld: 13-networking-hostname-resolution-and-firewalld.md
       - 14 Users, Groups, Passwords, and Sudo: 14-users-groups-passwords-and-sudo.md
       - 15 SELinux, SSH Keys, and Security: 15-selinux-ssh-keys-and-security.md
+      - 15a Containers With Podman: 15a-containers-with-podman.md
       - 16 Persistence, Reboot Checks, and Troubleshooting: 16-persistence-reboot-checks-and-troubleshooting.md
   - Labs Track:
       - 22 Labs Track and Skill Check Guide: 22-labs-track-and-skill-check-guide.md

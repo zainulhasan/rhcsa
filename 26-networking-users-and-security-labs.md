@@ -318,20 +318,22 @@ What to check before moving on:
 - the account-expiration date is visible with `chage`
 - you can explain the difference between password aging and account expiration
 
-### Drill 8: Give one user access to another user's home
+### Drill 8: Grant a group read-only ACL and adjust the ACL mask
+
+The single-user ACL case is covered in `24-foundations-labs.md` Drill 9. This drill practices a different angle: a **group** ACL plus the ACL **mask**.
 
 As `root`:
 
-1. Make sure users `john` and `davis` exist.
-2. Give `davis` full access to `/home/john`.
-3. Make that access apply to new files created later as well.
-4. Verify with ACL inspection.
+1. Create group `auditors` and a file `/srv/report.txt` with some text.
+2. Give group `auditors` read-only access to the file with `setfacl`.
+3. Lower the ACL mask so the effective permissions stay read-only even if an entry grants more.
+4. Verify the entries and the "effective" line with `getfacl`.
 
 What to check before moving on:
 
-- `john` still owns the home directory
-- `davis` access is granted with ACL, not by changing ownership
-- default ACLs are present for future content
+- `getfacl /srv/report.txt` shows a `group:auditors:r--` entry
+- the `mask::` line limits effective permissions
+- ownership of the file is unchanged
 
 ### Drill 9: Create a collaborative directory for one group only
 
@@ -612,15 +614,18 @@ Verification:
 #### Drill 8 example solution
 
 ```bash
-sudo setfacl -R -m u:davis:rwx /home/john
-sudo setfacl -R -m d:u:davis:rwx /home/john
-getfacl /home/john
+sudo groupadd auditors
+echo "quarterly numbers" | sudo tee /srv/report.txt
+sudo setfacl -m g:auditors:r /srv/report.txt
+sudo setfacl -m m:r /srv/report.txt        # set the ACL mask to read-only
+getfacl /srv/report.txt
 ```
 
 Verification:
 
-- `u:davis:rwx` grants current access
-- `d:u:davis:rwx` becomes the default ACL for new files and directories
+- `g:auditors:r--` appears in `getfacl` output
+- the `mask::r--` line caps effective permissions at read-only
+- `getfacl` shows `# owner:`/`# group:` unchanged (no ownership change)
 
 #### Drill 9 example solution
 

@@ -26,6 +26,8 @@ Admins manage shared directories, protect private data, and create links to file
 
 - Create hard and soft links
 - List, set, and change standard `ugo/rwx` permissions
+- Set special permissions (setuid, setgid, sticky bit)
+- Configure set-GID directories for collaboration
 - Manage default file permissions
 - Diagnose and correct file permission problems
 
@@ -141,6 +143,27 @@ Common idea:
 - directories often start from `777`
 - `umask` subtracts from those defaults
 
+### Special Permission Bits
+
+Beyond `rwx` there are three special bits. They appear as a fourth, leading digit in numeric mode (`4`, `2`, `1`), and in `ls -l` they replace an `x` with `s`, `S`, `t`, or `T`.
+
+| Bit | Numeric | On a file | On a directory |
+|-----|:-------:|-----------|----------------|
+| setuid | `4` | runs as the file's owner | (no standard effect) |
+| setgid | `2` | runs as the file's group | new files inherit the directory's group |
+| sticky | `1` | (no standard effect) | only the file owner (or root) can delete files in it |
+
+Where you actually see them on RHEL:
+
+- **setuid** — `ls -l /usr/bin/passwd` shows `-rwsr-xr-x`. The `s` in the user field lets any user run `passwd` with the owner's (root's) rights so they can update `/etc/shadow`.
+- **setgid on a directory** — the key RHCSA pattern. Every file created inside a setgid directory takes the directory's group, so a whole team shares files automatically. This is why a collaborative directory is `2775`, not `775`.
+- **sticky bit** — `ls -ld /tmp` shows `drwxrwxrwt`. Everyone can write in `/tmp`, but the trailing `t` stops users from deleting each other's files.
+
+Reading the letter:
+
+- lowercase `s`/`t` means the special bit **and** the underlying `x` are set
+- uppercase `S`/`T` means the special bit is set but `x` is **not** — usually a mistake to fix
+
 ## Command Breakdowns
 
 ### Create links
@@ -167,6 +190,20 @@ chmod 600 secret.txt
 chmod 755 script.sh
 chmod 700 private-dir
 ```
+
+### Set special permission bits
+
+```bash
+chmod u+s program        # setuid (symbolic)
+chmod g+s shareddir      # setgid (symbolic)
+chmod +t /shared/upload  # sticky bit (symbolic)
+
+chmod 4755 program       # setuid (numeric: leading 4)
+chmod 2775 shareddir      # setgid (numeric: leading 2)
+chmod 1777 /shared/upload # sticky (numeric: leading 1)
+```
+
+The leading digit adds to the normal three. `2775` = setgid (`2`) plus `rwxrwxr-x` (`775`).
 
 ### Check default mask
 
@@ -216,6 +253,29 @@ Verification:
 
 - compare created permissions to the current `umask`
 
+### Worked Example 4: Build a Set-GID Collaborative Directory
+
+This is the canonical RHCSA group-collaboration task: a shared directory where every new file automatically belongs to the team group.
+
+```bash
+sudo groupadd devteam
+sudo mkdir /srv/devshare
+sudo chgrp devteam /srv/devshare
+sudo chmod 2775 /srv/devshare
+ls -ld /srv/devshare
+```
+
+Expected `ls -ld` output:
+
+```text
+drwxrwsr-x. 2 root devteam 6 ... /srv/devshare
+```
+
+Verification:
+
+- the group field shows `rws` (the `s` is the setgid bit)
+- a file created in the directory by any group member inherits group `devteam`, which you can prove with `ls -l` on the new file
+
 ## Guided Hands-On Lab
 
 ### Lab Goal
@@ -239,9 +299,11 @@ cd rhcsa-perm-lab
 5. Change `report.txt` permissions to `640`.
 6. Create a directory `shared` and set permissions to `775`.
 7. Create a directory `private` and set permissions to `700`.
-8. Display the symbolic form of `umask`.
-9. Create a new file and new directory and inspect their permissions.
-10. Remove the original file and observe what happens to the hard link and symbolic link.
+8. Create a directory `team`, give it the setgid bit (`2775`), then create a file inside it and confirm the file inherited the directory's group.
+9. Create a directory `dropbox` with the sticky bit (`1777`) and confirm the trailing `t` in `ls -ld`.
+10. Display the symbolic form of `umask`.
+11. Create a new file and new directory and inspect their permissions.
+12. Remove the original file and observe what happens to the hard link and symbolic link.
 
 ### Expected Result
 
@@ -251,7 +313,7 @@ You can explain how links differ and you can set practical file and directory pe
 
 ```bash
 ls -li report.txt report.hard report.soft
-ls -ld shared private
+ls -ld shared private team dropbox
 umask -S
 ```
 
@@ -337,6 +399,8 @@ Fix:
 4. What command creates a symbolic link?
 5. What command shows the shell's default permission mask?
 6. Why might a symbolic link fail after the original file is removed?
+7. What numeric mode makes a collaborative directory where new files inherit the group, and which bit does it set?
+8. What does the sticky bit do on a world-writable directory like `/tmp`?
 
 ## Exam-Style Tasks
 
@@ -366,6 +430,17 @@ Create a directory `/tmp/project-private` that only its owner can access, and a 
 - private directory should be `700`
 - shared directory should be `775`
 
+### Task 3
+
+Create the group `engineers` and a collaborative directory `/srv/engineering` owned by group `engineers`, set up so that every file created inside it automatically belongs to the `engineers` group. Group members should be able to read, write, and enter; others should have no access.
+
+### Grader Mindset Checklist
+
+- group `engineers` must exist
+- `/srv/engineering` group must be `engineers`
+- the setgid bit must be set (mode `2770`, shown as `drwxrws---`)
+- a new file created inside must inherit group `engineers`
+
 ## Answer Key / Solution Guide
 
 ### Quiz Answers
@@ -376,6 +451,8 @@ Create a directory `/tmp/project-private` that only its owner can access, and a 
 4. `ln -s target linkname`
 5. `umask` or `umask -S`
 6. Because the symlink target path no longer resolves to a valid file.
+7. `2775` (or `chmod g+s`); it sets the setgid bit on the directory so new files inherit the directory's group.
+8. It lets everyone create files but stops users from deleting files they do not own.
 
 ### Exam-Style Task 1 Example Solution
 
@@ -396,6 +473,19 @@ chmod 775 /tmp/project-shared
 ls -ld /tmp/project-private /tmp/project-shared
 ```
 
+### Exam-Style Task 3 Example Solution
+
+```bash
+sudo groupadd engineers
+sudo mkdir /srv/engineering
+sudo chgrp engineers /srv/engineering
+sudo chmod 2770 /srv/engineering
+ls -ld /srv/engineering
+# prove inheritance:
+sudo touch /srv/engineering/testfile
+ls -l /srv/engineering/testfile
+```
+
 ## Recap / Memory Anchors
 
 - hard links share data
@@ -404,6 +494,8 @@ ls -ld /tmp/project-private /tmp/project-shared
 - `600` protects private files
 - `700` protects private directories
 - `775` is common for shared directories
+- `2775`/`2770` setgid directory = team files inherit the group
+- sticky bit (`1777`) lets all write but only owners delete
 - `umask` shapes default creation permissions
 
 ## Quick Command Summary
@@ -416,6 +508,8 @@ chmod 600 secret
 chmod 755 script
 chmod 700 private-dir
 chmod 775 shared-dir
+chmod 2775 collab-dir
+chmod 1777 dropbox-dir
 umask
 umask -S
 ls -li

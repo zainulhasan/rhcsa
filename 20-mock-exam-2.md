@@ -39,7 +39,8 @@ Use this only after you have completed:
 16. Configure a simple NFS export or client mount according to your lab setup. If your lab supports it, configure autofs for on-demand access.
 17. Configure SSH key-based authentication for `webadmin`.
 18. Use SELinux tools to ensure the content path for a web-related directory has the correct context for its purpose.
-19. Reboot and verify persistent storage, networking, service, firewall, and security settings.
+19. As `webadmin`, run a rootless web container named `webctr` that publishes host port `8080`, serves content from a host directory mounted with the correct SELinux relabel, and starts automatically as a systemd user service that survives reboot.
+20. Reboot and verify persistent storage, networking, service, firewall, container, and security settings.
 
 ## Grader Mindset Checklist
 
@@ -55,6 +56,7 @@ Use this only after you have completed:
 - NFS or autofs task must function as requested
 - SSH key login must work
 - SELinux labeling must be correct
+- rootless container must serve on `8080` and auto-start after reboot
 
 ## Suggested Proof Commands
 
@@ -72,6 +74,8 @@ lvs
 findmnt /webcontent
 ssh -o PreferredAuthentications=publickey webadmin@serverb hostname
 ls -Z /var/www/html
+curl http://localhost:8080
+systemctl --user status webctr.service
 ```
 
 ## Continue In Order

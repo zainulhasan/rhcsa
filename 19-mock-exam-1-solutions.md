@@ -112,34 +112,54 @@ ssh user@serverb hostname
 
 ### Task 11
 
+Create two GPT partitions on the spare disk: `vdb1` for LVM and `vdb2` for swap. The non-interactive form is shown; `partprobe` makes the new nodes appear.
+
 ```bash
 lsblk
-parted /dev/vdb
-pvcreate /dev/vdb1
-vgcreate vgmock /dev/vdb1
-lvcreate -n lvdata -L 512M vgmock
-lvs
+sudo parted --script /dev/vdb mklabel gpt
+sudo parted --script /dev/vdb mkpart primary 1MiB 600MiB
+sudo parted --script /dev/vdb set 1 lvm on
+sudo parted --script /dev/vdb mkpart primary 600MiB 1112MiB
+sudo partprobe /dev/vdb
+lsblk /dev/vdb
+# build the LVM stack on vdb1
+sudo pvcreate /dev/vdb1
+sudo vgcreate vgmock /dev/vdb1
+sudo lvcreate -n lvdata -L 512M vgmock
+sudo lvs
 ```
 
 ### Task 12
 
 ```bash
-mkfs.xfs /dev/vgmock/lvdata
-mkdir -p /data
-mount /dev/vgmock/lvdata /data
-blkid /dev/vgmock/lvdata
-vi /etc/fstab
-mount -a
+sudo mkfs.xfs /dev/vgmock/lvdata
+sudo mkdir -p /data
+sudo mount /dev/vgmock/lvdata /data
+sudo blkid /dev/vgmock/lvdata
+# add a line to /etc/fstab using the UUID from blkid, for example:
+#   UUID=xxxx-xxxx  /data  xfs  defaults  0 0
+sudo vi /etc/fstab
+sudo systemctl daemon-reload
+sudo mount -a
 findmnt /data
+```
+
+A reliable way to append the exact UUID line without retyping it:
+
+```bash
+echo "UUID=$(sudo blkid -s UUID -o value /dev/vgmock/lvdata) /data xfs defaults 0 0" | sudo tee -a /etc/fstab
 ```
 
 ### Task 13
 
 ```bash
-mkswap /dev/vdb2
-swapon /dev/vdb2
-blkid /dev/vdb2
-vi /etc/fstab
+sudo mkswap /dev/vdb2
+sudo swapon /dev/vdb2
+sudo blkid /dev/vdb2
+# add a swap line to /etc/fstab using the UUID, for example:
+#   UUID=xxxx-xxxx  none  swap  defaults  0 0
+echo "UUID=$(sudo blkid -s UUID -o value /dev/vdb2) none swap defaults 0 0" | sudo tee -a /etc/fstab
+sudo systemctl daemon-reload
 swapon --show
 ```
 
@@ -162,16 +182,26 @@ firewall-cmd --list-services
 
 ```bash
 getenforce
-restorecon -Rv /var/www/html
+sudo restorecon -Rv /var/www/html
 ls -Z /var/www/html
+```
+
+`restorecon` works here because `/var/www/html` is a **default** web path. If the task uses a **custom** path (for example `/web`), `restorecon` alone will not help — define the rule first, then apply it:
+
+```bash
+sudo semanage fcontext -a -t httpd_sys_content_t "/web(/.*)?"
+sudo restorecon -Rv /web
 ```
 
 ### Task 17
 
 ```bash
-mkdir -p /var/log/journal
-systemctl restart systemd-journald
+sudo mkdir -p /var/log/journal
+# make persistence explicit in the config:
+sudo sed -i 's/^#\?Storage=.*/Storage=persistent/' /etc/systemd/journald.conf
+sudo systemctl restart systemd-journald
 ls -ld /var/log/journal
+journalctl --disk-usage
 ```
 
 ### Task 18

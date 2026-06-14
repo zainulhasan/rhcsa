@@ -30,13 +30,14 @@ Admins archive configuration directories before changes, compress log bundles, a
 
 ## Commands/Tools Used
 
-`tar`, `gzip`, `gunzip`, `bzip2`, `bunzip2`, `scp`, `sftp`, `ssh`, `ls`, `file`
+`tar`, `gzip`, `gunzip`, `bzip2`, `bunzip2`, `xz`, `unxz`, `star`, `scp`, `sftp`, `ssh`, `ls`, `file`
 
 ## Offline Help References For This Topic
 
 - `man tar`
 - `man gzip`
 - `man bzip2`
+- `man xz`
 - `man scp`
 - `man sftp`
 
@@ -62,6 +63,9 @@ Common pattern:
 - `.tar` archive only
 - `.tar.gz` or `.tgz` tar archive compressed with gzip
 - `.tar.bz2` tar archive compressed with bzip2
+- `.tar.xz` tar archive compressed with xz
+
+`xz` gives the smallest result of the three and is what RHEL itself uses for kernel and package data, so you will meet `.tar.xz` and `.xz` files often. `gzip` is the fastest, `bzip2` sits in the middle. The RHCSA objective names `tar`, `star`, `gzip`, and `bzip2`; in practice you should also be comfortable with `xz`.
 
 ### Secure Transfer
 
@@ -102,11 +106,31 @@ tar -czvf configs.tar.gz configs/
 tar -cjvf configs.tar.bz2 configs/
 ```
 
-### Uncompress gzip or bzip2 files
+### Create xz-compressed archive
+
+```bash
+tar -cJvf configs.tar.xz configs/
+```
+
+- `-J` (capital J) compresses with `xz`
+- remember the pairing: `-z` gzip, `-j` bzip2, `-J` xz
+
+### Extract any compressed tar archive
+
+`tar` detects the compression automatically on extraction, so the same command works for all three:
+
+```bash
+tar -xvf configs.tar.gz
+tar -xvf configs.tar.bz2
+tar -xvf configs.tar.xz
+```
+
+### Uncompress standalone compressed files
 
 ```bash
 gunzip file.gz
 bunzip2 file.bz2
+unxz file.xz
 ```
 
 ### Copy with `scp`
@@ -190,11 +214,13 @@ cd rhcsa-archive-lab
 2. List archive contents without extracting.
 3. Create `data.tar.gz`.
 4. Create `data.tar.bz2`.
-5. Extract `data.tar.gz` into `restore1`.
-6. Extract `data.tar.bz2` into `restore2`.
-7. Use `file` on all archive types.
-8. If you have a second system, copy `data.tar.gz` to it with `scp`.
-9. If you have a second system, open `sftp` and list the remote directory.
+5. Create `data.tar.xz`.
+6. Extract `data.tar.gz` into `restore1`.
+7. Extract `data.tar.bz2` into `restore2`.
+8. Extract `data.tar.xz` into `restore3`.
+9. Use `file` on all archive types and compare their sizes with `ls -l`.
+10. If you have a second system, copy `data.tar.gz` to it with `scp`.
+11. If you have a second system, open `sftp` and list the remote directory.
 
 ### Expected Result
 
@@ -206,7 +232,9 @@ You can create and inspect archives, work with both gzip and bzip2, and understa
 tar -tvf data.tar
 find restore1
 find restore2
-file data.tar data.tar.gz data.tar.bz2
+find restore3
+file data.tar data.tar.gz data.tar.bz2 data.tar.xz
+ls -l data.tar data.tar.gz data.tar.bz2 data.tar.xz
 ```
 
 ## Independent Practice Tasks
@@ -287,8 +315,9 @@ Fix:
 1. What is the difference between an archive and compression?
 2. Which `tar` option extracts files?
 3. Which option makes a gzip-compressed tar archive?
-4. What tool quickly copies files over SSH?
-5. What command lists the contents of a tar archive?
+4. Which `tar` options make bzip2 and xz archives?
+5. What tool quickly copies files over SSH?
+6. What command lists the contents of a tar archive?
 
 ## Exam-Style Tasks
 
@@ -319,8 +348,9 @@ If a second host is available, securely copy `/tmp/configs.tar.gz` to user `stud
 1. An archive bundles files. Compression reduces size.
 2. `-x`
 3. `-z`
-4. `scp`
-5. `tar -tvf archive.tar`
+4. `-j` for bzip2, `-J` (capital) for xz.
+5. `scp`
+6. `tar -tvf archive.tar`
 
 ### Exam-Style Task 1 Example Solution
 
@@ -338,10 +368,11 @@ scp /tmp/configs.tar.gz student@serverb:/tmp/
 ## Recap / Memory Anchors
 
 - `tar` bundles
-- `gzip` and `bzip2` compress
+- `gzip`, `bzip2`, and `xz` compress (smallest is `xz`)
 - `-c` create
 - `-x` extract
 - `-t` list
+- `-z` gzip, `-j` bzip2, `-J` xz
 - `scp` copies over SSH
 - verify archive contents before assuming success
 
@@ -353,8 +384,10 @@ tar -xvf files.tar
 tar -tvf files.tar
 tar -czvf files.tar.gz dir
 tar -cjvf files.tar.bz2 dir
+tar -cJvf files.tar.xz dir
 gunzip file.gz
 bunzip2 file.bz2
+unxz file.xz
 scp file user@host:/tmp/
 sftp user@host
 ```

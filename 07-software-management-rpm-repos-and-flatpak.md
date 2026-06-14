@@ -63,6 +63,18 @@ Flatpak is different. It is a separate application distribution system, mostly u
 - Core: repository files, install, remove, query, verify installed packages
 - Version-specific: exact CDN workflow and subscription state may vary by RHEL version and lab access
 
+!!! note "Offline reality (read this)"
+    The RHCSA exam is performed **without internet access**. You will install
+    packages from a **local repository** that the exam provides — usually an
+    HTTP URL on the lab network or a directory on attached install media — not
+    from the public Red Hat CDN or the internet. The skill being tested is
+    *writing a working `.repo` file and installing from it*, not registering a
+    system online. Treat every step in this lesson that reaches the internet
+    (`subscription-manager` registration, `flathub.org`, public mirrors) as
+    **study-time-only practice**. The `dnf`, `rpm`, and `.repo` mechanics are
+    identical whether the source is local or remote, so practice them against a
+    local repo and you are exam-ready.
+
 ### Persistence After Reboot
 
 Software management is a little different from service configuration:
@@ -124,15 +136,29 @@ Common repo file location:
 /etc/yum.repos.d/example.repo
 ```
 
-Example content:
+Example content for a local HTTP repo (common exam style):
 
 ```ini
 [baseos-local]
 name=BaseOS Local Repo
 baseurl=http://repo.example.com/baseos/
 enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+```
+
+A repo can also point at a local directory or mounted media with a `file://` URL — no network needed at all:
+
+```ini
+[appstream-dvd]
+name=AppStream from DVD
+baseurl=file:///mnt/dvd/AppStream/
+enabled=1
 gpgcheck=0
 ```
+
+- `gpgcheck=1` with a `gpgkey` is the secure, real-world setting; use it when the repo is signed.
+- `gpgcheck=0` skips signature checks — acceptable only for a trusted local lab repo, and worth setting to `0` if a practice repo is unsigned and `dnf` refuses to install.
 
 After creating or editing a repo file:
 
@@ -142,6 +168,11 @@ sudo dnf repolist all
 ```
 
 ### CDN and subscription checks
+
+!!! warning "Study-time only — needs internet"
+    `subscription-manager register`/`refresh` talks to Red Hat over the
+    internet, so it is **not** an exam-day task. Practice these only to
+    understand registration state; on the exam you use the provided local repo.
 
 If your lab uses real Red Hat subscription access instead of a simple local repo, these commands matter:
 
@@ -159,6 +190,13 @@ Use them to answer basic questions such as:
 - which CDN-backed repositories are enabled?
 
 ### Flatpak basics
+
+!!! warning "Study-time only — needs internet"
+    Adding the `flathub.org` remote and installing from it requires internet
+    access, so the install/uninstall steps below are **practice-time only**.
+    For the exam, know the command shapes (`flatpak remotes`, `remote-add`,
+    `install`, `list`, `uninstall`); any graded Flatpak task uses a repo the
+    exam provides.
 
 ```bash
 flatpak remotes

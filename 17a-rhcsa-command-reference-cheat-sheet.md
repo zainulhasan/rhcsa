@@ -898,43 +898,16 @@ This section is useful for modern RHEL-style administration and may be version-s
 
 ### Running Containers With systemd
 
-There are two common patterns:
+Two patterns exist. On current RHEL, **Quadlet is the preferred method**; `podman generate systemd` still works but is deprecated upstream, so learn Quadlet first.
 
-1. `podman generate systemd`
-2. Quadlet files under systemd-managed directories
+#### Pattern 1 (preferred): Quadlet for systemd-managed Containers
 
-#### Pattern 1: Generate a systemd Unit From an Existing Container
+Quadlet lets you describe a container in a systemd-friendly file; systemd generates the service from it.
 
-| Command | What it does | Example |
-|---|---|---|
-| `podman generate systemd --name NAME --files` | creates a unit file for a container | `podman generate systemd --name web --files` |
+Common locations:
 
-Typical workflow:
-
-1. create the container first
-2. generate the unit file
-3. move the unit file into `/etc/systemd/system/`
-4. run `sudo systemctl daemon-reload`
-5. enable the generated unit
-
-Example:
-
-```bash
-sudo podman run -d --name web -p 8080:80 quay.io/httpd/httpd-24
-sudo podman generate systemd --name web --files
-sudo mv container-web.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now container-web.service
-systemctl status container-web.service
-```
-
-#### Pattern 2: Quadlet for systemd-managed Containers
-
-Quadlet lets you describe a container in a systemd-friendly file.
-
-Common location:
-
-- `/etc/containers/systemd/`
+- rootful: `/etc/containers/systemd/NAME.container` (manage with `systemctl`)
+- rootless: `~/.config/containers/systemd/NAME.container` (manage with `systemctl --user` + `loginctl enable-linger USER`)
 
 Example `web.container`:
 
@@ -955,13 +928,30 @@ Restart=always
 WantedBy=multi-user.target
 ```
 
-Typical workflow:
+Typical workflow (rootful):
 
 1. save file as `/etc/containers/systemd/web.container`
 2. run `sudo systemctl daemon-reload`
 3. run `sudo systemctl enable --now web.service`
 4. verify with `systemctl status web.service`
 5. verify ports with `ss -tuln`
+
+#### Pattern 2 (legacy): Generate a systemd Unit From an Existing Container
+
+`podman generate systemd` is **deprecated** in favor of Quadlet, but you may still see it.
+
+| Command | What it does | Example |
+|---|---|---|
+| `podman generate systemd --name NAME --files` | creates a unit file for a container | `podman generate systemd --name web --files` |
+
+```bash
+sudo podman run -d --name web -p 8080:80 quay.io/httpd/httpd-24
+sudo podman generate systemd --name web --files
+sudo mv container-web.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now container-web.service
+systemctl status container-web.service
+```
 
 ### SELinux With Container Volumes
 
