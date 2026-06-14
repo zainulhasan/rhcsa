@@ -317,72 +317,34 @@
   background: rgba(30, 96, 103, 0.14);
 }
 
-.md-typeset .mermaid-figure {
+/* Mermaid diagram container (rendered by mermaid-render.mjs). */
+.md-typeset .mermaid-diagram {
+  display: block;
   margin: 1.5rem 0;
-}
-
-.md-typeset .mermaid-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.md-typeset .mermaid-toolbar button {
-  border: 1px solid rgba(31, 95, 102, 0.16);
-  background: rgba(255, 255, 255, 0.82);
-  color: #1f5f66;
-  border-radius: 999px;
-  padding: 0.34rem 0.78rem;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-}
-
-[data-md-color-scheme="slate"] .md-typeset .mermaid-toolbar button {
-  border-color: rgba(153, 205, 204, 0.16);
-  background: rgba(20, 28, 30, 0.88);
-  color: #bfe5e3;
-}
-
-.md-typeset .mermaid-toolbar button:hover {
-  background: rgba(31, 95, 102, 0.08);
-}
-
-[data-md-color-scheme="slate"] .md-typeset .mermaid-toolbar button:hover {
-  background: rgba(153, 205, 204, 0.08);
-}
-
-.md-typeset .mermaid-frame {
-  overflow: auto;
+  padding: 0.75rem;
+  background: none;
   border: 1px solid rgba(31, 95, 102, 0.12);
   border-radius: 1rem;
-  padding: 1rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(237, 242, 243, 0.9));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  /* Wide diagrams scroll horizontally instead of shrinking to unreadable. */
+  overflow-x: auto;
+  text-align: center;
+  white-space: normal;
 }
 
-[data-md-color-scheme="slate"] .md-typeset .mermaid-frame {
-  border-color: rgba(153, 205, 204, 0.12);
-  background:
-    linear-gradient(180deg, rgba(21, 29, 31, 0.96), rgba(24, 33, 36, 0.94));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+[data-md-color-scheme="slate"] .md-typeset .mermaid-diagram {
+  border-color: rgba(153, 205, 204, 0.14);
+  background: rgba(20, 28, 30, 0.4);
 }
 
-.md-typeset .mermaid {
-  display: block;
-  margin: 0;
+/* Hide the raw fence source until the SVG is rendered in. */
+.md-typeset .mermaid-diagram > code {
+  display: none;
 }
 
-.md-typeset .mermaid svg {
-  display: block;
-  max-width: 100%;
+.md-typeset .mermaid-diagram svg {
+  display: inline-block;
+  max-width: none;
   height: auto;
-  margin: 0 auto;
-  /* Use the Zoom +/- buttons to enlarge; the frame scrolls when zoomed. */
-  transform-origin: top center;
-  transition: transform 0.15s ease;
 }
 
 @media screen and (max-width: 900px) {
@@ -409,11 +371,6 @@
   .hero-actions .md-button {
     width: 100%;
     text-align: center;
-  }
-
-  .md-typeset .mermaid svg {
-    min-width: 720px;
-    min-height: 220px;
   }
 }
 

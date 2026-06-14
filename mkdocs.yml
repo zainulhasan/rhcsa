@@ -51,8 +51,10 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.superfences:
       custom_fences:
+        # Distinct class so Material's built-in (CDN) Mermaid stays off and our
+        # offline ES module is the only renderer.
         - name: mermaid
-          class: mermaid
+          class: mermaid-diagram
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
@@ -64,10 +66,9 @@ extra_css:
   - assets/stylesheets/extra.css
 
 extra_javascript:
-  # Offline-safe: locally vendored Mermaid (UMD) + our own renderer/init.
-  - assets/javascripts/mermaid.min.js
-  - assets/javascripts/mermaid-init.js
-  - assets/javascripts/diagram-zoom.js
+  # Offline-safe: our ES module imports the locally vendored Mermaid dist (no CDN)
+  # and renders diagrams with mermaid.render() for correct sizing.
+  - assets/javascripts/mermaid-render.mjs
   - assets/javascripts/progress.js
 
 extra:
