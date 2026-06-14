@@ -11,7 +11,9 @@ mermaid.initialize({
   startOnLoad: false,
   securityLevel: "loose",
   theme: "dark",
-  flowchart: { useMaxWidth: false, htmlLabels: true }
+  // Extra node padding so multi-line labels (with <br/>) aren't clipped.
+  flowchart: { useMaxWidth: false, htmlLabels: true, padding: 16 },
+  themeCSS: ".nodeLabel, .node .label { line-height: 1.45; padding: 2px 0; }"
 });
 
 let counter = 0;
