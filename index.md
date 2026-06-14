@@ -34,7 +34,7 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
 - __Need Less Googling__
 
-  The lessons, labs, answer keys, and offline-help references are designed to keep most study and troubleshooting inside the course and your local system docs.
+  The lessons, labs, answer keys, and [offline-help references](00-study-skills-and-offline-help.md) are designed to keep most study and troubleshooting inside the course and your local system docs.
 
 - __Follow The Full Path__
 
@@ -42,7 +42,7 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
 - __Study Like The Exam__
 
-  Treat every change as unfinished until you verify it with commands and confirm it survives reboot.
+  Treat every change as unfinished until you verify it with commands and confirm it [survives reboot](16-persistence-reboot-checks-and-troubleshooting.md).
 
 - __Jump Straight To Labs__
 
