@@ -106,7 +106,7 @@ Use this site like a training system, not just a pile of notes.
 ## RHCSA Exam Map
 
 ```mermaid
-flowchart TD
+flowchart LR
     A["RHCSA / EX200 Study Scope"] --> B["Foundations"]
     A --> C["Administration Core"]
     A --> D["Review and Mock Exams"]

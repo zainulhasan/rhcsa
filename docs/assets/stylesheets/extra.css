@@ -343,7 +343,9 @@
 
 .md-typeset .mermaid-diagram svg {
   display: inline-block;
-  max-width: none;
+  /* Fit the content column so diagrams are never cut off horizontally;
+     tall diagrams (e.g. the LR exam map) scroll with the page. */
+  max-width: 100%;
   height: auto;
 }
 
