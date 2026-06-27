@@ -115,7 +115,7 @@ scp student@serverb:/etc/hosts .
 ssh-copy-id student@serverb
 ```
 
-This helps prepare for passwordless SSH using keys, which is covered more deeply later.
+This helps prepare for passwordless SSH using keys. Generating the key pair (`ssh-keygen`) and the full key-based authentication objective are covered in `15-selinux-ssh-keys-and-security.md`.
 
 ## Worked Examples
 

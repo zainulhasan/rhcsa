@@ -1,1 +1,1 @@
---8<-- "../30-rhel9-book-exercise-adaptation-bank.md"
+--8<-- "30-rhel9-book-exercise-adaptation-bank.md"

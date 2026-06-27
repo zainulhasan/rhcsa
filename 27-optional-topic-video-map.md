@@ -4,6 +4,12 @@ This page is intentionally short.
 
 It is not a second course, and it is not a list of random playlists. Its job is to help you reinforce one weak topic without drifting away from the real RHCSA scope.
 
+!!! warning "Study-time only"
+    The links on this page (and any videos you find) require internet and are
+    for **preparation only**. The exam is offline — none of these resources are
+    available during it. Use them to fix a weak topic at home, then prove the
+    skill in your lab with `man`, `--help`, and local docs.
+
 ## Source Of Truth
 
 Use Red Hat's public [EX200 exam page](https://www.redhat.com/en/services/training/ex200-red-hat-certified-system-administrator-rhcsa-exam) as the final scope check. I reviewed this page on March 28, 2026, and the public exam page states that `EX200` is based on `RHEL 10`.

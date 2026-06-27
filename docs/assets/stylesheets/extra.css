@@ -271,6 +271,39 @@
   color: #dce8e6;
 }
 
+/* Make each homepage card a single clickable tile.
+   The card's first link is stretched to cover the whole card; any
+   additional links inside the card stay individually clickable. */
+.homepage-cards li {
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.homepage-cards li:hover {
+  transform: translateY(-3px);
+  border-color: rgba(31, 95, 102, 0.45);
+  box-shadow: 0 16px 36px rgba(31, 95, 102, 0.16);
+}
+
+[data-md-color-scheme="slate"] .homepage-cards li:hover {
+  border-color: rgba(143, 210, 208, 0.5);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32);
+}
+
+.homepage-cards li a:first-of-type::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 1rem;
+}
+
+/* keep extra links (and the primary link text) usable above the overlay */
+.homepage-cards li a:not(:first-of-type) {
+  position: relative;
+  z-index: 2;
+}
+
 .map-callout {
   padding: 0.9rem 1rem;
   border-left: 4px solid #1f5f66;
@@ -284,77 +317,36 @@
   background: rgba(30, 96, 103, 0.14);
 }
 
-.md-typeset .mermaid-figure {
+/* Mermaid diagram container (rendered by mermaid-render.mjs). */
+.md-typeset .mermaid-diagram {
+  display: block;
   margin: 1.5rem 0;
-}
-
-.md-typeset .mermaid-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.md-typeset .mermaid-toolbar button {
-  border: 1px solid rgba(31, 95, 102, 0.16);
-  background: rgba(255, 255, 255, 0.82);
-  color: #1f5f66;
-  border-radius: 999px;
-  padding: 0.34rem 0.78rem;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-}
-
-[data-md-color-scheme="slate"] .md-typeset .mermaid-toolbar button {
-  border-color: rgba(153, 205, 204, 0.16);
-  background: rgba(20, 28, 30, 0.88);
-  color: #bfe5e3;
-}
-
-.md-typeset .mermaid-toolbar button:hover {
-  background: rgba(31, 95, 102, 0.08);
-}
-
-[data-md-color-scheme="slate"] .md-typeset .mermaid-toolbar button:hover {
-  background: rgba(153, 205, 204, 0.08);
-}
-
-.md-typeset .mermaid-frame {
-  overflow: auto;
+  padding: 0.75rem;
+  background: none;
   border: 1px solid rgba(31, 95, 102, 0.12);
   border-radius: 1rem;
-  padding: 1rem;
-  min-height: 320px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(237, 242, 243, 0.9));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-[data-md-color-scheme="slate"] .md-typeset .mermaid-frame {
-  border-color: rgba(153, 205, 204, 0.12);
-  background:
-    linear-gradient(180deg, rgba(21, 29, 31, 0.96), rgba(24, 33, 36, 0.94));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.md-typeset .mermaid {
+  /* Wide diagrams scroll horizontally instead of shrinking to unreadable. */
+  overflow-x: auto;
   text-align: center;
-  min-height: 260px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  white-space: normal;
 }
 
-.md-typeset .mermaid svg {
-  display: block;
-  width: min(100%, 1400px) !important;
-  min-width: 900px;
-  min-height: 240px;
-  height: auto !important;
-  margin: 0 auto;
-  transform-origin: top center;
-  transition: transform 0.15s ease;
+[data-md-color-scheme="slate"] .md-typeset .mermaid-diagram {
+  border-color: rgba(153, 205, 204, 0.14);
+  background: rgba(20, 28, 30, 0.4);
+}
+
+/* Hide the raw fence source until the SVG is rendered in. */
+.md-typeset .mermaid-diagram > code {
+  display: none;
+}
+
+.md-typeset .mermaid-diagram svg {
+  display: inline-block;
+  /* Fit the content column so diagrams are never cut off horizontally;
+     tall diagrams (e.g. the LR exam map) scroll with the page. */
+  max-width: 100%;
+  height: auto;
 }
 
 @media screen and (max-width: 900px) {
@@ -382,9 +374,106 @@
     width: 100%;
     text-align: center;
   }
+}
 
-  .md-typeset .mermaid svg {
-    min-width: 720px;
-    min-height: 220px;
-  }
+/* ---- Offline progress tracker ---- */
+
+/* Home page: progress bar under the hero panel */
+.md-typeset .rhcsa-progress {
+  margin: 0 0 1.6rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid rgba(31, 95, 102, 0.16);
+  border-radius: 1rem;
+  background: rgba(31, 95, 102, 0.05);
+}
+
+[data-md-color-scheme="slate"] .md-typeset .rhcsa-progress {
+  border-color: rgba(153, 205, 204, 0.18);
+  background: rgba(30, 96, 103, 0.16);
+}
+
+.md-typeset .rhcsa-progress-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+}
+
+.md-typeset .rhcsa-progress-label {
+  font-weight: 700;
+  color: #1f5f66;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .rhcsa-progress-label {
+  color: #bfe5e3;
+}
+
+.md-typeset .rhcsa-progress-count {
+  font-size: 0.82rem;
+  opacity: 0.85;
+}
+
+.md-typeset .rhcsa-progress-track {
+  height: 0.6rem;
+  border-radius: 999px;
+  background: rgba(31, 95, 102, 0.14);
+  overflow: hidden;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .rhcsa-progress-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.md-typeset .rhcsa-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1f5f66, #3a7e86);
+  transition: width 0.3s ease;
+}
+
+/* Lesson page: mark-complete toggle at the bottom */
+.md-typeset .rhcsa-complete {
+  margin: 2.5rem 0 0.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(31, 95, 102, 0.14);
+}
+
+[data-md-color-scheme="slate"] .md-typeset .rhcsa-complete {
+  border-top-color: rgba(153, 205, 204, 0.16);
+}
+
+.md-typeset .rhcsa-complete-btn {
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 95, 102, 0.3);
+  background: rgba(255, 255, 255, 0.7);
+  color: #1f5f66;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.md-typeset .rhcsa-complete-btn:hover {
+  background: rgba(31, 95, 102, 0.08);
+}
+
+.md-typeset .rhcsa-complete-btn.is-done {
+  background: #1f5f66;
+  border-color: #1f5f66;
+  color: #ffffff;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .rhcsa-complete-btn {
+  background: rgba(20, 28, 30, 0.85);
+  border-color: rgba(153, 205, 204, 0.3);
+  color: #bfe5e3;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .rhcsa-complete-btn.is-done {
+  background: #2b767f;
+  border-color: #2b767f;
+  color: #ffffff;
 }

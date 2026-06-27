@@ -159,24 +159,59 @@ After recovery work:
 
 ### Root password reset recovery pattern
 
-One common lab scenario is resetting the root password from an interrupted boot.
+Resetting a lost root password is one of the most likely RHCSA boot tasks. You must know the **whole** sequence, including the GRUB edit — there is no graphical shortcut and no internet to look it up. Practice it until you can do it from memory.
 
-Typical RHEL-style flow:
+Overview of the flow:
 
 ```text
-GRUB edit -> temporary break into recovery shell -> remount writable -> repair -> SELinux relabel -> reboot
+reboot -> interrupt GRUB -> edit kernel line (rd.break) -> boot to switch_root shell
+-> remount /sysroot rw -> chroot /sysroot -> passwd -> schedule SELinux relabel -> exit twice -> reboot
 ```
 
-A common variant uses:
+Step by step:
 
-- `rd.break` on the kernel line
-- `mount -o remount,rw /sysroot`
-- `chroot /sysroot`
-- `passwd`
-- `touch /.autorelabel`
-- `exit` twice, then reboot
+1. **Reboot** the system. At the GRUB menu, highlight the normal kernel entry and press `e` to edit it (do not press Enter).
+2. Find the line that begins with `linux` (it mentions `vmlinuz`). Move to the **end** of that line.
+3. Append a space and `rd.break`:
 
-Treat the exact boot arguments as version-sensitive lab details. The stable part is the repair logic after you reach the recovery shell.
+    ```text
+    rd.break
+    ```
+
+4. Press **Ctrl-x** (or F10) to boot with that argument. The system stops in the early `switch_root:/#` shell, with the real root filesystem mounted **read-only** at `/sysroot`.
+5. Remount `/sysroot` read-write and enter it:
+
+    ```bash
+    mount -o remount,rw /sysroot
+    chroot /sysroot
+    ```
+
+6. Set the new root password:
+
+    ```bash
+    passwd
+    ```
+
+7. Because you changed `/etc/shadow` with SELinux possibly inconsistent, schedule a full relabel on next boot:
+
+    ```bash
+    touch /.autorelabel
+    ```
+
+8. Leave both shells and reboot:
+
+    ```bash
+    exit
+    exit
+    ```
+
+The relabel runs automatically and the machine reboots again into a normal login with the new root password.
+
+!!! warning "Do not skip the relabel"
+    If you forget `touch /.autorelabel`, the new `/etc/shadow` may have the wrong
+    SELinux context and **root login can fail**. The faster alternative to a full
+    relabel is to fix just that file inside the chroot:
+    `restorecon -v /etc/shadow` before `exit`. Either approach works; pick one.
 
 ### Process inspection
 
@@ -222,8 +257,14 @@ sudo systemctl restart systemd-journald
 ```bash
 tuned-adm list
 sudo tuned-adm active
-sudo tuned-adm profile balanced
+sudo tuned-adm recommend
+sudo tuned-adm profile virtual-guest
 ```
+
+- `tuned-adm list` shows the available profiles on **your** system — use a name from that list, do not assume one exists.
+- `tuned-adm recommend` prints the profile tuned thinks fits this machine (often `virtual-guest` on a VM, `throughput-performance` on a server). The old `balanced` profile is not guaranteed to be present.
+- On RHEL 10, `tuned` is the active tuning daemon; if `tuned-adm` reports it is not running, start it with `sudo systemctl enable --now tuned` first.
+- The chosen profile persists across reboot; verify with `tuned-adm active`.
 
 ## Worked Examples
 
@@ -260,21 +301,25 @@ Verification:
 
 - identify one recent event involving `sshd`
 
-### Worked Example 4: Explain the Root Password Reset Flow
+### Worked Example 4: Reset the Root Password From an Interrupted Boot
 
-Command sequence:
+Follow the full procedure in "Root password reset recovery pattern" above: reboot, press `e` at GRUB, append `rd.break` to the `linux` line, Ctrl-x to boot, then:
 
 ```bash
 mount -o remount,rw /sysroot
 chroot /sysroot
 passwd
 touch /.autorelabel
+exit
+exit
 ```
 
 Verification:
 
-- explain why `/sysroot` must become writable
-- explain why `touch /.autorelabel` matters after password recovery
+- explain why you must append `rd.break` and remount `/sysroot` read-write
+- explain why `/sysroot` starts read-only in the `switch_root` shell
+- explain why `touch /.autorelabel` (or `restorecon -v /etc/shadow`) matters after password recovery
+- after the automatic reboot, confirm you can log in as root with the new password
 
 ## Guided Hands-On Lab
 
@@ -473,8 +518,10 @@ systemctl is-enabled service
 systemctl get-default
 systemctl set-default multi-user.target
 systemctl isolate rescue.target
+# root password reset: GRUB 'e' -> append rd.break -> Ctrl-x, then:
 mount -o remount,rw /sysroot
 chroot /sysroot
+passwd
 touch /.autorelabel
 ps aux --sort=-%cpu | head
 kill PID
@@ -485,5 +532,6 @@ journalctl -b
 journalctl -u sshd
 tuned-adm list
 tuned-adm active
-tuned-adm profile balanced
+tuned-adm recommend
+tuned-adm profile virtual-guest
 ```

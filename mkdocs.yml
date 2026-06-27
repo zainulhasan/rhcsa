@@ -10,10 +10,11 @@ theme:
   custom_dir: docs/overrides
   logo: assets/images/rhcsa-mark.svg
   favicon: assets/images/rhcsa-favicon.svg
+  # Offline-safe: use the system font stack instead of fetching Google Fonts.
+  font: false
   features:
     - navigation.instant
     - navigation.sections
-    - navigation.expand
     - navigation.footer
     - navigation.top
     - navigation.tracking
@@ -50,22 +51,25 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.superfences:
       custom_fences:
+        # Distinct class so Material's built-in (CDN) Mermaid stays off and our
+        # offline ES module is the only renderer.
         - name: mermaid
-          class: mermaid
+          class: mermaid-diagram
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
 
 plugins:
   - search
-  - mermaid2
 
 extra_css:
   - assets/stylesheets/extra.css
 
 extra_javascript:
-  - https://unpkg.com/mermaid@10.4.0/dist/mermaid.esm.min.mjs
-  - assets/javascripts/mermaid-zoom.js
+  # Offline-safe: our ES module imports the locally vendored Mermaid dist (no CDN)
+  # and renders diagrams with mermaid.render() for correct sizing.
+  - assets/javascripts/mermaid-render.mjs
+  - assets/javascripts/progress.js
 
 extra:
   generator: false
@@ -94,7 +98,15 @@ nav:
       - 13 Networking, Hostname Resolution, and firewalld: 13-networking-hostname-resolution-and-firewalld.md
       - 14 Users, Groups, Passwords, and Sudo: 14-users-groups-passwords-and-sudo.md
       - 15 SELinux, SSH Keys, and Security: 15-selinux-ssh-keys-and-security.md
+      - 15a Containers With Podman: 15a-containers-with-podman.md
       - 16 Persistence, Reboot Checks, and Troubleshooting: 16-persistence-reboot-checks-and-troubleshooting.md
+  - Review and Mock Exams:
+      - 17a RHCSA Command Reference Cheat Sheet: 17a-rhcsa-command-reference-cheat-sheet.md
+      - 17 Final Review and Cheat Sheets: 17-final-review-cheat-sheets.md
+      - 18 Mock Exam 1: 18-mock-exam-1.md
+      - 19 Mock Exam 1 Solutions: 19-mock-exam-1-solutions.md
+      - 20 Mock Exam 2: 20-mock-exam-2.md
+      - 21 Mock Exam 2 Solutions: 21-mock-exam-2-solutions.md
   - Labs Track:
       - 22 Labs Track and Skill Check Guide: 22-labs-track-and-skill-check-guide.md
       - 23 VM Lab Setup and Baseline Checks: 23-vm-lab-setup-and-baseline-checks.md
@@ -103,13 +115,6 @@ nav:
       - 25 Administration Core Labs: 25-administration-core-labs.md
       - 26 Networking, Users, and Security Labs: 26-networking-users-and-security-labs.md
       - 28 RHCSA 10 Mixed Practice Bank: 28-rhcsa-10-mixed-practice-bank.md
-  - Review and Mock Exams:
-      - 17a RHCSA Command Reference Cheat Sheet: 17a-rhcsa-command-reference-cheat-sheet.md
-      - 17 Final Review and Cheat Sheets: 17-final-review-cheat-sheets.md
-      - 18 Mock Exam 1: 18-mock-exam-1.md
-      - 19 Mock Exam 1 Solutions: 19-mock-exam-1-solutions.md
-      - 20 Mock Exam 2: 20-mock-exam-2.md
-      - 21 Mock Exam 2 Solutions: 21-mock-exam-2-solutions.md
   - Optional Reference:
       - 27 Optional Topic Reinforcement Map: 27-optional-topic-video-map.md
       - 30 RHEL 9 Book Exercise Adaptation Bank: 30-rhel9-book-exercise-adaptation-bank.md
