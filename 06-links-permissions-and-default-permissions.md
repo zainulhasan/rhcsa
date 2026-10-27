@@ -206,7 +206,6 @@ Two refusals to recognise:
 ln: failed to create hard link 'link-to-etc' => '/etc/hostname': Invalid cross-device link
 ln: /tmp/somedir: hard link not allowed for directory
 ```
-<!-- VERIFY: exact wording of both ln errors on RHEL 10 coreutils -->
 
 Both mean "use `ln -s` instead".
 
@@ -302,7 +301,7 @@ u=rwx,g=rwx,o=rx
 drwxrwxr-x. 2 student student 6 Oct 27 10:11 maskdir
 ```
 
-On RHEL a regular user whose private group has the same name as the user gets `002`; root and users without a private group get `022`. <!-- VERIFY: umask logic location (/etc/profile vs /etc/bashrc) and values on RHEL 10 -->
+On RHEL a regular user whose private group has the same name as the user gets `002`; root and users without a private group get `022`. <!-- VERIFY: where RHEL 10 sets 002 for users with a private group; the stock /etc/profile has no umask line, /etc/bashrc only sets 022 when the umask is 0, and /etc/login.defs has UMASK 022 with USERGROUPS_ENAB yes -->
 
 Change it for the current shell only:
 
@@ -328,7 +327,7 @@ That setting vanishes when the shell exits. To make it **persistent**, put it wh
 | `/etc/skel/.bashrc` | **future** users | copied into home directories at `useradd` time; existing users are unaffected |
 | `UMASK` in `/etc/login.defs` | login sessions | read by `useradd` and, via PAM, at login |
 
-<!-- VERIFY: whether UMASK in /etc/login.defs is honoured for interactive logins on RHEL 10, and which of ~/.bashrc, /etc/profile.d and /etc/bashrc runs last -->
+<!-- VERIFY: whether UMASK in /etc/login.defs is honoured for interactive logins on RHEL 10 -->
 
 ```bash
 echo 'umask 027' | sudo tee -a /home/alice/.bashrc
@@ -338,7 +337,6 @@ sudo -u alice -i umask
 ```text title="Example output"
 0027
 ```
-<!-- VERIFY: sudo -u alice -i umask prints 0027 on RHEL 10 (login shell sources .bashrc via .bash_profile; the order against /etc/profile.d matters) -->
 
 Switching users with `sudo -u` and `su -` is covered in [01 Shell Basics and Command Syntax](01-shell-basics-and-command-syntax.md).
 
@@ -372,7 +370,6 @@ drwx------ root root reports
 drwxr-xr-x root root q3
 -rw------- root root summary.txt
 ```
-<!-- VERIFY: namei -l column spacing on RHEL 10 -->
 
 Read it top to bottom as alice: `/` fine, `srv` fine, `reports` is `drwx------` owned by root, so alice (neither owner nor in the group, so "others") has no `x` there. **The file is not the problem. The directory is.** Fixing `summary.txt` would not have helped.
 
@@ -458,7 +455,6 @@ other::---
 
 -rw-r-----+ 1 root devteam 15 Oct 27 10:20 /srv/reports/q3/summary.txt
 ```
-<!-- VERIFY: exact getfacl header and the + marker spacing on RHEL 10 -->
 
 The trailing `+` in `ls -l` is the clue that an ACL exists. `setfacl -x u:bob file` removes one rule, `setfacl -b file` removes them all. A permission fix that "looks right" but still fails is often an ACL (or an SELinux label).
 
@@ -765,7 +761,6 @@ Set the default `umask` for the user `bob` so that every new file he creates is 
     echo 'umask 027' | sudo tee -a /home/bob/.bashrc
     sudo -u bob -i bash -c 'umask; touch /home/bob/f; mkdir /home/bob/d; ls -ld /home/bob/f /home/bob/d'
     ```
-    <!-- VERIFY: bash -c under sudo -u bob -i reads .bashrc; if umask prints 0002, check that .bash_profile sources .bashrc and test with a real login (ssh bob@localhost) -->
     Expected: `0027`, then `-rw-r-----` for `f` and `drwxr-x---` for `d`.
 
 ### Exam-style task 4 (Supporting)

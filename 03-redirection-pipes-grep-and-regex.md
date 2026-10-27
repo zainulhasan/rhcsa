@@ -16,7 +16,6 @@ description: Send command output to files, split errors from normal output, chai
     /etc/passwd
     /etc/passwd
     ```
-    <!-- VERIFY: ordering of the error line versus the listing on the first command (stderr and stdout are separate streams) -->
     Notice that the first command printed an error and a result, and the second printed only the result. The error was thrown into `/dev/null`, the system's rubbish bin. By the end of this lesson you will know exactly why that works.
 
 ## Why it matters
@@ -183,12 +182,12 @@ grep 'bash$' /etc/passwd | cut -d: -f1 | sort | tee bash-users.txt
 
 ```text title="Example output"
 root:x:0:0:Super User:/root:/bin/bash
-operator:x:11:0:operator:/root:/sbin/nologin
+operator:x:11:0:operator:/root:/usr/sbin/nologin
 2
 root
 student
 ```
-<!-- VERIFY: exact GECOS text "Super User" and the count of bash users on the lab image -->
+<!-- VERIFY: the count of bash users on the lab image -->
 
 Notice that `operator` matched `root` because its home directory is `/root`. That is what "searching too broadly" looks like: `^root` or `^root:` would have matched only the real account.
 
@@ -239,9 +238,8 @@ grep -v '^#' file.conf
 
 ```text title="Example output"
 1:root:x:0:0:Super User:/root:/bin/bash
-10:operator:x:11:0:operator:/root:/sbin/nologin
+10:operator:x:11:0:operator:/root:/usr/sbin/nologin
 ```
-<!-- VERIFY: the line number of the operator entry on the lab image -->
 
 | Option | Meaning |
 |---|---|
@@ -294,8 +292,8 @@ sed -i.bak 's/http:/https:/' app.conf
 bAnana
 bAnAnA
 root:x:0:0:Super User:/root:/bin/bash
-bin:x:1:1:bin:/bin:/sbin/nologin
-daemon:x:2:2:daemon:/sbin:/sbin/nologin
+bin:x:1:1:bin:/bin:/usr/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/usr/sbin/nologin
 ```
 
 | Part | Meaning |

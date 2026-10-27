@@ -241,7 +241,7 @@ Danger:
 - `rm -rf` does both without asking. Read the path twice, especially if it contains a variable or a `*`.
 
 !!! note "Root's safety aliases"
-    On RHEL, the `root` user's `~/.bashrc` normally defines `alias rm='rm -i'`, `alias cp='cp -i'` and `alias mv='mv -i'`, so root gets a confirmation prompt that `student` does not. This can surprise you in scripts and in `sudo` sessions. Check with `alias`. <!-- VERIFY: root aliases present on RHEL 10 default image -->
+    On RHEL, the `root` user's `~/.bashrc` normally defines `alias rm='rm -i'`, `alias cp='cp -i'` and `alias mv='mv -i'`, so root gets a confirmation prompt that `student` does not. This can surprise you in scripts and in `sudo` sessions. Check with `alias`.
 
 ### 6. Read files: `cat`, `less`, `head`, `tail`, `wc`
 
@@ -256,10 +256,10 @@ less /etc/services
 ```text title="Example output"
 servera.lab.example
 root:x:0:0:root:/root:/bin/bash
-bin:x:1:1:bin:/bin:/sbin/nologin
-daemon:x:2:2:daemon:/sbin:/sbin/nologin
+bin:x:1:1:bin:/bin:/usr/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/usr/sbin/nologin
 student:x:1000:1000:student:/home/student:/bin/bash
-tcpdump:x:72:72::/:/sbin/nologin
+tcpdump:x:72:72::/:/usr/sbin/nologin
 42 /etc/passwd
 ```
 <!-- VERIFY: passwd contents differ per image; line counts are illustrative -->
@@ -600,10 +600,8 @@ Create `/tmp/editcheck.txt` with at least three lines, then:
     | Change | Persistent? | Make it persist with |
     |---|---|---|
     | Files and directories in `/home`, `/etc`, `/root` | Yes | Nothing, they are on disk |
-    | Files in `/tmp` | Not guaranteed | Do not rely on `/tmp` for exam answers unless the task names it; `/tmp` is cleaned automatically |
+    | Files in `/tmp` | Not guaranteed | Do not rely on `/tmp` for exam answers unless the task names it; `/tmp` is cleaned automatically (the stock `systemd-tmpfiles` rule removes entries not used for 10 days) |
     | Unsaved edits in `vi` or `nano` | No | Save with `:wq` or `Ctrl+O` |
-
-    <!-- VERIFY: /tmp cleanup behaviour on RHEL 10 (systemd-tmpfiles age rules, tmpfs or disk) -->
 
 **Verify like a grader:**
 

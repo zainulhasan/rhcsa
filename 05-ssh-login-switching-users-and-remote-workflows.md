@@ -13,9 +13,8 @@ description: Log in to remote systems with SSH, check who and where you are, run
     ```text title="Example output"
     servera.lab.example
     student
-    OpenSSH_9.9p1, OpenSSL 3.2.2 4 Jun 2024
+    OpenSSH_9.9p1, OpenSSL 3.5.8 25 Aug 2026
     ```
-    <!-- VERIFY: OpenSSH and OpenSSL version strings on the RHEL 10 lab image -->
     Notice that the first two lines answer "which machine?" and "which user?". Those are the two questions you must be able to answer before every important command on a remote system. By the end of this lesson you will know why they matter and how to change both.
 
 ## Why it matters
@@ -159,7 +158,6 @@ scp student@serverb.lab.example:/etc/hosts .
 report.txt                                    100%   32    41.7KB/s   00:00
 hosts                                         100%  158   188.2KB/s   00:00
 ```
-<!-- VERIFY: scp progress line layout on RHEL 10 (scp uses the SFTP protocol by default in current OpenSSH) -->
 
 The rule is the same every time: `scp SOURCE DESTINATION`. The side with `user@host:` is remote. Useful options:
 
@@ -189,14 +187,25 @@ ssh-keygen -t ed25519
 ```text title="Example output"
 Generating public/private ed25519 key pair.
 Enter file in which to save the key (/home/student/.ssh/id_ed25519):
-Enter passphrase (empty for no passphrase):
+Enter passphrase for "/home/student/.ssh/id_ed25519" (empty for no passphrase):
 Enter same passphrase again:
 Your identification has been saved in /home/student/.ssh/id_ed25519
 Your public key has been saved in /home/student/.ssh/id_ed25519.pub
 The key fingerprint is:
 SHA256:7Hq2fVbN4zLx0JkPcA9sYtW1uRgE5oMdXiB3nCvT6hI student@servera.lab.example
+The key's randomart image is:
++--[ED25519 256]--+
+|X.. .oo          |
+|.= .   o .       |
+|=o    o +        |
+|oo.o E o o       |
+|=.o + * S .      |
+|*o + + = .       |
+|oo. O = o o      |
+|.  * + o + .     |
+|  ..=  .o        |
++----[SHA256]-----+
 ```
-<!-- VERIFY: exact ssh-keygen prompts and the randomart block on RHEL 10 -->
 
 Press Enter at each prompt to accept the default file and an empty passphrase (fine for a lab; a passphrase is stronger). You now have a private key (`id_ed25519`, never share it) and a public key (`id_ed25519.pub`, safe to copy). Now install the public key on the server:
 
@@ -261,18 +270,19 @@ wtmp begins Mon Oct 27 07:54:12 2026
 | `w` | Same, plus what each user is running and system load |
 | `last` | History of past logins and reboots (read from `/var/log/wtmp`) |
 
-Which accounts the server accepts is set in `/etc/ssh/sshd_config` (and files in `/etc/ssh/sshd_config.d/`). To see the active values, including defaults, use the test mode of the daemon:
+Which accounts the server accepts is set in `/etc/ssh/sshd_config` and in the drop-in files it includes from `/etc/ssh/sshd_config.d/` (RHEL ships `40-redhat-crypto-policies.conf` and `50-redhat.conf` there). To see the active values, including defaults, use the test mode of the daemon:
 
 ```bash
 sudo sshd -T | grep -Ei 'permitrootlogin|passwordauthentication|pubkeyauthentication'
 ```
 
 ```text title="Example output"
-permitrootlogin yes
+permitrootlogin without-password
 pubkeyauthentication yes
 passwordauthentication yes
 ```
-<!-- VERIFY: default PermitRootLogin value on the RHEL 10 lab image -->
+
+The default `permitrootlogin without-password` is the older spelling of `prohibit-password`: root may log in with a key but not with a password.
 
 After you edit `sshd_config`, apply it with `sudo systemctl reload sshd`. Check the syntax first with `sudo sshd -t`: no output means the file is valid. A typo that stops `sshd` from restarting can lock you out of a remote machine, so keep your current session open while you test a new one.
 
@@ -380,10 +390,13 @@ ssh student@serverb.lab.example
 
 ```text title="Example output"
 # Host serverb.lab.example found: line 1
+# Host serverb.lab.example found: line 2
+# Host serverb.lab.example found: line 3
 /home/student/.ssh/known_hosts updated.
 Original contents retained as /home/student/.ssh/known_hosts.old
 ```
-<!-- VERIFY: ssh-keygen -R output wording on RHEL 10 -->
+
+One `found: line N` line is printed for each saved key of that host, so you may see one to three.
 
 If you did not expect any change, stop and investigate before connecting.
 
