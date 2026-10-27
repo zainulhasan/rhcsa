@@ -30,11 +30,11 @@ flowchart LR
 ## Instructions
 
 - Suggested self-timer: 3 hours. This is this course's own practice limit, not a statement about any real exam.
-- Work from the command line, on `servera`, as `student` with `sudo`. Tasks 17, 18 and 19 need the **console** of `servera` (the hypervisor window or `virsh console`), because you edit the GRUB menu. SSH is not enough for them.
+- Work from the command line, on `servera`, as `student` with `sudo`. Tasks 18 and 19 need the **console** of `servera` (the hypervisor window or `virsh console`), because you edit the GRUB menu. SSH is not enough for them. Task 17 does not need the console.
 - Use local help only (`man`, `--help`, `/usr/share/doc`). Task 2 is the one task that needs internet access (or the offline alternative given there).
 - Build in your own verification steps.
 - Do the tasks in order. Some depend on earlier ones (Task 9 needs the port from Task 8, Task 14 needs the volume group from Task 13).
-- Tasks 17, 18 and 19 each reboot the machine. Task 20 reboots once more to prove persistence.
+- Task 17 does not reboot: `grubby` only stores the argument, and it takes effect on the next boot, which is the first reboot of Task 18. Task 18 reboots twice (rescue shell, then a normal boot), Task 19 reboots (and relabels), and Task 20 reboots once more to prove persistence.
 - There are no container tasks in this mock.
 
 ## Lab environment and setup
@@ -94,6 +94,10 @@ echo 'bob:bobpass' | sudo chpasswd
 echo 'carol:carolpass' | sudo chpasswd
 echo 'dana:danapass' | sudo chpasswd
 
+# stale files from an earlier attempt, so every task starts blank
+sudo rm -f /etc/yum.repos.d/localpractice.repo /etc/sudoers.d/webadmins /etc/auto.master.d/homes.autofs /etc/auto.homes
+sudo rm -f /etc/systemd/journald.conf.d/persistent.conf /etc/httpd/conf.d/mock3.conf
+
 # Task 1: a directory of RPM files for the local repository
 sudo dnf remove -y tree zip
 sudo mkdir -p /srv/localrepo
@@ -103,6 +107,7 @@ sudo createrepo_c /srv/localrepo
 # Task 4: a directory that is not writable for its group
 sudo mkdir -p /data/teamdocs
 echo 'team notes' | sudo tee /data/teamdocs/notes.txt
+sudo rm -f /data/teamdocs/bob.txt /data/teamdocs/dana.txt
 sudo chown root:root /data/teamdocs
 sudo chmod 755 /data/teamdocs
 
@@ -111,17 +116,20 @@ sudo mkdir -p /srv/countdemo
 sudo touch /srv/countdemo/a /srv/countdemo/b /srv/countdemo/c
 
 # Tasks 13 and 14: volume group vgapp on /dev/vdb with a mounted XFS logical volume
-sudo parted --script /dev/vdb mklabel gpt mkpart primary 1MiB 601MiB set 1 lvm on
-sudo partprobe /dev/vdb
-sudo udevadm settle
-sudo pvcreate /dev/vdb1
-sudo vgcreate vgapp /dev/vdb1
-sudo lvcreate -n lvapp -L 500M vgapp
-sudo mkfs.xfs /dev/vgapp/lvapp
+# (skipped when vgapp already exists, so a second run never destroys it)
+if ! sudo vgs vgapp &>/dev/null; then
+  sudo parted --script /dev/vdb mklabel gpt mkpart primary 1MiB 601MiB set 1 lvm on
+  sudo partprobe /dev/vdb
+  sudo udevadm settle
+  sudo pvcreate -y /dev/vdb1
+  sudo vgcreate vgapp /dev/vdb1
+  sudo lvcreate -n lvapp -L 500M vgapp
+  sudo mkfs.xfs /dev/vgapp/lvapp
+fi
 sudo mkdir -p /data/app
-echo "UUID=$(sudo blkid -s UUID -o value /dev/vgapp/lvapp) /data/app xfs defaults 0 0" | sudo tee -a /etc/fstab
+grep -q '[[:space:]]/data/app[[:space:]]' /etc/fstab || echo "UUID=$(sudo blkid -s UUID -o value /dev/vgapp/lvapp) /data/app xfs defaults 0 0" | sudo tee -a /etc/fstab
 sudo systemctl daemon-reload
-sudo mount -a
+mountpoint -q /data/app || sudo mount -a
 echo 'before growth' | sudo tee /data/app/before.txt
 
 # Task 18: start from a default target that is not multi-user
@@ -132,16 +140,17 @@ On `serverb` (NFS and time server for Tasks 11 and 15, SSH target for Task 16):
 
 ```bash
 sudo dnf install -y nfs-utils chrony
-sudo useradd -m -u 4001 alice
-sudo useradd -m -u 4002 bob
+id alice &>/dev/null || sudo useradd -m -u 4001 alice
+id bob   &>/dev/null || sudo useradd -m -u 4002 bob
 echo 'bob:bobpass' | sudo chpasswd
-sudo mkdir -p /export/homes/alice /export/homes/bob
+sudo mkdir -p /export/homes/alice /export/homes/bob /etc/exports.d
 echo 'welcome alice' | sudo tee /export/homes/alice/welcome.txt
 echo 'welcome bob' | sudo tee /export/homes/bob/welcome.txt
 sudo chown -R alice:alice /export/homes/alice
 sudo chown -R bob:bob /export/homes/bob
 echo '/export/homes 192.168.122.0/24(rw,sync)' | sudo tee /etc/exports.d/mock3.exports
-printf 'allow 192.168.122.0/24\nlocal stratum 10\n' | sudo tee /etc/chrony.d/mock3.conf
+# time-serving settings go into the main file, which chronyd always reads (guarded, so a re-run adds them once)
+grep -q '^allow 192.168.122.0/24' /etc/chrony.conf || printf 'allow 192.168.122.0/24\nlocal stratum 10\n' | sudo tee -a /etc/chrony.conf
 sudo systemctl enable nfs-server chronyd
 sudo systemctl restart nfs-server chronyd
 sudo firewall-cmd --permanent --add-service={nfs,mountd,rpc-bind,ntp}
@@ -150,7 +159,7 @@ sudo exportfs -rav
 ```
 
 <!-- VERIFY: dnf download is available in the dnf-plugins-core that RHEL 10 installs; otherwise use dnf install --downloadonly --downloaddir /srv/localrepo tree zip -->
-<!-- VERIFY: /etc/chrony.d/*.conf is read by the stock chrony.conf on RHEL 10 (via confdir or include) -->
+<!-- VERIFY: the stock RHEL 10 /etc/chrony.conf has no uncommented `allow` or `local` line, so the appended lines are the only ones the reset has to remove -->
 
 ??? warning "Reset servera and serverb (destroys the Mock 3 work and everything on /dev/vdb and /dev/vdc)"
     Run this to start over after a previous attempt, then run Setup again. Every line ignores "not found" errors. On `servera`:
@@ -158,23 +167,22 @@ sudo exportfs -rav
     sudo systemctl disable --now autofs httpd dailyreport.timer 2>/dev/null
     sudo umount /remote/homes/alice /remote/homes/bob /data/app /mnt/usbdata 2>/dev/null
     sudo swapoff /dev/vgapp/lvswap 2>/dev/null
-    for lv in lvapp lvswap; do
-      U=$(sudo blkid -s UUID -o value /dev/vgapp/$lv 2>/dev/null)
-      [ -n "$U" ] && sudo sed -i "/$U/d" /etc/fstab
-    done
-    sudo sed -i '\#usbdata#d' /etc/fstab
     # the course's standard disk reset, once for /dev/vdb and once for /dev/vdc
     sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
     sudo vgremove -ff -y vgapp vgdata vgexam vgfs datacontainer 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo wipefs -a /dev/vdc[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdc; sudo partprobe /dev/vdc
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vd[bc]|vg(data|app|fs)-/d' /etc/fstab
+    # the two mock mount points (/data/app, /mnt/usbdata) and the swap line, whatever device they used
+    sudo sed -i -E '\#[[:space:]]/(data/app|mnt/usbdata)[[:space:]]#d; /^LABEL=USBDATA[[:space:]]/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     sudo rm -f /etc/auto.master.d/homes.autofs /etc/auto.homes /etc/sudoers.d/webadmins
-    sudo rm -rf /remote /data /srv/countdemo /srv/localrepo /usr/local/bin/dircount.sh
+    sudo rm -rf /remote /data /mnt/usbdata /srv/countdemo /srv/localrepo /srv/flatpak-usb /usr/local/bin/dircount.sh
     sudo rm -f /etc/yum.repos.d/localpractice.repo
     sudo dnf remove -y tree zip
     sudo flatpak uninstall --system -y org.gnome.gedit org.gnome.Calculator 2>/dev/null
+    sudo flatpak uninstall --system --unused -y 2>/dev/null
     sudo flatpak remote-delete --system --force flathub 2>/dev/null
     sudo flatpak remote-delete --system --force labremote 2>/dev/null
     for u in alice bob carol dana; do sudo pkill -u $u 2>/dev/null; sudo userdel -r $u 2>/dev/null; done
@@ -188,8 +196,8 @@ sudo exportfs -rav
     sudo setsebool -P httpd_can_network_connect off
     sudo semanage port -d -t http_port_t -p tcp 8765 2>/dev/null
     sudo rm -f /etc/httpd/conf.d/mock3.conf /var/www/html/index.html
-    sudo firewall-cmd --permanent --remove-service=https
-    sudo firewall-cmd --permanent --remove-port=8765/tcp
+    sudo firewall-cmd --permanent --remove-service=https 2>/dev/null
+    sudo firewall-cmd --permanent --remove-port=8765/tcp 2>/dev/null
     sudo firewall-cmd --reload
     sudo nmcli connection delete labnet 2>/dev/null
     sudo sed -i '/^server serverb.lab.example/d;s/^#pool /pool /' /etc/chrony.conf
@@ -200,8 +208,9 @@ sudo exportfs -rav
     ```
     The `/etc/hosts` line for `serverb` from Setup is kept on purpose. On `serverb`:
     ```bash
-    sudo rm -rf /export/homes /etc/exports.d/mock3.exports /etc/chrony.d/mock3.conf
+    sudo rm -rf /export/homes /etc/exports.d/mock3.exports
     sudo exportfs -rav
+    sudo sed -i '/^allow 192.168.122.0\/24/d;/^local stratum 10/d' /etc/chrony.conf
     sudo systemctl restart chronyd
     for u in alice bob; do sudo userdel -r $u 2>/dev/null; done
     ```
@@ -237,7 +246,7 @@ Setup created the user `carol` and the user `dana`, who is a member of the group
 - (3 points) For `carol` set: maximum password age 45 days, minimum 2 days, warning 7 days, and the account expiry date `2030-12-31`.
 - (3 points) Create the sudoers drop-in `/etc/sudoers.d/webadmins` so that members of `webadmins` can run **only** `/usr/bin/systemctl restart chronyd` as root and **without** a password. Use `visudo` to edit it.
 
-- [ ] `chage -l carol` shows maximum 45, minimum 2, warning 7 and the account expiry `Dec 31, 2030`
+- [ ] `sudo chage -l carol` shows maximum 45, minimum 2, warning 7 and the account expiry `Dec 31, 2030`
 - [ ] The drop-in file has owner `root` and mode `0440`, and `sudo visudo -c` reports no errors
 - [ ] `sudo -l -U dana` lists `NOPASSWD: /usr/bin/systemctl restart chronyd` and nothing else
 - [ ] `sudo -u dana sudo -n systemctl restart chronyd` succeeds, and `sudo -u dana sudo -n systemctl restart sshd` is refused
@@ -247,7 +256,7 @@ Setup created the user `carol` and the user `dana`, who is a member of the group
 
 ### Task 4 (4 points): Diagnose a permission problem
 
-Members of the group `labteam` (`alice` and `bob`) must be able to create files in `/data/teamdocs`, and new files must belong to the group `labteam`. Other users (for example `dana`) must still be able to read and enter the directory, but not write. Right now `bob` gets `Permission denied`. Find the causes and fix them. Do not add users to other groups and do not make the directory writable for everyone.
+Members of the group `labteam` (`alice` and `bob`) must be able to create files in `/data/teamdocs`, and new files must belong to the group `labteam`. Other users (for example `dana`) must still be able to read and enter the directory, but not write. Right now `bob` gets `Permission denied`. Find the causes and fix them. Use only the owning group and the permission bits (no ACLs), keep `root` as the owner, do not add users to other groups and do not make the directory writable for everyone.
 
 - [ ] `sudo -u bob touch /data/teamdocs/bob.txt` succeeds
 - [ ] `ls -l /data/teamdocs/bob.txt` shows the group `labteam`
@@ -276,7 +285,7 @@ Configure the system journal to be stored on disk so that it survives reboots. U
 - [ ] `/var/log/journal` exists and contains a directory named like the machine ID
 - [ ] `ls /var/log/journal/*/system.journal` lists a journal file
 - [ ] `systemd-analyze cat-config systemd/journald.conf` shows `Storage=persistent` and `SystemMaxUse=100M`
-- [ ] After a reboot, `journalctl --list-boots` lists more than one boot (check it after Task 17)
+- [ ] After a reboot, `journalctl --list-boots` lists more than one boot (check it after the first reboot of Task 18)
 
 ### Task 7 (6 points): systemd timer
 
@@ -285,7 +294,7 @@ Create the service unit `dailyreport.service` and the timer unit `dailyreport.ti
 - [ ] `systemctl is-enabled dailyreport.timer` prints `enabled`
 - [ ] `systemctl list-timers dailyreport.timer` shows the next run at `03:30:00`
 - [ ] After `sudo systemctl start dailyreport.service`, `journalctl -t dailyreport` shows `daily report ran`
-- [ ] The service unit itself is not enabled (the timer starts it)
+- [ ] The service unit itself is not enabled: `systemctl is-enabled dailyreport.service` prints `static` (the timer starts it)
 
 ??? question "Hint"
     A calendar expression for every day at 03:30 is `*-*-* 03:30:00`; check yours with `systemd-analyze calendar`. A timer unit needs a `[Timer]` section and an `[Install]` section with `WantedBy=timers.target`. Catching up is a `Persistent=` setting.
@@ -293,22 +302,22 @@ Create the service unit `dailyreport.service` and the timer unit `dailyreport.ti
 ### Task 8 (6 points): SELinux boolean and port label
 
 - (2 points) Turn the SELinux boolean `httpd_can_network_connect` on, persistently.
-- (4 points) Configure `httpd` to listen on `tcp/8765` in addition to port 80, using the new file `/etc/httpd/conf.d/mock3.conf`. Give the port `8765` the SELinux label `http_port_t` (it has no label yet). Put the single line `mock3 web` in `/var/www/html/index.html`, then start `httpd` and enable it at boot.
+- (4 points) Configure `httpd` to listen on `tcp/8765` in addition to port 80, using the new file `/etc/httpd/conf.d/mock3.conf`. Give the port `8765` the SELinux label `http_port_t` (it should have no label yet; check with `semanage port -l` first). <!-- VERIFY: tcp/8765 is unlabelled in the stock RHEL 10 policy; if semanage port -l already lists another type for it, change it with semanage port -m instead of -a --> Put the single line `mock3 web` in `/var/www/html/index.html`, then start `httpd` and enable it at boot.
 
-- [ ] `getsebool httpd_can_network_connect` prints `on`, and `sudo semanage boolean -l` shows it as `(on , on)`
+- [ ] `getsebool httpd_can_network_connect` prints `on`, and `sudo semanage boolean -l | grep httpd_can_network_connect` shows `on` in both the current and the default column
 - [ ] `sudo semanage port -l | grep -w 8765` lists `http_port_t` with `tcp`
 - [ ] `systemctl is-active httpd` prints `active` and `systemctl is-enabled httpd` prints `enabled`
 - [ ] `curl http://localhost:8765` prints `mock3 web`
 
 ??? question "Hint"
-    Try to start `httpd` before you add the label and read the error: it is an SELinux denial on `bind`, not a typo. `setsebool -P` writes the boolean to disk; `semanage port -a` needs the type, the protocol and the port number.
+    Try to start `httpd` before you add the label and read the error: it is an SELinux denial on `bind`, not a typo. `setsebool -P` writes the boolean to disk; `semanage port -a` needs the type, the protocol and the port number (`-m` instead of `-a` if the port already has another label).
 
 ### Task 9 (4 points): Firewall service and port, runtime to permanent
 
 In the default zone, allow the service `https` and the port `8765/tcp`. First add both to the **runtime** configuration only, test them, and then copy the runtime configuration to the permanent one with a single command.
 
-- [ ] `firewall-cmd --list-services` includes `https` and `firewall-cmd --list-ports` includes `8765/tcp`
-- [ ] `firewall-cmd --permanent --list-services` includes `https` and `firewall-cmd --permanent --list-ports` includes `8765/tcp`
+- [ ] `sudo firewall-cmd --list-services` includes `https` and `sudo firewall-cmd --list-ports` includes `8765/tcp`
+- [ ] `sudo firewall-cmd --permanent --list-services` includes `https` and `sudo firewall-cmd --permanent --list-ports` includes `8765/tcp`
 - [ ] After `sudo firewall-cmd --reload` both are still present
 
 ### Task 10 (5 points): Static IPv4 and IPv6 on a second connection
@@ -379,7 +388,7 @@ Setup created the volume group `vgapp` (on `/dev/vdb1`, about 596 MiB) with the 
 
 ### Task 16 (5 points): SSH key login with a client config
 
-As the user `bob` on `servera`, create an ed25519 key pair with no passphrase in `~/.ssh/id_ed25519_labb` (note the non-default file name). Install the public key for `bob` on `serverb` (the password of `bob` there is `bobpass`). Then create `~/.ssh/config` for `bob` with a host alias `labb` that points to `serverb.lab.example`, user `bob` and that key, so that `ssh labb` logs in with no password and no options.
+As the user `bob` on `servera`, create an ed25519 key pair with no passphrase in `~/.ssh/id_ed25519_labb` (note the non-default file name). Install the public key for `bob` on `serverb` (the password of `bob` there is `bobpass`); always use the name `serverb.lab.example` when you connect, so that the host key is stored under the name the alias uses. Then create `~/.ssh/config` for `bob` with a host alias `labb` that points to `serverb.lab.example`, user `bob` and that key, so that `ssh labb` logs in with no password and no options.
 
 - [ ] `~bob/.ssh/id_ed25519_labb` and `id_ed25519_labb.pub` exist
 - [ ] `sudo -iu bob ssh -o BatchMode=yes labb hostname` prints `serverb.lab.example`
@@ -388,10 +397,10 @@ As the user `bob` on `servera`, create an ed25519 key pair with no passphrase in
 
 ### Task 17 (4 points): Kernel argument in the bootloader
 
-Add the kernel argument `loglevel=5` to **every** installed kernel boot entry, in a way that survives reboots and kernel updates of the existing entries. You can check the running kernel only after the next boot, so verify the stored setting now and the running one after Task 18.
+Add the kernel argument `loglevel=5` to **every** installed kernel boot entry, in a way that survives reboots. This task does not reboot the machine: the running kernel keeps its old command line until the first reboot of Task 18, so verify the stored setting now and the running one after that reboot.
 
 - [ ] `sudo grubby --info=DEFAULT` shows `loglevel=5` in `args`
-- [ ] After the next reboot, `cat /proc/cmdline` contains `loglevel=5`
+- [ ] After the first reboot of Task 18, `cat /proc/cmdline` contains `loglevel=5`
 
 ??? question "Hint"
     `grubby --update-kernel=ALL --args="..."` edits the boot entries. Editing `/etc/default/grub` and running `grub2-mkconfig` is the other route, but check the result in `grubby --info=ALL` either way.
@@ -457,7 +466,7 @@ systemctl list-timers dailyreport.timer
 getsebool httpd_can_network_connect
 sudo semanage port -l | grep -w 8765
 curl http://localhost:8765
-firewall-cmd --permanent --list-all
+sudo firewall-cmd --permanent --list-all
 ip addr show dummy0
 chronyc sources
 tuned-adm active
