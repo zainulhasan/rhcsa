@@ -151,14 +151,14 @@ Changing `PASS_MAX_DAYS` in `/etc/login.defs` affects **new** accounts only. Exi
 
 ### 2. Modify and delete users
 
-`usermod` takes the same style of options as `useradd` and changes an existing account:
+`usermod` takes the same style of options as `useradd` and changes an existing account. The examples assume `alice` and `dana` already exist (`sudo useradd alice; sudo useradd dana`):
 
 ```bash
 sudo usermod -c "Alice Ops" -s /bin/bash alice     # comment and shell
 sudo usermod -g developers alice                     # primary group
 sudo usermod -aG wheel alice                         # APPEND a supplementary group
-sudo usermod -l alice2 alice                         # rename (login name only)
-sudo usermod -d /home/alice2 -m alice2               # move home directory
+sudo usermod -l dana2 dana                           # rename (login name only)
+sudo usermod -d /home/dana2 -m dana2                 # move home directory
 ```
 
 | Option | Meaning |
@@ -173,8 +173,8 @@ sudo usermod -d /home/alice2 -m alice2               # move home directory
 Delete an account with `userdel`:
 
 ```bash
-sudo userdel alice          # removes the account, KEEPS /home/alice and the mail spool
-sudo userdel -r alice       # removes the account AND its home directory and mail spool
+sudo userdel dana2          # removes the account, KEEPS /home/dana2 and the mail spool
+sudo userdel -r dana2       # removes the account AND its home directory and mail spool (use one or the other)
 ```
 
 Without `-r` the home directory stays, owned by a bare number (the old UID). Decide first whether the data should be kept. To find such leftovers later: `sudo find / -xdev -nouser 2>/dev/null`. You cannot delete a user who is logged in.
@@ -198,9 +198,9 @@ Add and remove members without touching their other groups:
 
 ```bash
 sudo usermod -aG ops alice       # add alice to ops
-sudo gpasswd -a ben ops          # add ben to ops (same effect)
-sudo gpasswd -d ben ops          # remove ben from ops
-sudo gpasswd -M alice,ben ops    # set the complete member list (replaces)
+sudo gpasswd -a bob ops          # add bob to ops (same effect; create bob first)
+sudo gpasswd -d bob ops          # remove bob from ops
+sudo gpasswd -M alice,bob ops    # set the complete member list (replaces)
 id alice
 groups alice
 ```
