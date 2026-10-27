@@ -66,11 +66,18 @@ Think of a device as a **wall socket** and a profile as the **instruction card**
 - The **device** is the kernel's name for the hardware: `ens160`, `enp1s0`, `eth0`. See it with `nmcli device status` or `ip addr`.
 - The **connection profile** is what NetworkManager stores the settings in. It may be named after the device (`enp1s0`) or something else such as `Wired connection 1`. See it with `nmcli connection show`.
 
-**Always look up the real profile name before modifying it.** Never assume it is `eth0`; this is the single most common networking mistake on the exam. The examples use a shell variable so you copy the name once:
+**Always look up the real profile name before modifying it.** Never assume it is `eth0`; this is a very common networking mistake. The examples use a shell variable so you copy the name once:
 
 ```bash
 nmcli connection show        # find the NAME in the first column
 CON="enp1s0"                 # set CON to YOUR profile name (quote it if it has spaces)
+```
+
+Or let the shell find the active Ethernet profile for you, so nothing is hardcoded:
+
+```bash
+CON=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}')
+echo "$CON"
 ```
 
 On RHEL 10 NetworkManager stores profiles as **keyfiles**, one file per profile in `/etc/NetworkManager/system-connections/` (named `<profile>.nmconnection`, readable by root only). Older releases used `ifcfg-*` files under `/etc/sysconfig/network-scripts/` and profile names like `System ens160`; on RHEL 10 do not expect those. <!-- VERIFY: keyfile-only storage and default profile name on RHEL 10 -->
@@ -180,7 +187,7 @@ sudo nmcli connection modify "$CON" +ipv4.addresses 192.168.122.20/24   # add a 
 ```
 
 !!! warning "Do not cut your own branch"
-    On a remote (SSH) session, changing the address of the interface you are logged in through drops your session when you run `nmcli connection up`. On the exam you usually work on the console, but the habit matters: if you must do it over SSH, keep the old address in the list (`+ipv4.addresses`) until the new one is proven.
+    On a remote (SSH) session, changing the address of the interface you are logged in through drops your session when you run `nmcli connection up`. You may well be on the console, but the habit matters: if you must do it over SSH, keep the old address in the list (`+ipv4.addresses`) until the new one is proven.
 
 ### 3. Configure a static IPv6 address
 
@@ -439,8 +446,9 @@ sudo firewall-cmd --permanent --zone=internal --remove-source=192.168.122.11/32 
 sudo firewall-cmd --permanent --remove-service=http 2>/dev/null
 sudo firewall-cmd --permanent --zone=internal --remove-service=http 2>/dev/null
 sudo firewall-cmd --permanent --remove-port=8888/tcp 2>/dev/null
+sudo firewall-cmd --permanent --zone=internal --remove-port=8888/tcp 2>/dev/null
 sudo firewall-cmd --reload
-sudo sed -i -e '/^192\.168\.122\.11 .*serverb\.lab\.example/d' -e '/dummy\.lab\.example/d' /etc/hosts
+sudo sed -i '/dummy\.lab\.example/d' /etc/hosts
 ```
 
 **Task:**
@@ -475,8 +483,8 @@ sudo sed -i -e '/^192\.168\.122\.11 .*serverb\.lab\.example/d' -e '/dummy\.lab\.
     sudo nmcli connection up lab-dummy
 
     sudo hostnamectl set-hostname servera.lab.example
-    printf '%s\n' '192.168.122.11  serverb.lab.example serverb' \
-                  '10.99.0.1       dummy.lab.example dummy' | sudo tee -a /etc/hosts
+    grep -q 'serverb\.lab\.example' /etc/hosts || echo '192.168.122.11  serverb.lab.example serverb' | sudo tee -a /etc/hosts
+    grep -q 'dummy\.lab\.example' /etc/hosts || echo '10.99.0.1       dummy.lab.example dummy' | sudo tee -a /etc/hosts
     getent hosts serverb.lab.example dummy.lab.example
 
     sudo systemctl enable --now NetworkManager firewalld
@@ -489,9 +497,17 @@ sudo sed -i -e '/^192\.168\.122\.11 .*serverb\.lab\.example/d' -e '/dummy\.lab\.
     ```
     **Verify:** `ip -br addr show dummy0` lists `10.99.0.1/24` and `fd00:99::1/64`. `ping -c2 10.99.0.1` and `ping -6 -c2 fd00:99::1` answer. `nmcli -g ipv4.dns,ipv4.dns-search connection show lab-dummy` shows `192.168.122.1` and `lab.example`. `hostnamectl --static` prints `servera.lab.example`. `getent hosts serverb.lab.example` prints `192.168.122.11  serverb.lab.example serverb`. `sudo firewall-cmd --list-all` shows `ports: 8888/tcp` and no `http`. `sudo firewall-cmd --zone=internal --list-all` shows source `192.168.122.11/32` and `http`. Reboot and repeat these checks; everything must still be there.
 
-    Optional reachability test (VERIFY that `python3` is installed on the lab image): on servera run `python3 -m http.server 8888`, then from serverb run `curl -sI http://192.168.122.10:8888/`. Remove the `8888/tcp` rule and curl hangs until it times out.
+    Optional reachability test (VERIFY that `python3` is installed on the lab image). Serverb's address `192.168.122.11` is now bound to the `internal` zone, and `internal` does not allow `8888/tcp`, so a test from serverb is rejected even though `public` allows the port. Either run the test before you bind the source, or allow the port in `internal` too:
 
-    Clean up when finished: `sudo nmcli connection delete lab-dummy`, remove the firewall rules with the same commands as in Setup, and delete the two lines you added to `/etc/hosts`.
+    ```bash
+    sudo firewall-cmd --permanent --zone=internal --add-port=8888/tcp && sudo firewall-cmd --reload
+    python3 -m http.server 8888            # on servera; leave it running
+    curl -sI http://192.168.122.10:8888/   # from serverb: answers 200
+    ```
+
+    Stop the server with Ctrl+C, then remove the port rule (from `public`, and from `internal` if you added it) and `curl` fails at once with `No route to host`. A firewalld reject answers immediately; it does not hang until a timeout (only a `drop` zone does that).
+
+    Clean up when finished: `sudo nmcli connection delete lab-dummy`, remove the firewall rules with the same commands as in Setup, and delete only the `dummy.lab.example` line from `/etc/hosts` (keep the `serverb` line if it was there before you started).
     <!-- VERIFY: dummy0 interface creation via nmcli on RHEL 10 -->
 
 ## More practice
@@ -555,7 +571,7 @@ Allow network access to the `http` service and TCP port `8888` using `firewall-c
 ## Exam tips
 
 !!! tip "What the exam expects"
-    The address, gateway, DNS, hostname and firewall rules from the task are in place **after a reboot**, on the correct profile and zone. A grader will not run your commands again; they look at the end state.
+    The address, gateway, DNS, hostname and firewall rules from the task are in place **after a reboot**, on the correct profile and zone. Expect the end state to be what is checked, and configurations must persist after a reboot without intervention.
 
 !!! warning "Must survive reboot"
     | Change | Persistent? | Make it persist with |
