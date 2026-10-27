@@ -196,14 +196,12 @@ Perform a complete admin workflow covering packages, scripting, storage, mounts,
 Shared lab environment, `servera`, user `student`. Uses `/dev/vdb` (clean), mount point `/data`, VG `vgdata`, LV `lvdata`.
 
 ??? warning "Disk reset (destroys everything on /dev/vdb)"
-    Run before the lab. Afterwards delete old lines for `/data` from `/etc/fstab`.
     ```bash
-    sudo umount /data /par1 /record /datasource 2>/dev/null
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgapp datacontainer 2>/dev/null
-    sudo wipefs -a /dev/vdb
-    sudo sed -i '\|[[:space:]]/data[[:space:]]|d' /etc/fstab
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 ### Task Steps
@@ -298,7 +296,7 @@ You may keep the filesystem and script if they are useful for later labs, but ev
 8. Check bootloader defaults safely with `grubby`.
 
 ??? success "Solution sketches"
-    **Setup for 1:** `sudo dnf install -y createrepo_c`. **Setup for 5:** reset `/dev/vdc` (`sudo wipefs -a /dev/vdc`). **Setup for 6:** the `vgdata/lvdata` LV from the guided lab above (VG has about 1 GiB free); redo the guided lab's storage steps if it is missing.
+    **Setup for 1:** `sudo dnf install -y createrepo_c`. **Setup for 5:** `/dev/vdc` must be clean. If an earlier run left a swap partition there, use the cleanup command under item 5 first. **Setup for 6:** the `vgdata/lvdata` LV from the guided lab above (VG has about 1 GiB free); redo the guided lab's storage steps if it is missing.
 
     1. Local repository:
         ```bash
@@ -328,10 +326,19 @@ You may keep the filesystem and script if they are useful for later labs, but ev
     5. Swap on `/dev/vdc`:
         ```bash
         sudo parted --script /dev/vdc mklabel gpt mkpart swap linux-swap 1MiB 513MiB
+        sudo partprobe /dev/vdc
         sudo mkswap /dev/vdc1
         sudo swapon /dev/vdc1
         echo "UUID=$(sudo blkid -s UUID -o value /dev/vdc1) none swap defaults 0 0" | sudo tee -a /etc/fstab
+        sudo systemctl daemon-reload
         swapon --show
+        ```
+        Cleanup (removes the swap line first, because it is found by UUID, then wipes the disk):
+        ```bash
+        U=$(sudo blkid -s UUID -o value /dev/vdc1); sudo swapoff /dev/vdc1
+        sudo sed -i "/^UUID=$U /d" /etc/fstab
+        sudo wipefs -a /dev/vdc1; sudo wipefs -a /dev/vdc; sudo partprobe /dev/vdc
+        sudo systemctl daemon-reload
         ```
     6. `sudo lvextend -r -L +500M /dev/vgdata/lvdata` then `df -h /data` and `sudo lvs`.
     7. `(crontab -l 2>/dev/null; echo '*/5 * * * * /usr/bin/date >> /var/tmp/practice.log') | crontab -` then `crontab -l`.
@@ -347,12 +354,11 @@ These drills turn common admin task shapes into clean tasks with persistence che
 
 ??? warning "Disk reset (destroys everything on /dev/vdb)"
     ```bash
-    sudo umount /data /par1 /record /datasource 2>/dev/null
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgapp datacontainer 2>/dev/null
-    sudo wipefs -a /dev/vdb
-    sudo sed -i '\|[[:space:]]/par1[[:space:]]|d' /etc/fstab
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 **Task:** as `root` (or with `sudo`), on `/dev/vdb`:
@@ -400,13 +406,13 @@ What to check before moving on:
 **Setup:** shared lab environment, `servera`. Clean `/dev/vdb`. Run `swapon --show` first and note any swap that is already active.
 
 ??? warning "Disk reset (destroys everything on /dev/vdb)"
-    After the reset, open `/etc/fstab` and delete any swap line whose `UUID=` no longer appears in `blkid` output. Do not delete the system's own swap line.
+    If an earlier run left a swap line in `/etc/fstab` whose `UUID=` no longer appears in `blkid` output, delete it. Do not delete the system's own swap line.
     ```bash
-    sudo umount /data /par1 /record /datasource 2>/dev/null
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgapp datacontainer 2>/dev/null
-    sudo wipefs -a /dev/vdb
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 **Task:** as `root` (or with `sudo`):
@@ -672,12 +678,11 @@ What to check before moving on:
 
 ??? warning "Disk reset (destroys everything on /dev/vdb)"
     ```bash
-    sudo umount /data /par1 /record /datasource 2>/dev/null
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgapp datacontainer 2>/dev/null
-    sudo wipefs -a /dev/vdb
-    sudo sed -i '\|[[:space:]]/record[[:space:]]|d' /etc/fstab
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 ```bash
@@ -741,7 +746,7 @@ sudo systemctl enable --now firewalld
 
 **Task:** as `root` (or with `sudo`):
 
-- [ ] Reconfigure Apache to listen on port `93` instead of `80`.
+- [ ] Reconfigure Apache to listen on port `93`. Put the changes in a drop-in file under `/etc/httpd/conf.d/`, so the stock `httpd.conf` stays untouched (the stock `Listen 80` may stay).
 - [ ] Set `/srv/webcontent/html` as the `DocumentRoot` and allow access to it (`<Directory>` block with `Require all granted`).
 - [ ] Label the content correctly with SELinux (type `httpd_sys_content_t` on `/srv/webcontent`, persistent rule, then apply it).
 - [ ] Label port `93` for HTTP in SELinux.
@@ -752,7 +757,7 @@ What to check before moving on:
 
 - [ ] `sudo httpd -t` reports `Syntax OK`
 - [ ] `ss -tuln` shows port `93`
-- [ ] `sudo semanage port -l | grep '^http_port_t'` includes `93`
+- [ ] `sudo semanage port -l | grep -w 93` shows `http_port_t`
 - [ ] `ls -Zd /srv/webcontent/html` shows `httpd_sys_content_t`
 - [ ] `curl http://localhost:93/` returns `RHCSA custom web root`
 
@@ -760,19 +765,18 @@ What to check before moving on:
     Four separate layers can each block you: the Apache config (`Listen`, `DocumentRoot`, `<Directory>`), the SELinux port label, the SELinux file label, and the firewall. A `403` usually means the `<Directory>` block or the file label; a connection failure or a failed start usually means the port label.
 
 ??? question "Hint 2"
-    `semanage port -a` for the port, `semanage fcontext -a` then `restorecon -Rv` for the files, `firewall-cmd --permanent` plus `--reload` for the firewall. Put the `<Directory>` block in a new file under `/etc/httpd/conf.d/`.
+    `semanage port -a` for the port, `semanage fcontext -a` then `restorecon -Rv` for the files, `firewall-cmd --permanent` plus `--reload` for the firewall. Put `Listen`, `DocumentRoot` and the `<Directory>` block in one new file under `/etc/httpd/conf.d/`; it is read after `httpd.conf`, so its `DocumentRoot` wins.
 
 ??? success "Solution"
     ```bash
     # 1. Apache configuration
-    sudo sed -i 's/^Listen 80$/Listen 93/' /etc/httpd/conf/httpd.conf
-    sudo sed -i 's|^DocumentRoot "/var/www/html"|DocumentRoot "/srv/webcontent/html"|' /etc/httpd/conf/httpd.conf
     sudo tee /etc/httpd/conf.d/webcontent.conf <<'EOF'
+    Listen 93
+    DocumentRoot "/srv/webcontent/html"
     <Directory "/srv/webcontent/html">
         Require all granted
     </Directory>
     EOF
-    grep -E '^(Listen|DocumentRoot)' /etc/httpd/conf/httpd.conf
     sudo httpd -t
 
     # 2. SELinux: port label and file context
@@ -785,21 +789,30 @@ What to check before moving on:
     sudo firewall-cmd --reload
 
     # 4. Service
-    sudo systemctl enable --now httpd
+    sudo systemctl enable httpd
     sudo systemctl restart httpd
     curl http://localhost:93/
     ```
     **Verify:**
     ```bash
     sudo ss -tlnp | grep ':93'
-    sudo semanage port -l | grep '^http_port_t'
+    sudo semanage port -l | grep -w 93
     ls -Zd /srv/webcontent/html /srv/webcontent/html/index.html
     sudo firewall-cmd --list-ports
     systemctl is-enabled httpd
     ```
-    The `curl` prints `RHCSA custom web root`; the listener shows `httpd`; `http_port_t` lists `93`; the content has `httpd_sys_content_t`; the firewall lists `93/tcp`.
+    <!-- VERIFY: semanage port -l | grep -w 93 prints one http_port_t line on RHEL 10 and port 93 is not already assigned to another SELinux type -->
+    The `curl` prints `RHCSA custom web root`; the listener shows `httpd`; the `semanage` line shows `http_port_t`; the content has `httpd_sys_content_t`; the firewall lists `93/tcp`.
 
     **Reboot and re-check:** `sudo reboot`, then repeat `systemctl is-active httpd`, `sudo firewall-cmd --list-ports` and `curl http://localhost:93/`. If it fails after reboot, the missing piece was `enable`, `--permanent`, or the persistent `semanage` rule (a plain `chcon` would not have survived `restorecon`).
+
+    **Cleanup (so later drills start from a stock Apache):**
+    ```bash
+    sudo rm /etc/httpd/conf.d/webcontent.conf
+    sudo semanage port -d -t http_port_t -p tcp 93
+    sudo firewall-cmd --permanent --remove-port=93/tcp && sudo firewall-cmd --reload
+    sudo systemctl restart httpd
+    ```
 
 ### Drill 10: Autofs home-style mount
 
@@ -866,43 +879,37 @@ What to check before moving on:
 
 **Task:** as `root` (or with `sudo`):
 
-- [ ] Edit `journald` configuration so logs are stored persistently.
+- [ ] Configure `journald` (with a drop-in file) so logs are stored persistently.
 - [ ] Restart the journal service.
 - [ ] Verify both the configuration file and the resulting storage behavior.
 
 What to check before moving on:
 
-- [ ] the config explicitly requests persistent storage (`Storage=persistent`, uncommented)
+- [ ] the configuration explicitly requests persistent storage (`Storage=persistent`)
 - [ ] `journalctl -b` still works
 - [ ] logs still exist after reboot (`journalctl --list-boots` shows more than one boot)
 
 ??? question "Hint 1"
-    The setting lives in the `[Journal]` section of `/etc/systemd/journald.conf`. The shipped line is commented out.
+    The setting `Storage=` lives in the `[Journal]` section. Do not `sed` `/etc/systemd/journald.conf`: the line may be absent or commented out. A drop-in under `/etc/systemd/journald.conf.d/` always works.
 
 ??? question "Hint 2"
     After changing the file, restart `systemd-journald`. The directory `/var/log/journal` is what makes logs survive a reboot.
 
 ??? success "Solution"
     ```bash
-    sudoedit /etc/systemd/journald.conf
-    ```
-    In the `[Journal]` section, set (remove the leading `#`):
-    ```ini
-    Storage=persistent
-    ```
-    Then:
-    ```bash
+    sudo mkdir -p /etc/systemd/journald.conf.d && printf '[Journal]\nStorage=persistent\n' | sudo tee /etc/systemd/journald.conf.d/persistent.conf
     sudo systemctl restart systemd-journald
-    grep '^Storage=' /etc/systemd/journald.conf
+    systemd-analyze cat-config systemd/journald.conf | grep -i '^Storage'
     ls -ld /var/log/journal
     sudo journalctl --flush
     journalctl -b | tail
     journalctl --disk-usage
     ```
     <!-- VERIFY: restarting systemd-journald with Storage=persistent creates /var/log/journal; if not, run sudo mkdir -p /var/log/journal && sudo systemd-tmpfiles --create --prefix /var/log/journal -->
-    **Verify:** `Storage=persistent` is visible in the config and `/var/log/journal` exists (owned by `root:systemd-journal`).
+    <!-- VERIFY: systemd-analyze cat-config systemd/journald.conf lists the drop-in and Storage=persistent on RHEL 10 -->
+    **Verify:** `Storage=persistent` is visible in the merged config and `/var/log/journal` exists (owned by `root:systemd-journal`).
 
-    **Reboot and re-check:** `sudo reboot`, then `journalctl --list-boots` must list at least two boots (`-1` and `0`), and `journalctl -b -1 | head` shows messages from before the reboot.
+    **Reboot and re-check:** `sudo reboot`, then `journalctl --list-boots` (this is the check that proves persistence) must list at least two boots (`-1` and `0`), and `journalctl -b -1 | head` shows messages from before the reboot.
 
 ### Drill 12: Create a VFAT LV by extents and mount it
 
@@ -910,12 +917,11 @@ What to check before moving on:
 
 ??? warning "Disk reset (destroys everything on /dev/vdb)"
     ```bash
-    sudo umount /data /par1 /record /datasource 2>/dev/null
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgapp datacontainer 2>/dev/null
-    sudo wipefs -a /dev/vdb
-    sudo sed -i '\|[[:space:]]/datasource[[:space:]]|d' /etc/fstab
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 ```bash
@@ -1178,12 +1184,11 @@ Fix:
 
 ??? warning "Disk reset (destroys everything on /dev/vdb)"
     ```bash
-    sudo umount /data /par1 /record /datasource 2>/dev/null
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgapp datacontainer 2>/dev/null
-    sudo wipefs -a /dev/vdb
-    sudo sed -i '\|[[:space:]]/data[[:space:]]|d' /etc/fstab
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 **Task:** on `/dev/vdb`, create one GPT partition that uses the whole disk, a PV, a VG named `vgdata` and a 1 GiB logical volume named `lvdata`. Build an XFS filesystem on it, mount it at `/data`, and make sure it mounts automatically after reboot.
