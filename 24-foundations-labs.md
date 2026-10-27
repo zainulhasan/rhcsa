@@ -25,7 +25,7 @@ Every drill has the same shape:
 The shared environment is the one from [23 VM Lab Setup and Baseline Checks](23-vm-lab-setup-and-baseline-checks.md): `servera.lab.example` (192.168.122.10) is the main machine, `serverb.lab.example` (192.168.122.11) is the remote one, you log in as `student` (password `student`, has sudo), and the root password is `redhat` (lab only). Run the drills on servera unless a drill says otherwise.
 
 !!! note "Users and groups in Setup"
-    Setup lines create the accounts a drill needs (`alice`, `bob`, `carol`, `dana`, groups `labteam`, `projectops`). Where a drill needs an account in a group, the Setup uses `id U &>/dev/null || sudo useradd U` and then `sudo usermod -aG GROUP U`. `useradd -G` does nothing when the user already exists (it only prints "already exists"), so the group membership would silently be missing on a re-run; `usermod -aG` is safe to repeat. A plain `sudo useradd NAME` on an existing account is harmless: it prints "already exists" and changes nothing.
+    Setup lines create the accounts a drill needs (`alice`, `bob`, `carol`, `dana`, groups `labteam`, `projectops`). Where a drill needs an account in a group, the Setup uses `id U &>/dev/null || sudo useradd U` and then `sudo usermod -aG GROUP U`. `useradd -G` on an existing user fails with `useradd: user 'NAME' already exists` and adds no group, so a re-run would break or leave the membership missing; `usermod -aG` is safe to repeat. A plain `sudo useradd NAME` on an existing account fails the same way and changes nothing.
 
 ## Drill index
 
