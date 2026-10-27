@@ -72,7 +72,7 @@ async function renderAll() {
         bindFunctions(el);
       }
     } catch (e) {
-      el.dataset.rendered = "";
+      delete el.dataset.rendered;
       if (window.console) {
         console.error("[mermaid-render]", e);
       }
@@ -95,7 +95,7 @@ new MutationObserver(function () {
   lastScheme = now;
   configure();
   document.querySelectorAll(".mermaid-diagram[data-src]").forEach(function (el) {
-    el.dataset.rendered = "";
+    delete el.dataset.rendered;
     el.textContent = el.dataset.src;
   });
   renderAll();

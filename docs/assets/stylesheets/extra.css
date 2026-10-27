@@ -506,11 +506,14 @@
 
 /* ---- Reading comfort ---- */
 
-/* About 85 characters per line; sidebars stay where they are. */
-.md-content__inner {
-  max-width: 38rem;
-  margin-left: auto;
-  margin-right: auto;
+/* About 85 characters per line on wide screens; sidebars stay where they are.
+   Below this width Material's own side gutter must be left alone. */
+@media screen and (min-width: 76.25em) {
+  .md-content__inner {
+    max-width: 38rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 .md-typeset {
@@ -617,12 +620,6 @@
 .md-typeset table:not([class]) th,
 .md-typeset table:not([class]) td {
   padding: 0.7em 1em;
-}
-
-@media screen and (max-width: 76.1875em) {
-  .md-content__inner {
-    max-width: none;
-  }
 }
 
 /* ---- Print: reference sheets (e.g. the command cheat sheet) on paper ---- */
