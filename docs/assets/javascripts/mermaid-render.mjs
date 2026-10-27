@@ -41,7 +41,7 @@ function scheme() {
 function configure() {
   mermaid.initialize({
     startOnLoad: false,
-    securityLevel: "loose",
+    securityLevel: "strict",
     theme: "base",
     themeVariables: THEMES[scheme()],
     // Extra node padding so multi-line labels (with <br/>) aren't clipped.
@@ -72,6 +72,11 @@ async function renderAll() {
         bindFunctions(el);
       }
     } catch (e) {
+      // Mermaid leaves a stray error node in <body> when a render fails.
+      const stray = document.getElementById("dmmd-" + counter);
+      if (stray) {
+        stray.remove();
+      }
       delete el.dataset.rendered;
       if (window.console) {
         console.error("[mermaid-render]", e);
@@ -95,8 +100,8 @@ new MutationObserver(function () {
   lastScheme = now;
   configure();
   document.querySelectorAll(".mermaid-diagram[data-src]").forEach(function (el) {
+    // Keep the old SVG on screen until the redraw replaces it (no flash of source).
     delete el.dataset.rendered;
-    el.textContent = el.dataset.src;
   });
   renderAll();
 }).observe(document.body, { attributes: true, attributeFilter: ["data-md-color-scheme"] });

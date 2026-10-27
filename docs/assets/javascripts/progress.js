@@ -53,7 +53,7 @@
   }
 
   function currentSlug() {
-    var parts = window.location.pathname.split("/").filter(Boolean);
+    var parts = window.location.pathname.split("/").filter(function (p) { return p && p !== "index.html"; });
     return parts.length ? parts[parts.length - 1] : "";
   }
 
@@ -134,6 +134,19 @@
     renderLessonButton();
     renderHomeProgress();
   }
+
+  // Closed <details> stay hidden on paper: open them for printing, restore after.
+  var reopen = [];
+  window.addEventListener("beforeprint", function () {
+    document.querySelectorAll("details:not([open])").forEach(function (d) {
+      d.setAttribute("open", "");
+      reopen.push(d);
+    });
+  });
+  window.addEventListener("afterprint", function () {
+    reopen.forEach(function (d) { d.removeAttribute("open"); });
+    reopen = [];
+  });
 
   function boot() {
     // document$ fires on first load and after every Material instant-nav swap.
