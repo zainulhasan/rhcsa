@@ -126,11 +126,11 @@ Each user has a **crontab** (cron table). Edit your own with `crontab -e` (opens
 ```bash
 crontab -e
 crontab -l
-sudo crontab -e -u natasha
-sudo crontab -l -u natasha
+sudo crontab -e -u alice
+sudo crontab -l -u alice
 ```
 
-The second pair edits `natasha`'s cron table, not root's. Always check which user you are before editing.
+The second pair edits `alice`'s cron table, not root's. Always check which user you are before editing.
 
 A cron line has five time fields, then the command:
 
@@ -464,7 +464,7 @@ Use `grubby` for the kernel command line of existing kernels. Use `/etc/default/
 **Setup:** shared lab environment, `servera`, logged in as `student`. Create the second user that the lab edits and note the starting state of the default target and kernel arguments:
 
 ```bash
-sudo useradd natasha
+sudo useradd alice
 systemctl get-default > /tmp/default-target.orig
 sudo grubby --info=DEFAULT > /tmp/grubby.orig
 ```
@@ -476,7 +476,7 @@ If `atd` is not installed, run `sudo dnf install -y at` first (needs a repositor
 - [ ] As `student`, queue an `at` job in 2 minutes that writes the hostname to `/tmp/once.txt`. Then queue a second job for 1 hour from now and remove it with `atrm`.
 - [ ] As `student`, add a cron job that appends the date as `YYYY-MM-DD-HH:MM:SS` to `/tmp/repeat.txt` every 2 minutes.
 - [ ] As root, create `/etc/cron.d/lab-heartbeat` that runs `logger -t labcron heartbeat` as root every 10 minutes.
-- [ ] Give user `natasha` a cron job that runs `/usr/bin/id >> /tmp/natasha-cron.txt` at 02:00 Monday to Friday.
+- [ ] Give user `alice` a cron job that runs `/usr/bin/id >> /tmp/alice-cron.txt` at 02:00 Monday to Friday.
 - [ ] Add one `@reboot` cron entry for `student` that writes `boot at $(date)` to `/tmp/boot-marker.txt`.
 - [ ] Create `lab-note.service` and `lab-note.timer` so a timestamp is appended to `/tmp/lab-timer.txt` every 2 minutes. Enable and start the timer.
 - [ ] Check that `crond` and `atd` are active, and that `chronyd` is active and enabled.
@@ -489,7 +489,7 @@ If `atd` is not installed, run `sudo dnf install -y at` first (needs a repositor
     Cron needs `%` escaped, and `@reboot` goes in the same crontab as the other `student` lines. Files in `/etc/cron.d/` need a user field, user crontabs do not. A timer needs two files with the same base name.
 
 ??? question "Hint 2"
-    Tools: `at` with `atq` and `atrm`; `crontab -e` and `sudo crontab -e -u natasha`; `systemctl enable --now` on the `.timer`; `chronyc sources`; `systemctl set-default`; `grubby --update-kernel`; `grub2-mkconfig -o`.
+    Tools: `at` with `atq` and `atrm`; `crontab -e` and `sudo crontab -e -u alice`; `systemctl enable --now` on the `.timer`; `chronyc sources`; `systemctl set-default`; `grubby --update-kernel`; `grub2-mkconfig -o`.
 
 ??? success "Solution"
     ```bash
@@ -510,10 +510,10 @@ If `atd` is not installed, run `sudo dnf install -y at` first (needs a repositor
     ```bash
     crontab -l
 
-    # system cron file and natasha's table
+    # system cron file and alice's table
     echo '*/10 * * * * root /usr/bin/logger -t labcron heartbeat' | sudo tee /etc/cron.d/lab-heartbeat
-    echo '0 2 * * 1-5 /usr/bin/id >> /tmp/natasha-cron.txt' | sudo crontab -u natasha -
-    sudo crontab -l -u natasha
+    echo '0 2 * * 1-5 /usr/bin/id >> /tmp/alice-cron.txt' | sudo crontab -u alice -
+    sudo crontab -l -u alice
 
     # systemd timer
     sudo tee /etc/systemd/system/lab-note.service <<'EOF'
@@ -570,7 +570,7 @@ If `atd` is not installed, run `sudo dnf install -y at` first (needs a repositor
     sudo rm /etc/systemd/system/lab-note.{service,timer} /etc/cron.d/lab-heartbeat
     sudo systemctl daemon-reload
     crontab -r
-    sudo userdel -r natasha
+    sudo userdel -r alice
     sudo cp -a /root/chrony.conf.orig /etc/chrony.conf && sudo systemctl restart chronyd
     sudo systemctl set-default "$(cat /tmp/default-target.orig)"
     sudo grubby --update-kernel=ALL --remove-args="loglevel=5"
