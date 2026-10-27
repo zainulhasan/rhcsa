@@ -197,20 +197,23 @@ Every drill below has its own **Setup** that creates what it needs. If you are r
     ```bash
     for u in alice bob carol dana; do sudo userdel -r "$u" 2>/dev/null; done
     for g in labteam webadmins auditors; do sudo groupdel "$g" 2>/dev/null; done
-    sudo rm -f /etc/sudoers.d/webadmins /etc/httpd/conf.d/port82.conf /etc/httpd/conf.d/port85.conf /etc/httpd/conf.d/webcontent.conf
+    sudo rm -f /etc/sudoers.d/webadmins /etc/sudoers.d/labteam /etc/httpd/conf.d/port82.conf /etc/httpd/conf.d/port85.conf /etc/httpd/conf.d/webcontent.conf
     sudo semanage port -d -t http_port_t -p tcp 82 2>/dev/null
     sudo semanage port -d -t http_port_t -p tcp 85 2>/dev/null
     sudo semanage fcontext -d '/srv/webcontent(/.*)?' 2>/dev/null
     sudo semanage fcontext -d '/data/xfs(/.*)?' 2>/dev/null
     sudo setsebool -P httpd_enable_homedirs off
-    sudo firewall-cmd --permanent --remove-port=82/tcp --remove-port=85/tcp --remove-port=8081/tcp --remove-service=https 2>/dev/null
+    sudo firewall-cmd --permanent --remove-port=82/tcp --remove-port=85/tcp --remove-port=8081/tcp --remove-service=https --remove-service=http 2>/dev/null
+    sudo firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address="192.168.122.11" service name="http" accept' 2>/dev/null
     sudo firewall-cmd --reload
     sudo rm -rf /srv/webcontent /data/xfs /data/labteam /srv/report.txt /srv/alice
-    sudo sed -i '/servera.lab.example/d;/serverb.lab.example/d' /etc/hosts
+    CON=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}')
+    sudo nmcli connection modify "$CON" -ipv4.addresses 192.168.122.60/24 2>/dev/null
+    sudo nmcli connection up "$CON"
     sudo nmcli connection delete net 2>/dev/null
     sudo nmcli connection delete v6lab 2>/dev/null
     ```
-    The block does not undo a changed hostname and does not touch your original network profile.
+    The block does not undo a changed hostname, leaves the shared lab's `/etc/hosts` lines for `servera` and `serverb` alone (the drills add them only if missing), and keeps your original network profile and its first address.
 
 ## Guided Hands-On Lab
 
@@ -239,10 +242,10 @@ If you ran this lab before, run the page reset above first.
 - [ ] 4. Add `192.168.122.11 serverb.lab.example serverb` to `/etc/hosts` and prove `getent hosts serverb` answers.
 - [ ] 5. Create group `webadmins`, then user `alice` with home `/srv/alice`, shell `/bin/bash`, and `webadmins` as a supplementary group.
 - [ ] 6. Set password aging on `alice`: maximum 90 days, minimum 7, warning 14.
-- [ ] 7. Add a sudo drop-in `/etc/sudoers.d/webadmins` letting members of `webadmins` run any command, mode `0440`, and verify the syntax.
+- [ ] 7. Add a sudo drop-in `/etc/sudoers.d/webadmins` letting members of `webadmins` run any command, mode `0440`, created safely (with `visudo`), and verify the syntax.
 - [ ] 8. As `student` on servera, generate an ed25519 key with no passphrase and install it for `alice@serverb` with `ssh-copy-id`.
 - [ ] 9. Permanently open the `https` service in firewalld.
-- [ ] 10. Prepare `httpd` for TCP `85`: `Listen 85` in a drop-in, SELinux port label `http_port_t`, permanent firewall port, service enabled and started.
+- [ ] 10. Prepare `httpd` for TCP `85`: `Listen 85` in a drop-in, SELinux port label `http_port_t`, permanent firewall port, service enabled and (re)started.
 - [ ] 11. Test with `curl http://localhost:85`.
 - [ ] 12. Reboot and verify every item that must persist.
 
@@ -250,13 +253,13 @@ If you ran this lab before, run the page reset above first.
     Step 2 uses a plus sign in front of the property (`+ipv4.addresses`) so you add to the list instead of replacing it. Step 10 needs three separate layers: the service config, SELinux, and the firewall.
 
 ??? question "Hint 2"
-    The tools for step 10 are `semanage port`, `firewall-cmd --permanent`, `systemctl enable --now`, and a file under `/etc/httpd/conf.d/`. A bind error in `systemctl status httpd` means the SELinux port label is missing.
+    The tools for step 10 are `semanage port`, `firewall-cmd --permanent`, `systemctl enable` plus `systemctl restart` (so a running `httpd` re-reads `Listen`), and a file under `/etc/httpd/conf.d/`. A bind error in `systemctl status httpd` means the SELinux port label is missing.
 
 ??? success "Solution"
     ```bash
     # 1-2: addresses (additive, safe over SSH)
     nmcli -t -f NAME,DEVICE connection show --active
-    CON="$(nmcli -t -f NAME connection show --active | head -1)"      # your active profile
+    CON=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}')      # your active ethernet profile
     ip -br addr
     sudo nmcli connection modify "$CON" +ipv4.addresses 192.168.122.60/24
     sudo nmcli connection up "$CON"
@@ -264,7 +267,7 @@ If you ran this lab before, run the page reset above first.
 
     # 3-4: hostname and local resolution
     sudo hostnamectl set-hostname servera.lab.example
-    echo "192.168.122.11 serverb.lab.example serverb" | sudo tee -a /etc/hosts
+    grep -q 'serverb.lab.example' /etc/hosts || echo "192.168.122.11 serverb.lab.example serverb" | sudo tee -a /etc/hosts
     getent hosts serverb
 
     # 5-6: group, user, aging
@@ -274,10 +277,10 @@ If you ran this lab before, run the page reset above first.
     sudo chage -M 90 -m 7 -W 14 alice
     id alice; getent passwd alice; ls -ld /srv/alice; sudo chage -l alice
 
-    # 7: sudo drop-in
-    echo '%webadmins ALL=(ALL) ALL' | sudo tee /etc/sudoers.d/webadmins
-    sudo chmod 440 /etc/sudoers.d/webadmins
-    sudo visudo -cf /etc/sudoers.d/webadmins
+    # 7: sudo drop-in: syntax-check a temp file, then install it with the right mode
+    T=$(mktemp); echo '%webadmins ALL=(ALL) ALL' > "$T"
+    sudo visudo -cf "$T" && sudo install -m 0440 -o root -g root "$T" /etc/sudoers.d/webadmins; rm -f "$T"
+    # (interactive alternative: sudo visudo -f /etc/sudoers.d/webadmins)
     sudo visudo -c
     sudo -l -U alice
 
@@ -297,7 +300,8 @@ If you ran this lab before, run the page reset above first.
     sudo firewall-cmd --reload
     echo 'guided lab page' | sudo tee /var/www/html/index.html
     sudo restorecon -Rv /var/www/html
-    sudo systemctl enable --now httpd
+    sudo systemctl enable httpd
+    sudo systemctl restart httpd
     ss -tlnp | grep ':85'
     curl http://localhost:85
     ```
@@ -368,8 +372,8 @@ Do each of these on `servera`, then check yourself against the collapsed answers
     sudo groupadd labteam
     sudo usermod -aG labteam alice; sudo usermod -aG labteam bob; sudo usermod -aG labteam carol
     getent group labteam
-    sudo visudo -f /etc/sudoers.d/labteam     # type: %labteam ALL=(ALL) ALL
-    sudo chmod 440 /etc/sudoers.d/labteam
+    sudo visudo -f /etc/sudoers.d/labteam     # type: %labteam ALL=(ALL) ALL, save, exit
+    sudo ls -l /etc/sudoers.d/labteam         # visudo creates it as 0440
     sudo visudo -c
 
     # 8
@@ -437,7 +441,7 @@ What to check before moving on:
 **Setup:** note the original profile and the real interface name:
 
 ```bash
-ORIG="$(nmcli -t -f NAME connection show --active | head -1)"; echo "$ORIG"
+ORIG=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}'); echo "$ORIG"
 IFACE="$(nmcli -t -f DEVICE,TYPE device status | awk -F: '$2=="ethernet"{print $1; exit}')"; echo "$IFACE"
 sudo nmcli connection delete net 2>/dev/null
 ```
@@ -467,7 +471,8 @@ What to check before moving on:
     ```bash
     nmcli device status
     sudo nmcli connection add con-name net type ethernet ifname "$IFACE" \
-      ipv4.addresses 192.168.122.50/24 ipv4.gateway 192.168.122.1 ipv4.method manual
+      ipv4.addresses 192.168.122.50/24 ipv4.gateway 192.168.122.1 ipv4.method manual \
+      connection.autoconnect no
     sudo nmcli connection modify net ipv4.dns 8.8.8.8
     sudo nmcli connection up net
     nmcli connection show net | grep -E 'ipv4\.(method|addresses|gateway|dns)'
@@ -476,7 +481,7 @@ What to check before moving on:
     ```
     **Verify:** `ip addr show` lists `192.168.122.50/24`; `nmcli connection show net` shows `ipv4.method: manual`.
 
-    **Persistence:** `nmcli` writes the profile to `/etc/NetworkManager/system-connections/net.nmconnection`, so the profile survives a reboot. Whether it is *active* after reboot depends on `connection.autoconnect` and priority; check with `nmcli -f NAME,DEVICE connection show --active` after rebooting. <!-- VERIFY: which profile wins on boot when two profiles share one interface and both autoconnect -->
+    **Persistence:** `nmcli` writes the profile to `/etc/NetworkManager/system-connections/net.nmconnection`, so the profile survives a reboot. The solution sets `connection.autoconnect no`, so after a reboot the profile still exists but your original profile is the active one (check with `nmcli -f NAME,DEVICE connection show --active`). On the exam, a profile you want active at boot needs `connection.autoconnect yes` (the default).
 
     **Restore your lab network when finished:**
     ```bash
@@ -487,7 +492,7 @@ What to check before moving on:
 
 ### Drill 3: Hostname and local name resolution
 
-**Setup:** `sudo sed -i '/servera.lab.example/d' /etc/hosts`
+**Setup:** none. The shared lab (see [23](23-vm-lab-setup-and-baseline-checks.md)) may already have this `/etc/hosts` line; the solution only adds it if it is missing.
 
 **Task:** As `root` (use `sudo`):
 
@@ -510,7 +515,7 @@ What to check before moving on:
 ??? success "Solution"
     ```bash
     sudo hostnamectl set-hostname servera.lab.example
-    echo "192.168.122.10 servera.lab.example servera" | sudo tee -a /etc/hosts
+    grep -q 'servera.lab.example' /etc/hosts || echo "192.168.122.10 servera.lab.example servera" | sudo tee -a /etc/hosts
     hostnamectl
     getent hosts servera.lab.example
     cat /etc/hostname
@@ -593,7 +598,8 @@ What to check before moving on:
 
     # stretch: prove it works end to end
     echo 'Listen 82' | sudo tee /etc/httpd/conf.d/port82.conf
-    sudo systemctl enable --now httpd
+    sudo systemctl enable httpd
+    sudo systemctl restart httpd
     echo 'port 82 page' | sudo tee /var/www/html/index.html
     sudo restorecon -Rv /var/www/html
     ss -tlnp | grep ':82'
@@ -644,7 +650,8 @@ What to check before moving on:
         Require all granted
     </Directory>
     EOF
-    sudo systemctl enable --now httpd
+    sudo systemctl enable httpd
+    sudo systemctl restart httpd
     curl -sI http://localhost | head -1          # 403 until the label is fixed
     sudo semanage fcontext -a -t httpd_sys_content_t '/srv/webcontent(/.*)?'
     sudo restorecon -Rv /srv/webcontent
@@ -670,7 +677,7 @@ These drills add more objective-matching practice with clearer verification and 
 
 - [ ] Create user `carol` with UID `2000`.
 - [ ] Create user `dana` with UID `3000`.
-- [ ] Set passwords interactively (lab value `carol123` and `dana123`).
+- [ ] Set passwords (lab values `carol123` and `dana123`; `passwd` asks interactively, `chpasswd` takes `user:password` on stdin).
 - [ ] Configure `dana` so the account expires in 30 days.
 - [ ] Set password aging on `carol`: minimum 7 days, maximum 90 days, warning 14 days.
 
@@ -921,8 +928,12 @@ What to check before moving on:
 ```bash
 sudo firewall-cmd --permanent --remove-port=8081/tcp 2>/dev/null
 sudo firewall-cmd --permanent --remove-service=https 2>/dev/null
+sudo firewall-cmd --permanent --remove-service=http 2>/dev/null
+sudo firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address="192.168.122.11" service name="http" accept' 2>/dev/null
 sudo firewall-cmd --reload
 ```
+
+The two extra lines make sure `http` is not already open to everyone in zone `public`, and that no earlier rich rule for `192.168.122.11` is left, so the stretch really tests the source restriction.
 
 **Task:** As `root` (use `sudo`):
 
@@ -930,7 +941,7 @@ sudo firewall-cmd --reload
 - [ ] Make the runtime change permanent without retyping it.
 - [ ] Permanently allow service `https`, then remove `8081/tcp` permanently.
 - [ ] Show that after `firewall-cmd --reload` the runtime and permanent views agree.
-- [ ] Stretch: allow the `http` service **only** from `192.168.122.11` using a permanent rich rule (test from `serverb` with `curl http://192.168.122.10`).
+- [ ] Stretch: allow the `http` service **only** from `192.168.122.11` using a permanent rich rule (needs `httpd` running on `servera`; test from `serverb` with `curl http://192.168.122.10`, and from another source it must fail).
 
 What to check before moving on:
 
@@ -1085,7 +1096,7 @@ Fix:
     | `chcon -t TYPE FILE` | No (lost on relabel) | `semanage fcontext -a` then `restorecon` |
     | `semanage port -a` | Yes | stored in policy |
     | `useradd`, `usermod`, `chage`, sudo drop-ins | Yes | files on disk |
-    | `systemctl start httpd` | No | `systemctl enable --now httpd` |
+    | `systemctl start httpd` | No | `systemctl enable httpd` (and `restart` to apply new config) |
 
 ## Mini Quiz
 
@@ -1132,12 +1143,19 @@ Grader mindset checklist:
     sudo useradd -m -d /srv/alice -s /bin/bash alice
     sudo usermod -aG webadmins alice
     echo 'alice:alice' | sudo chpasswd
-    sudo visudo -f /etc/sudoers.d/webadmins        # add the line below, save, exit
     ```
-    The line to add (or write it non-interactively):
+    Create the sudoers drop-in **one** of these two ways (not both). Interactive:
     ```bash
-    echo '%webadmins ALL=(ALL) ALL' | sudo tee /etc/sudoers.d/webadmins
-    sudo chmod 440 /etc/sudoers.d/webadmins
+    sudo visudo -f /etc/sudoers.d/webadmins        # type: %webadmins ALL=(ALL) ALL, save, exit
+    ```
+    Or non-interactive, syntax-checked before it is installed:
+    ```bash
+    T=$(mktemp); echo '%webadmins ALL=(ALL) ALL' > "$T"
+    sudo visudo -cf "$T" && sudo install -m 0440 -o root -g root "$T" /etc/sudoers.d/webadmins; rm -f "$T"
+    ```
+    Then verify:
+    ```bash
+    ls -l /etc/sudoers.d/webadmins                 # -r--r----- root root
     sudo visudo -c
     id alice
     getent passwd alice
@@ -1180,7 +1198,8 @@ Grader mindset checklist:
     sudo firewall-cmd --reload
     echo 'task 2 page' | sudo tee /var/www/html/index.html
     sudo restorecon -Rv /var/www/html
-    sudo systemctl enable --now httpd
+    sudo systemctl enable httpd
+    sudo systemctl restart httpd
     sudo semanage port -l | grep http_port_t
     sudo firewall-cmd --list-ports
     ss -tuln | grep :85
