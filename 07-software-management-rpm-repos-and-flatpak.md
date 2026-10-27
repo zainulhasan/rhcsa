@@ -88,7 +88,6 @@ repo id          repo name
 appstream-local  AppStream Local Repo
 baseos-local     BaseOS Local Repo
 ```
-<!-- VERIFY: dnf repolist column layout on RHEL 10 -->
 
 | Command | What it shows |
 |---|---|
@@ -163,19 +162,21 @@ sudo dnf remove -y tree
 ```text title="Example output"
 $ sudo dnf install -y tree
 Dependencies resolved.
-================================================================
- Package   Architecture   Version          Repository      Size
-================================================================
+================================================================================
+ Package        Architecture      Version                Repository        Size
+================================================================================
 Installing:
- tree      x86_64         2.1.0-8.el10     appstream-local  55 k
+ tree           x86_64            2.1.0-8.el10           baseos-local      55 k
 
 Transaction Summary
-================================================================
+================================================================================
 Install  1 Package
+
+Total download size: 55 k
+Installed size: 164 k
 ...
 Complete!
 ```
-<!-- VERIFY: exact dnf output layout and tree version on RHEL 10 -->
 
 | Command | What it does |
 |---|---|
@@ -207,11 +208,12 @@ sudo dnf install ./tree-2.1.0-8.el10.x86_64.rpm
 To get an RPM file to practice with:
 
 ```bash
+sudo dnf install -y dnf-plugins-core
 mkdir -p ~/rpms
 dnf download --destdir ~/rpms tree
 ```
 
-<!-- VERIFY: dnf download needs dnf-plugins-core on DNF 4; built in on DNF 5 -->
+`dnf download` comes from the `dnf-plugins-core` package on RHEL 10 (DNF 4). If it answers `No such command: download`, install that package first, as above.
 
 ### 5. Query with `rpm`
 
@@ -230,17 +232,23 @@ Version     : 2.1.0
 Release     : 8.el10
 Architecture: x86_64
 Install Date: Tue 27 Oct 2026 09:14:02 AM UTC
-Size        : 107616
+Group       : Unspecified
+Size        : 167670
+License     : GPL-2.0-or-later AND LGPL-2.1-or-later
 Signature   : RSA/SHA256, ... Key ID 199e2f91fd431d51
-Source RPM  : tree-2.1.0-8.el10.src.rpm
+Source RPM  : tree-pkg-2.1.0-8.el10.src.rpm
 Summary     : File system tree viewer
+...
 
 $ rpm -ql tree
 /usr/bin/tree
-/usr/share/doc/tree/LICENSE
+/usr/share/doc/tree
+/usr/share/doc/tree/README
+/usr/share/licenses/tree
+/usr/share/licenses/tree/LICENSE
 /usr/share/man/man1/tree.1.gz
 ```
-<!-- VERIFY: rpm -qi field values and rpm -ql file list; illustrative -->
+Values such as the install date, size and key ID are illustrative; the field names are what `rpm -qi` prints.
 
 | Option | Meaning |
 |---|---|
@@ -312,9 +320,9 @@ flathub system
 
 $ flatpak list
 Name   Application ID    Version  Branch  Installation
-gedit  org.gnome.gedit   48.1     stable  system
+gedit  org.gnome.gedit   51.0     stable  system
 ```
-<!-- VERIFY: flatpak remotes/list column layout, and gedit version, on RHEL 10 -->
+<!-- VERIFY: flatpak list column layout (the version number is illustrative) -->
 
 | Command | Meaning |
 |---|---|
@@ -428,7 +436,6 @@ sudo chown student: /srv/labrepo
     flatpak uninstall --user -y org.gnome.gedit
     ```
     **Verify:** `dnf repolist` lists `lab-local` and `sudo dnf makecache` completes without error for it (`dnf repoinfo lab-local` shows its details); `rpm -q tree` prints a name, and prints "package tree is not installed" after removal; `flatpak list --user` shows the app after install and nothing after uninstall. Reboot and repeat `dnf repolist` and `flatpak remotes --user` to confirm the repo file and remote persist.
-    <!-- VERIFY: dnf install with --disablerepo='*' --enablerepo works on RHEL 10 for a file:// repo; flathub user remote needs internet -->
 
     Clean up when done: `sudo rm /etc/yum.repos.d/lab-local.repo; sudo rm -rf /srv/labrepo; sudo dnf clean all`.
 
