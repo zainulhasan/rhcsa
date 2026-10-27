@@ -5,6 +5,9 @@ docs_dir: docs
 site_dir: site
 use_directory_urls: true
 
+validation:
+  anchors: warn
+
 theme:
   name: material
   custom_dir: docs/overrides
@@ -58,6 +61,10 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.details
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.keys
 
 plugins:
   - search
