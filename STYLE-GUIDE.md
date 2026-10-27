@@ -22,16 +22,17 @@ Every lesson, lab and mock uses the same machines so state never has to be guess
 | Spare disks | `/dev/vdb` and `/dev/vdc` on servera, 2 GiB each, empty |
 | OS | RHEL 10 (or a compatible clone) |
 
-Disk reset snippet (use before any storage drill; destroys data on `/dev/vdb`). Pages must inline it as a collapsed `??? warning "Disk reset"` block, because this guide is not published:
+Disk reset snippet (use before any storage drill; destroys data on `/dev/vdb`). Pages must inline it as a collapsed `??? warning "Disk reset"` block, because this guide is not published. It removes the mounts, swap, volume groups, signatures and every `/etc/fstab` line the course's drills create, so a half-finished drill cannot send the next reboot into emergency mode:
 
 ```bash
-sudo umount /dev/vdb* 2>/dev/null
-sudo swapoff /dev/vdb* 2>/dev/null
-sudo vgremove -ff -y vgdata vgexam 2>/dev/null
-sudo wipefs -a /dev/vdb
+sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+sudo systemctl daemon-reload; sudo swapon -a
 ```
 
-Remove any related lines from `/etc/fstab` after a reset.
+Use the same block for `/dev/vdc` by replacing `vdb` with `vdc`.
 
 Users and groups a drill needs must be created in that drill's **Setup** step. Never rely on state left behind by another drill.
 
