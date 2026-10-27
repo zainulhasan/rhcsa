@@ -40,7 +40,7 @@ This is this course's own practice scheme: 100 points for Tasks 1-18 and 20, Tas
 | 11 Resolution | 4 | `getent hosts web1.lab.example` | `192.168.122.10  web1.lab.example web1` |
 | 12 Firewall | 5 | `firewall-cmd --list-services`, `firewall-cmd --permanent --list-services` | both include `ssh` and `http` |
 | 13 LVM | 6 | `sudo lvs --units m -o lv_name,lv_size vgweb` | `lvcontent  700.00m` (before Task 15) |
-| 14 Filesystem | 6 | `findmnt /webcontent`, `findmnt --verify`, `sudo blkid -s LABEL -o value /dev/vgweb/lvcontent`, `grep ' /webcontent ' /etc/fstab` | `/webcontent /dev/mapper/vgweb-lvcontent ext4`; no errors; `webcontent`; line starts `UUID=` |
+| 14 Filesystem | 6 | `findmnt /webcontent`, `findmnt --verify`, `sudo blkid -s LABEL -o value /dev/vgweb/lvcontent`, `grep ' /webcontent ' /etc/fstab` | `/webcontent /dev/mapper/vgweb-lvcontent ext4`; `Success, no errors or warnings detected`; `webcontent`; line starts `UUID=` |
 | 15 Grow | 4 | `sudo lvs --units m -o lv_name,lv_size vgweb`, `df -h /webcontent` | `lvcontent  800.00m`; size just under 800M |
 | 16 NFS + autofs | 8 | `findmnt /mnt/nfsdata`, `ls /mnt/auto/data`, `systemctl is-enabled autofs` | `nfs4` mount; `hello.txt`; `enabled` |
 | 17 SSH keys | 6 | `sudo -iu webadmin ssh -o PasswordAuthentication=no webadmin@serverb hostname` | `serverb.lab.example` |
@@ -266,7 +266,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     findmnt /webcontent
     findmnt --verify
     ```
-    **Verify:** `findmnt /webcontent` shows ext4 on `/dev/mapper/vgweb-lvcontent`. Use `sudo` with `blkid`; without it the UUID can come back empty and the fstab line is broken. Check the last line of `/etc/fstab` with `tail -n 1 /etc/fstab`.
+    **Verify:** `findmnt /webcontent` shows ext4 on `/dev/mapper/vgweb-lvcontent`, and `findmnt --verify` prints `Success, no errors or warnings detected`. Use `sudo` with `blkid`; without it the UUID can come back empty and the fstab line is broken. Check the last line of `/etc/fstab` with `tail -n 1 /etc/fstab`.
 
 ### Task 15: Grow online
 

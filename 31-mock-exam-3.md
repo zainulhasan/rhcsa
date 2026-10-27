@@ -74,7 +74,7 @@ Run these before you start the timer. They prepare both machines so every task c
 On `servera`:
 
 ```bash
-sudo dnf install -y httpd policycoreutils-python-utils nfs-utils autofs createrepo_c tuned flatpak dosfstools chrony
+sudo dnf install -y httpd policycoreutils-python-utils nfs-utils autofs createrepo_c dnf-plugins-core tuned flatpak dosfstools chrony
 
 # a local name for serverb (Tasks 11, 15 and 16 use serverb and serverb.lab.example)
 grep -q 'serverb.lab.example' /etc/hosts || echo '192.168.122.11 serverb.lab.example serverb' | sudo tee -a /etc/hosts
@@ -98,7 +98,7 @@ echo 'dana:danapass' | sudo chpasswd
 sudo rm -f /etc/yum.repos.d/localpractice.repo /etc/sudoers.d/webadmins /etc/auto.master.d/homes.autofs /etc/auto.homes
 sudo rm -f /etc/systemd/journald.conf.d/persistent.conf /etc/httpd/conf.d/mock3.conf
 
-# Task 1: a directory of RPM files for the local repository
+# Task 1: a directory of RPM files for the local repository (dnf download comes from dnf-plugins-core)
 sudo dnf remove -y tree zip
 sudo mkdir -p /srv/localrepo
 sudo dnf download --destdir /srv/localrepo tree zip
@@ -158,8 +158,6 @@ sudo firewall-cmd --reload
 sudo exportfs -rav
 ```
 
-<!-- VERIFY: dnf download is available in the dnf-plugins-core that RHEL 10 installs; otherwise use dnf install --downloadonly --downloaddir /srv/localrepo tree zip -->
-<!-- VERIFY: the stock RHEL 10 /etc/chrony.conf has no uncommented `allow` or `local` line, so the appended lines are the only ones the reset has to remove -->
 
 ??? warning "Reset servera and serverb (destroys the Mock 3 work and everything on /dev/vdb and /dev/vdc)"
     Run this to start over after a previous attempt, then run Setup again. Every line ignores "not found" errors. On `servera`:
@@ -246,7 +244,7 @@ Setup created the user `carol` and the user `dana`, who is a member of the group
 - (3 points) For `carol` set: maximum password age 45 days, minimum 2 days, warning 7 days, and the account expiry date `2030-12-31`.
 - (3 points) Create the sudoers drop-in `/etc/sudoers.d/webadmins` so that members of `webadmins` can run **only** `/usr/bin/systemctl restart chronyd` as root and **without** a password. Use `visudo` to edit it.
 
-- [ ] `sudo chage -l carol` shows maximum 45, minimum 2, warning 7 and the account expiry `Dec 31, 2030`
+- [ ] `sudo chage -l carol` shows maximum 45, minimum 2, warning 7 and the account expiry `Dec 31, 2030` (`Dec 30, 2030` in a time zone east of UTC)
 - [ ] The drop-in file has owner `root` and mode `0440`, and `sudo visudo -c` reports no errors
 - [ ] `sudo -l -U dana` lists `NOPASSWD: /usr/bin/systemctl restart chronyd` and nothing else
 - [ ] `sudo -u dana sudo -n systemctl restart chronyd` succeeds, and `sudo -u dana sudo -n systemctl restart sshd` is refused
