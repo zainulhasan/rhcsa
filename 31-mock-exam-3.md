@@ -76,13 +76,19 @@ On `servera`:
 ```bash
 sudo dnf install -y httpd policycoreutils-python-utils nfs-utils autofs createrepo_c tuned flatpak dosfstools chrony
 
+# a local name for serverb (Tasks 11, 15 and 16 use serverb and serverb.lab.example)
+grep -q 'serverb.lab.example' /etc/hosts || echo '192.168.122.11 serverb.lab.example serverb' | sudo tee -a /etc/hosts
+
 # groups and users (UIDs are fixed so NFS ownership matches serverb)
-sudo groupadd -g 4101 labteam
-sudo groupadd -g 4102 webadmins
-sudo useradd -m -u 4001 -G labteam alice
-sudo useradd -m -u 4002 -G labteam bob
-sudo useradd -m -u 4003 carol
-sudo useradd -m -u 4004 -G webadmins dana
+getent group labteam >/dev/null || sudo groupadd -g 4101 labteam
+getent group webadmins >/dev/null || sudo groupadd -g 4102 webadmins
+id alice &>/dev/null || sudo useradd -m -u 4001 alice
+id bob   &>/dev/null || sudo useradd -m -u 4002 bob
+id carol &>/dev/null || sudo useradd -m -u 4003 carol
+id dana  &>/dev/null || sudo useradd -m -u 4004 dana
+sudo usermod -aG labteam alice
+sudo usermod -aG labteam bob
+sudo usermod -aG webadmins dana
 echo 'alice:forgotten' | sudo chpasswd
 echo 'bob:bobpass' | sudo chpasswd
 echo 'carol:carolpass' | sudo chpasswd
@@ -135,10 +141,9 @@ echo 'welcome bob' | sudo tee /export/homes/bob/welcome.txt
 sudo chown -R alice:alice /export/homes/alice
 sudo chown -R bob:bob /export/homes/bob
 echo '/export/homes 192.168.122.0/24(rw,sync)' | sudo tee /etc/exports.d/mock3.exports
-sudo systemctl enable --now nfs-server
 printf 'allow 192.168.122.0/24\nlocal stratum 10\n' | sudo tee /etc/chrony.d/mock3.conf
-sudo systemctl enable --now chronyd
-sudo systemctl restart chronyd
+sudo systemctl enable nfs-server chronyd
+sudo systemctl restart nfs-server chronyd
 sudo firewall-cmd --permanent --add-service={nfs,mountd,rpc-bind,ntp}
 sudo firewall-cmd --reload
 sudo exportfs -rav
@@ -158,10 +163,13 @@ sudo exportfs -rav
       [ -n "$U" ] && sudo sed -i "/$U/d" /etc/fstab
     done
     sudo sed -i '\#usbdata#d' /etc/fstab
-    sudo systemctl daemon-reload
-    sudo vgremove -ff -y vgapp 2>/dev/null
-    sudo wipefs -a /dev/vdb1 /dev/vdc1 /dev/vdc2 2>/dev/null
-    sudo wipefs -a /dev/vdb /dev/vdc
+    # the course's standard disk reset, once for /dev/vdb and once for /dev/vdc
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgapp vgdata vgexam vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo wipefs -a /dev/vdc[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdc; sudo partprobe /dev/vdc
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vd[bc]|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     sudo rm -f /etc/auto.master.d/homes.autofs /etc/auto.homes /etc/sudoers.d/webadmins
     sudo rm -rf /remote /data /srv/countdemo /srv/localrepo /usr/local/bin/dircount.sh
     sudo rm -f /etc/yum.repos.d/localpractice.repo
@@ -190,7 +198,7 @@ sudo exportfs -rav
     sudo grubby --update-kernel=ALL --remove-args="loglevel=5"
     sudo systemctl set-default multi-user.target
     ```
-    On `serverb`:
+    The `/etc/hosts` line for `serverb` from Setup is kept on purpose. On `serverb`:
     ```bash
     sudo rm -rf /export/homes /etc/exports.d/mock3.exports /etc/chrony.d/mock3.conf
     sudo exportfs -rav
@@ -267,6 +275,7 @@ Configure the system journal to be stored on disk so that it survives reboots. U
 
 - [ ] `/var/log/journal` exists and contains a directory named like the machine ID
 - [ ] `ls /var/log/journal/*/system.journal` lists a journal file
+- [ ] `systemd-analyze cat-config systemd/journald.conf` shows `Storage=persistent` and `SystemMaxUse=100M`
 - [ ] After a reboot, `journalctl --list-boots` lists more than one boot (check it after Task 17)
 
 ### Task 7 (6 points): systemd timer

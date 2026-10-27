@@ -84,7 +84,7 @@ This is this course's own practice scheme: 100 points over 20 tasks. Your own ta
 | 3 Aging and sudo | 6 | `sudo chage -l carol`, `stat -c '%U:%G %a' /etc/sudoers.d/webadmins`, `sudo visudo -c`, `sudo -l -U dana` | maximum 45, minimum 2, warning 7, `Dec 31, 2030`; `root:root 440`; `parsed OK`; `(root) NOPASSWD: /usr/bin/systemctl restart chronyd` |
 | 4 Permissions | 4 | `stat -c '%U:%G %a' /data/teamdocs`, `sudo -u bob touch /data/teamdocs/bob.txt`, `ls -l /data/teamdocs/bob.txt` | `root:labteam 2775`; no error; group `labteam` |
 | 5 Script | 6 | `dircount.sh /srv/countdemo /nope; echo $?`, `dircount.sh; echo $?` | `/srv/countdemo: 3 entries`, `/nope: not a directory`, `2`; usage line, `1` |
-| 6 Journal | 3 | `ls /var/log/journal`, `journalctl --list-boots` | a machine-id directory; two or more boots after a reboot |
+| 6 Journal | 3 | `systemd-analyze cat-config systemd/journald.conf \| grep -E '^(Storage\|SystemMaxUse)'`, `ls /var/log/journal`, `journalctl --list-boots` | `Storage=persistent`, `SystemMaxUse=100M`; a machine-id directory; two or more boots after a reboot |
 | 7 Timer | 6 | `systemctl is-enabled dailyreport.timer`, `systemctl list-timers dailyreport.timer`, `journalctl -t dailyreport` | `enabled`; next run `03:30:00`; `daily report ran` |
 | 8 SELinux | 6 | `getsebool httpd_can_network_connect`, `sudo semanage port -l \| grep -w 8765`, `curl http://localhost:8765` | `on`; `http_port_t  tcp  8765, 80, ...`; `mock3 web` |
 | 9 Firewall | 4 | `sudo firewall-cmd --permanent --list-services`, `sudo firewall-cmd --permanent --list-ports` | includes `https`; includes `8765/tcp` |
@@ -262,10 +262,12 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     ```
     **Verify:**
     ```bash
+    systemd-analyze cat-config systemd/journald.conf
     ls /var/log/journal
     ls /var/log/journal/*/system.journal
     journalctl --list-boots
     ```
+    `systemd-analyze cat-config` prints the stock file followed by your drop-in, so `Storage=persistent` and `SystemMaxUse=100M` appear under `# /etc/systemd/journald.conf.d/persistent.conf`. <!-- VERIFY: systemd-analyze cat-config output layout for journald drop-ins on RHEL 10 -->
     The first `ls` shows a directory named like the machine ID (illustrative: `4f2c...`). `--list-boots` shows several lines after the reboots in Tasks 17-19; with only one boot it lists a single line. With `Storage=persistent` journald creates `/var/log/journal` itself, but creating it first makes the intent explicit. A drop-in file is preferred over editing `/etc/systemd/journald.conf` because package updates leave it alone. <!-- VERIFY: RHEL 10 default Storage=auto and whether /var/log/journal exists on a fresh install -->
 
 ### Task 7: systemd timer
@@ -325,7 +327,8 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     sudo semanage port -a -t http_port_t -p tcp 8765
     sudo semanage port -l | grep -w http_port_t
     sudo restorecon -v /var/www/html/index.html
-    sudo systemctl enable --now httpd
+    sudo systemctl enable httpd
+    sudo systemctl restart httpd
     curl http://localhost:8765
     ```
     **Verify:** `getsebool` prints `httpd_can_network_connect --> on`; `sudo semanage boolean -l | grep httpd_can_network_connect` shows `(on , on)` (current and default); the port list shows `http_port_t  tcp  8765, 80, ...`; `curl` prints `mock3 web`. `setsebool` without `-P` changes the running value only and is lost at reboot. `semanage port -a` writes to the policy store, so the label persists.
@@ -372,7 +375,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     sudo sed -i 's/^pool /#pool /' /etc/chrony.conf
     echo 'server serverb.lab.example iburst' | sudo tee -a /etc/chrony.conf
     grep -E '^(server|pool)' /etc/chrony.conf
-    sudo systemctl enable --now chronyd
+    sudo systemctl enable chronyd
     sudo systemctl restart chronyd
     sleep 15
     chronyc sources
@@ -455,7 +458,8 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     showmount -e serverb
     echo '/remote/homes  /etc/auto.homes' | sudo tee /etc/auto.master.d/homes.autofs
     echo '*  -rw,sync  serverb:/export/homes/&' | sudo tee /etc/auto.homes
-    sudo systemctl enable --now autofs
+    sudo systemctl enable autofs
+    sudo systemctl restart autofs
     ls /remote/homes/alice
     findmnt /remote/homes/alice
     sudo -u alice touch /remote/homes/alice/test.txt
@@ -498,7 +502,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     ```bash
     cat /proc/cmdline
     ```
-    The running command line contains `loglevel=5`. `grubby` edits the boot loader specification entries in `/boot/loader/entries/`, which is why the change persists. To remove the argument: `sudo grubby --update-kernel=ALL --remove-args="loglevel=5"`. The second route is to edit `GRUB_CMDLINE_LINUX` in `/etc/default/grub` and rebuild with `sudo grub2-mkconfig -o /boot/grub2/grub.cfg`; on current RHEL releases that mainly affects entries created later, so confirm it with `grubby --info=ALL` and use `grubby` for existing entries. <!-- VERIFY: on RHEL 10, whether grub2-mkconfig after editing /etc/default/grub updates existing BLS entries, and the grub.cfg path on UEFI systems -->
+    The running command line contains `loglevel=5`. `grubby` edits the boot loader specification entries in `/boot/loader/entries/`, which is why the change persists. To remove the argument: `sudo grubby --update-kernel=ALL --remove-args="loglevel=5"`. The second route is to edit `GRUB_CMDLINE_LINUX` in `/etc/default/grub` and rebuild with `sudo grub2-mkconfig -o /boot/grub2/grub.cfg`. On RHEL 9 and later `/boot/grub2/grub.cfg` is the right output path for both BIOS and UEFI systems; do not write to the old `/boot/efi/EFI/redhat/grub.cfg`, which is a small stub that points to it. That route mainly affects entries created later, so confirm it with `grubby --info=ALL` and use `grubby` for existing entries. <!-- VERIFY: on RHEL 10, whether grub2-mkconfig after editing /etc/default/grub updates existing BLS entries -->
 
 ### Task 18: Boot a target once, set the default target
 
