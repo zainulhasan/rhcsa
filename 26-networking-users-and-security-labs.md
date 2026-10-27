@@ -930,10 +930,12 @@ sudo firewall-cmd --permanent --remove-port=8081/tcp 2>/dev/null
 sudo firewall-cmd --permanent --remove-service=https 2>/dev/null
 sudo firewall-cmd --permanent --remove-service=http 2>/dev/null
 sudo firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address="192.168.122.11" service name="http" accept' 2>/dev/null
+sudo firewall-cmd --permanent --zone=internal --remove-source=192.168.122.11/32 2>/dev/null
+sudo firewall-cmd --permanent --zone=internal --remove-source=192.168.122.11 2>/dev/null
 sudo firewall-cmd --reload
 ```
 
-The two extra lines make sure `http` is not already open to everyone in zone `public`, and that no earlier rich rule for `192.168.122.11` is left, so the stretch really tests the source restriction.
+The extra lines make sure `http` is not already open to everyone in zone `public`, that no earlier rich rule for `192.168.122.11` is left, and that lesson 13's `internal`-zone source binding for `192.168.122.11` is gone. With that binding in place, traffic from `serverb` would land in `internal` and never reach the `public` rich rule, so the stretch would test the wrong zone.
 
 **Task:** As `root` (use `sudo`):
 
@@ -941,7 +943,7 @@ The two extra lines make sure `http` is not already open to everyone in zone `pu
 - [ ] Make the runtime change permanent without retyping it.
 - [ ] Permanently allow service `https`, then remove `8081/tcp` permanently.
 - [ ] Show that after `firewall-cmd --reload` the runtime and permanent views agree.
-- [ ] Stretch: allow the `http` service **only** from `192.168.122.11` using a permanent rich rule (needs `httpd` running on `servera`; test from `serverb` with `curl http://192.168.122.10`, and from another source it must fail).
+- [ ] Stretch: allow the `http` service **only** from `192.168.122.11` using a permanent rich rule (needs `httpd` running on `servera`; test from `serverb` with `curl http://192.168.122.10`: it returns the page. From any other source address the request fails, with `No route to host` or a timeout, because zone `public` does not allow `http` for it).
 
 What to check before moving on:
 
@@ -973,7 +975,7 @@ What to check before moving on:
     sudo firewall-cmd --reload
     sudo firewall-cmd --list-rich-rules
     ```
-    **Verify:** `firewall-cmd --list-all` shows `services:` including `https`, no `8081/tcp`, and the rich rule if you did the stretch.
+    **Verify:** `firewall-cmd --list-all` shows `services:` including `https`, no `8081/tcp`, and the rich rule if you did the stretch. For the stretch, `curl http://192.168.122.10` from `serverb` returns the page; the same request from a machine with any other address fails. <!-- VERIFY: the exact failure text (No route to host versus a timeout) for a blocked client in zone public on RHEL 10 -->
 
     **Persistence:** only `--permanent` changes (or `--runtime-to-permanent`) survive `--reload` and reboot. After a reboot, `sudo firewall-cmd --list-all` must match the permanent configuration. Remove the stretch rule with `--permanent --remove-rich-rule=...` and `--reload` when done. <!-- VERIFY: rich-rule support and syntax with the nftables backend on RHEL 10 -->
 
