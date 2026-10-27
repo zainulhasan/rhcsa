@@ -42,13 +42,13 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
 ```
 
 ??? warning "Disk reset (destroys everything on the disk)"
-    Task 10 starts from a clean `/dev/vdb`. Run this first. Afterwards remove any related lines (mount point `/appdata` and old swap lines for `/dev/vdb`) from `/etc/fstab` with `sudo vi /etc/fstab`, then run `sudo systemctl daemon-reload`.
+    Task 10 starts from a clean `/dev/vdb`. Run this first. It also removes the mounts, volume groups and `/etc/fstab` lines the course's drills create (including `/appdata` from Task 10), so a half-finished drill cannot send the next reboot into emergency mode.
     ```bash
-    sudo umount /appdata 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgapp 2>/dev/null
-    sudo wipefs -a /dev/vdb[0-9]* /dev/vdb 2>/dev/null
-    sudo partprobe /dev/vdb
+    sudo umount /data /par1 /record /datasource /mnt/lvapp /appdata 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp|appdata)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 ## Index
@@ -249,13 +249,14 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
 ??? success "Solution"
     ```bash
     chage -M 60 -m 7 -W 10 analyst2
+    echo 'guest2:Pass#1234' | chpasswd
     passwd -l guest2
     passwd -S guest2
     passwd -u guest2
     chage -l analyst2
     passwd -S guest2
     ```
-    **Verify:** `chage -l analyst2` lists a maximum of `60` days, minimum `7`, warning `10`. <!-- VERIFY: passwd -u on an account that never had a password set may refuse on RHEL 10; if so, set a password first with passwd guest2 -->
+    **Verify:** `chage -l analyst2` lists a maximum of `60` days, minimum `7`, warning `10`. `guest2` needs a real password first: unlocking an account that has no password is refused, because it would leave a passwordless account. <!-- VERIFY: passwd -u on an account with an empty password field is refused on RHEL 10 -->
 
 ### Task 7: Configure group membership, sudo access, and ownership
 
@@ -410,22 +411,21 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
 - [ ] `journalctl -b` shows current boot logs
 
 ??? question "Hint 1"
-    With the default `Storage=auto`, journald only writes to disk if `/var/log/journal` already exists.
+    With the default `Storage=auto`, journald only writes to disk if `/var/log/journal` already exists. Put `Storage=persistent` in a drop-in under `/etc/systemd/journald.conf.d/` (the file need not exist beforehand, unlike a `sed` on `journald.conf`); journald then creates the directory itself on restart.
 
 ??? success "Solution"
     ```bash
-    mkdir -p /var/log/journal
-    sed -i.bak 's/^#*Storage=.*/Storage=persistent/' /etc/systemd/journald.conf
-    systemd-tmpfiles --create --prefix /var/log/journal
+    mkdir -p /etc/systemd/journald.conf.d
+    printf '[Journal]\nStorage=persistent\n' | tee /etc/systemd/journald.conf.d/persistent.conf
     systemctl restart systemd-journald
     journalctl --flush
-    grep '^Storage=' /etc/systemd/journald.conf
+    systemd-analyze cat-config systemd/journald.conf
     ls -ld /var/log/journal
     ls /var/log/journal
     journalctl --disk-usage
     journalctl -b | tail
     ```
-    **Verify:** `ls /var/log/journal` prints a long machine-ID directory name; after a reboot `journalctl --list-boots` lists more than one boot. <!-- VERIFY: journald.conf Storage= line and tmpfiles ownership behaviour on RHEL 10 -->
+    **Verify:** `ls /var/log/journal` prints a long machine-ID directory name; after a reboot `journalctl --list-boots` lists more than one boot. `systemd-analyze cat-config systemd/journald.conf` shows the drop-in with `Storage=persistent`. <!-- VERIFY: journald.conf.d drop-in is honoured and /var/log/journal is created on restart on RHEL 10 -->
 
 ## Networking and Security Carryover
 
