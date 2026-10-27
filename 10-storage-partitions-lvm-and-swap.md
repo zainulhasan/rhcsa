@@ -215,6 +215,8 @@ sudo vgs -o +vg_extent_size
 sudo vgdisplay vgdata
 ```
 
+`vgcreate -s` sets the extent size when you create the VG, for example `sudo vgcreate -s 8M vgdata /dev/vdb1` for 8 MiB extents. You cannot pick it later without recreating the VG, so only do this when a task asks for it.
+
 Sizing logical volumes: exam tasks phrase size in three ways.
 
 ```bash
@@ -244,7 +246,7 @@ sudo vgs vgdata
 
 # 2. If not, make a new PV and add it to the VG
 sudo parted --script /dev/vdc mklabel gpt mkpart primary 1MiB 1025MiB set 1 lvm on
-sudo partprobe /dev/vdc
+sudo partprobe /dev/vdc; sudo udevadm settle
 sudo pvcreate /dev/vdc1
 sudo vgextend vgdata /dev/vdc1
 
@@ -304,6 +306,7 @@ sudo e2label /dev/vgdata/lvfiles files        # ext2/3/4
 XFS labels are limited to 12 characters. **Validate before you reboot**, because a bad fstab line can drop the machine into emergency mode:
 
 ```bash
+sudo systemctl daemon-reload
 sudo mount -a
 findmnt --verify
 findmnt /data/files
@@ -316,7 +319,7 @@ Filesystem                  Size  Used Avail Use% Mounted on
 ```
 <!-- VERIFY: size and used figures for a fresh 400M XFS; they are approximate -->
 
-`mount -a` mounts everything in fstab that is not mounted yet. If it prints an error, fix the line now. Lesson 11 covers filesystems and mounts in more depth.
+`daemon-reload` makes systemd re-read `/etc/fstab` (systemd generates the mount units from it). `mount -a` mounts everything in fstab that is not mounted yet. If it prints an error, fix the line now. Lesson 11 covers filesystems and mounts in more depth.
 
 ### 7. Create swap (partition, LV, then persist)
 
@@ -326,7 +329,7 @@ Swap is disk space the kernel uses when RAM runs short. It needs a **swap signat
 
 ```bash
 sudo parted --script /dev/vdb mkpart swap linux-swap 1025MiB 1537MiB
-sudo partprobe /dev/vdb
+sudo partprobe /dev/vdb; sudo udevadm settle
 sudo mkswap /dev/vdb2
 sudo swapon /dev/vdb2
 swapon --show
@@ -359,7 +362,7 @@ sudo blkid /dev/vdb2
 UUID=<uuid-from-blkid>  none  swap  defaults  0 0
 ```
 
-Test it without rebooting: `sudo swapoff -a && sudo swapon -a && swapon --show`.
+Test it without rebooting: `sudo systemctl daemon-reload && sudo swapoff -a && sudo swapon -a && swapon --show`.
 
 **Remove swap safely:**
 
@@ -439,7 +442,7 @@ Verification: `lvs`, `vgs`, and `pvs` should no longer show the removed lab obje
 
 | Problem | Cause | Fix |
 |---|---|---|
-| `Device or resource busy` | The device is mounted, active as swap, or in use by LVM | Unmount or deactivate (`umount`, `swapoff`, `lvremove`) before removing |
+| `Device or resource busy` | The device is mounted, active as swap, or in use by LVM | Unmount, switch off swap, or deactivate the LV (`umount`, `swapoff`, `lvchange -an`) before removing it |
 | `pvcreate` fails | Wrong device, partition table not re-read, or device already in use | Check `lsblk` and `blkid`, run `partprobe` and `udevadm settle` |
 | Swap works now but not after reboot | No persistent entry configured | Add the `UUID=... none swap defaults 0 0` line to `/etc/fstab` and verify after reboot |
 | Wrong size calculations | MB and MiB confusion or a typing error | Inspect the real result with `lsblk` and `lvs` (LVM `M` means MiB) |
@@ -447,15 +450,16 @@ Verification: `lvs`, `vgs`, and `pvs` should no longer show the removed lab obje
 
 ## Hands-on lab
 
-**Setup:** shared lab environment, `servera`, user `student`, spare disks `/dev/vdb` and `/dev/vdc` (2 GiB each, empty). If the disks were used before, reset them first (below) and remove old lines from `/etc/fstab`. Never practice on a disk that contains important data.
+**Setup:** shared lab environment, `servera`, user `student`, spare disks `/dev/vdb` and `/dev/vdc` (2 GiB each, empty). If the disks were used before, reset them first (below; the reset also cleans `/etc/fstab`). Never practice on a disk that contains important data.
 
-??? warning "Disk reset (destroys everything on the disk)"
-    Run once per spare disk, replacing `vdb` with `vdc` for the second disk. Remove any related `/etc/fstab` lines afterwards.
+??? warning "Disk reset"
+    Destroys everything on the disk. Run the block once for `/dev/vdb`, then run it again with `vdb` replaced by `vdc`. It also removes the `/etc/fstab` lines this course's drills create, so a half-finished drill cannot send the next reboot into emergency mode. This lesson mounts at `/data/files`, so that path is added to the list.
     ```bash
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam 2>/dev/null
-    sudo wipefs -a /dev/vdb
+    sudo umount /data/files /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb; sudo udevadm settle
+    sudo sed -i -E '\#[[:space:]]/(data|data/files|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 **Task:**
@@ -507,7 +511,7 @@ Verification: `lvs`, `vgs`, and `pvs` should no longer show the removed lab obje
 
     # extend: add vdc, grow the VG, then grow the LV and the filesystem
     sudo parted --script /dev/vdc mklabel gpt mkpart primary 1MiB 1025MiB set 1 lvm on
-    sudo partprobe /dev/vdc
+    sudo partprobe /dev/vdc; sudo udevadm settle
     sudo pvcreate /dev/vdc1
     sudo vgextend vgdata /dev/vdc1
     sudo lvextend -r -L 1200M /dev/vgdata/lvfiles
@@ -544,6 +548,7 @@ On an unused disk, create a GPT partition for LVM, create a volume group named `
     sudo parted --script /dev/vdb mkpart primary 1MiB 1025MiB
     sudo parted --script /dev/vdb set 1 lvm on
     sudo partprobe /dev/vdb
+    sudo udevadm settle
     sudo pvcreate /dev/vdb1
     sudo vgcreate vgexam /dev/vdb1
     sudo lvcreate -n lvexam -L 512M vgexam
@@ -568,7 +573,7 @@ Add a new swap area on an unused partition, activate it, and make it persistent 
     swapon --show
     sudo blkid /dev/vdb2
     ```
-    Add `UUID=<uuid-from-blkid>  none  swap  defaults  0 0` to `/etc/fstab`, then check with `sudo swapoff -a && sudo swapon -a && swapon --show`.
+    Add `UUID=<uuid-from-blkid>  none  swap  defaults  0 0` to `/etc/fstab`, then check with `sudo systemctl daemon-reload && sudo swapoff -a && sudo swapon -a && swapon --show`.
 
 ## Exam tips
 
