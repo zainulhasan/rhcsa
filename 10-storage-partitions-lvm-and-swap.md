@@ -1,60 +1,58 @@
-# Storage, Partitions, LVM, and Swap
+---
+description: Inspect disks, create GPT partitions, build and extend LVM, add swap, and make it all mount at boot by UUID or label without destroying existing data.
+---
 
-> Teach you how to inspect disks, create GPT partitions, build LVM storage, and add swap space without destroying existing data.
+# 10 Storage, Partitions, LVM, and Swap
 
-## At a Glance
+> By the end of this lesson you can find free space safely, partition a disk, build and extend LVM storage, add swap, and make it all survive a reboot.
 
-**Why this matters for RHCSA**
+!!! example "Try it now (2 minutes)"
+    ```bash
+    lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS
+    ```
+    ```text title="Example output"
+    NAME          SIZE TYPE FSTYPE      MOUNTPOINTS
+    vda            10G disk
+    |-vda1          1M part
+    |-vda2        200M part vfat        /boot/efi
+    |-vda3          1G part xfs         /boot
+    `-vda4        8.8G part xfs         /
+    vdb             2G disk
+    vdc             2G disk
+    ```
+    <!-- VERIFY: exact partition layout of the vda system disk on the RHEL 10 lab image -->
+    Notice that `vdb` and `vdc` have no partitions, no filesystem and no mount point. That means they are free. By the end of this lesson you will know how to prove that before you touch anything, and what to build on them.
 
-Storage is one of the most important RHCSA topics. You must be able to work carefully, verify every step, and understand persistence after reboot.
+## Why it matters
 
-**Real-world use**
+Storage is one of the most important RHCSA topics. A typical task reads "add a 512 MiB logical volume, put a filesystem on it, mount it at boot, and add some swap". Each piece is easy, but one wrong device name can destroy data, so you must work carefully, verify every step, and understand what persists after a reboot. In real life, admins add disks, carve logical volumes for applications, grow storage when it fills up, and configure swap to keep a system stable.
 
-Admins add disks, create logical volumes for applications, extend storage, and configure swap to support system stability.
+**Objectives covered:**
 
-**Estimated study time**
-
-8 hours
-
-## Prerequisites
-
-- Read `01-shell-basics-and-command-syntax.md`
-- Read `02-files-directories-and-text-editing.md`
-
-## Objectives Covered
-
-- List, create, and delete partitions on MBR and GPT disks
+- List, create, and delete partitions on GPT disks
 - Create and remove physical volumes
 - Assign physical volumes to volume groups
 - Create and delete logical volumes
-- Add swap to a system non-destructively
-- Prepare storage for persistent mounting later
+- Configure systems to mount file systems at boot by universally unique ID (UUID) or label
+- Add new partitions and logical volumes, and swap to a system non-destructively
 
-## Commands/Tools Used
+**Prereqs:** [01 Shell Basics and Command Syntax](01-shell-basics-and-command-syntax.md) and [02 Files, Directories, and Text Editing](02-files-directories-and-text-editing.md) · **Time:** about 8 h
 
-`lsblk`, `blkid`, `parted`, `fdisk`, `partprobe`, `pvcreate`, `pvs`, `vgcreate`, `vgs`, `lvcreate`, `lvs`, `lvremove`, `vgremove`, `pvremove`, `mkswap`, `swapon`, `swapoff`, `free`
+**Tools used:** `lsblk`, `blkid`, `parted`, `fdisk`, `partprobe`, `udevadm`, `pvcreate`, `pvs`, `vgcreate`, `vgextend`, `vgs`, `lvcreate`, `lvextend`, `lvs`, `lvremove`, `vgremove`, `pvremove`, `mkswap`, `swapon`, `swapoff`, `free`, `findmnt`
 
-## Offline Help References For This Topic
+**Offline help for this topic:** `man lsblk`, `man parted`, `man pvcreate`, `man vgcreate`, `man lvcreate`, `man mkswap`, `man swapon`
 
-- `man lsblk`
-- `man parted`
-- `man pvcreate`
-- `man vgcreate`
-- `man lvcreate`
-- `man mkswap`
-- `man swapon`
+!!! note "Supporting skill (not a listed RHEL 10 objective)"
+    The official RHEL 10 list names **GPT** disks only. MBR (DOS) partitioning with `fdisk` is kept in this course as a supporting skill, because older systems and some practice material still use it. Learn GPT first.
 
-## Common Beginner Mistakes
+## How it works
 
-- Editing the wrong disk
-- Forgetting to inspect the current layout before changes
-- Creating a filesystem or swap on the wrong device
-- Removing LVM objects in the wrong order
-- Making storage changes but forgetting persistent mount or swap configuration
+Think of a warehouse. The **disk** is the empty building. A **partition** is a fenced-off section of it. LVM (Logical Volume Manager) lets you pour several sections into one big **pool** and then cut flexible **shelves** out of the pool, which you can make bigger later without moving anything.
 
-## Concept Explanation In Simple Language
-
-A disk can contain partitions. LVM adds flexibility on top of block devices.
+- **PV (physical volume):** a disk or partition handed over to LVM. One section of floor.
+- **VG (volume group):** a pool made from one or more PVs. The whole warehouse floor.
+- **LV (logical volume):** a slice of the pool that looks like a normal block device. A shelf. You put a filesystem or swap on it.
+- **Extent:** the unit LVM allocates in. It is 4 MiB by default, so every LV size is rounded up to a multiple of it.
 
 ```mermaid
 flowchart LR
@@ -76,11 +74,11 @@ Basic storage stack:
 5. logical volume (`LV`)
 6. filesystem or swap
 
-### Why LVM Matters
+### Why LVM matters
 
-LVM makes storage easier to resize and manage than fixed plain partitions alone.
+LVM makes storage easier to resize and manage than fixed plain partitions alone. A plain partition cannot grow if the next section is taken. An LV can grow by adding another disk to the VG.
 
-### Safe Workflow
+### Safe workflow
 
 For storage tasks, slow down. A good sequence is:
 
@@ -92,18 +90,48 @@ For storage tasks, slow down. A good sequence is:
 6. verify
 7. configure persistence where needed
 
-## Command Breakdowns
+## Commands, step by step
 
-### Inspect block devices
+### 1. Inspect, and find free space first (non-destructive)
+
+Before you add anything, prove what is free. These commands only read.
 
 ```bash
-lsblk
-blkid
+lsblk -f
+sudo blkid
+sudo wipefs /dev/vdb
+sudo parted /dev/vdb print free
+sudo vgs
+df -h
 ```
 
-### Create a GPT partition with `parted`
+```text title="Example output"
+$ sudo blkid
+/dev/vda2: UUID="7B77-95E7" TYPE="vfat" PARTUUID="..."
+/dev/vda3: UUID="1c5c0a4e-0f3b-4f0e-9a58-2f3d6a7a9b11" TYPE="xfs" PARTUUID="..."
+/dev/vda4: UUID="c0a7a3a2-6b1d-4a43-8d1c-5f6d52f6c6a0" TYPE="xfs" PARTUUID="..."
 
-`parted` works on **GPT** (the modern default). You can run it interactively:
+$ sudo parted /dev/vdb print free
+Error: /dev/vdb: unrecognised disk label
+```
+<!-- VERIFY: blkid/parted wording on a blank disk; UUIDs above are illustrative -->
+
+| Command | What it tells you |
+|---|---|
+| `lsblk -f` | Tree of disks and partitions with filesystem type, label, UUID and mount point |
+| `blkid` | Filesystem type, UUID and label of each formatted device. A blank disk prints nothing |
+| `wipefs /dev/vdb` | Lists leftover signatures without erasing anything (only `-a` erases) |
+| `parted /dev/vdb print free` | Partition table plus unused gaps on the disk |
+| `vgs` | The `VFree` column is free space already inside a VG |
+| `df -h` | Space on mounted filesystems |
+
+A disk is safe to use only when it has no partitions, no filesystem and no mount point. If `parted` says "unrecognised disk label", the disk is blank. If it already has partitions, **do not run `mklabel`**: it wipes the table. Add new partitions in the gaps shown by `print free` instead.
+
+### 2. Create a GPT partition with `parted`
+
+`parted` works on both **GPT** (the modern default) and MBR. You pick the table type with `mklabel gpt` or `mklabel msdos`. Unlike `fdisk`, `parted` writes every change **immediately**; there is no `w` to save.
+
+You can run it interactively:
 
 ```bash
 sudo parted /dev/vdb
@@ -127,16 +155,19 @@ sudo parted --script /dev/vdb set 1 lvm on
 sudo parted /dev/vdb print
 ```
 
-After creating partitions, force the kernel to re-read the partition table so the new device node (e.g. `/dev/vdb1`) appears. Without this, `pvcreate` may fail with "device not found":
+After creating partitions, force the kernel to re-read the partition table so the new device node (for example `/dev/vdb1`) appears. Without this, `pvcreate` may fail with "device not found":
 
 ```bash
 sudo partprobe /dev/vdb
+sudo udevadm settle
 lsblk
 ```
 
-### Create an MBR partition with `fdisk`
+`udevadm settle` waits until udev has finished creating the device nodes.
 
-The objective covers **MBR and GPT**. For an MBR (DOS) layout, `fdisk` is the standard tool:
+### 3. Create an MBR partition with `fdisk` (supporting skill)
+
+For an MBR (DOS) layout you can use `parted --script /dev/vdb mklabel msdos`, or `fdisk`:
 
 ```bash
 sudo fdisk /dev/vdb
@@ -150,73 +181,219 @@ Inside `fdisk`, the key single-letter commands are:
 - `p` print the table
 - `w` write changes and exit (`q` quits without saving)
 
-`fdisk` writes and re-reads the table on `w`, but run `sudo partprobe` afterward if the new node does not appear.
+`fdisk` writes and re-reads the table on `w`, but run `sudo partprobe` afterward if the new node does not appear. The codes `8e` and `82` are for MBR. On a GPT label, `fdisk`'s `t` command uses different type names (aliases such as `lvm` and `swap`; type `L` lists them).
 
-### Create LVM objects
+### 4. Create LVM objects
 
 ```bash
 sudo pvcreate /dev/vdb1
 sudo vgcreate vgdata /dev/vdb1
-sudo lvcreate -n lvdata -L 500M vgdata
+sudo lvcreate -n lvfiles -L 400M vgdata
+sudo pvs
+sudo vgs
+sudo lvs
 ```
 
-Sizing logical volumes — exam tasks phrase size in three ways:
+```text title="Example output"
+  PV         VG     Fmt  Attr PSize    PFree
+  /dev/vdb1  vgdata lvm2 a--  1020.00m 620.00m
+
+  VG     #PV #LV #SN Attr   VSize    VFree
+  vgdata   1   1   0 wz--n- 1020.00m 620.00m
+
+  LV      VG     Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  lvfiles vgdata -wi-a----- 400.00m
+```
+<!-- VERIFY: exact PSize/VSize (extent rounding of a 1 GiB partition) and column layout on RHEL 10 -->
+
+The LV appears as `/dev/vgdata/lvfiles`, and also as `/dev/mapper/vgdata-lvfiles` (the form `df` and `mount` show).
+
+To see the extent size, which matters when a task asks for "N extents" or a custom `-s` value:
 
 ```bash
-sudo lvcreate -n lvdata -L 500M vgdata        # absolute size (megabytes)
-sudo lvcreate -n lvdata -l 50 vgdata          # 50 physical extents (-l, lowercase)
-sudo lvcreate -n lvdata -l 100%FREE vgdata    # all remaining free space in the VG
+sudo vgs -o +vg_extent_size
+sudo vgdisplay vgdata
 ```
 
-- `-L` (capital) takes a size like `500M` or `2G`.
+Sizing logical volumes: exam tasks phrase size in three ways.
+
+```bash
+sudo lvcreate -n lvfiles -L 400M vgdata       # absolute size (M is MiB in LVM)
+sudo lvcreate -n lvfiles -l 50 vgdata         # 50 extents (-l, lowercase)
+sudo lvcreate -n lvfiles -l 100%FREE vgdata   # all remaining free space in the VG
+```
+
+- `-L` (capital) takes a size like `500M` or `2G`. LVM treats these as binary units (MiB and GiB).
 - `-l` (lowercase) takes a number of **extents**, or a percentage such as `100%FREE`. A task that says "use all remaining space" means `-l 100%FREE`; one that says "use 50 extents" means `-l 50`.
 
-### Remove LVM objects safely
+### 5. Extend a volume group and a logical volume
 
-Delete in reverse order:
+Two separate jobs, and the exam often asks for both: **add space to the VG**, then **grow the LV and its filesystem**.
+
+```mermaid
+flowchart LR
+    A["New partition"] --> B["pvcreate"]
+    B --> C["vgextend"]
+    C --> D["lvextend -r"]
+    D --> E["Filesystem grown"]
+```
 
 ```bash
-sudo lvremove /dev/vgdata/lvdata
+# 1. Is there already free space in the VG? Look at VFree.
+sudo vgs vgdata
+
+# 2. If not, make a new PV and add it to the VG
+sudo parted --script /dev/vdc mklabel gpt mkpart primary 1MiB 1025MiB set 1 lvm on
+sudo partprobe /dev/vdc
+sudo pvcreate /dev/vdc1
+sudo vgextend vgdata /dev/vdc1
+
+# 3. Grow the LV and its filesystem in one step
+sudo lvextend -r -L 1200M /dev/vgdata/lvfiles
+```
+
+`-r` (`--resizefs`) resizes the filesystem right after the LV. Without `-r`, grow the filesystem yourself:
+
+| Filesystem | Command | Notes |
+|---|---|---|
+| XFS | `sudo xfs_growfs /data/files` | Takes the **mount point**. XFS can grow but never shrink |
+| ext4 | `sudo resize2fs /dev/vgdata/lvfiles` | Takes the device. Works while mounted when growing |
+
+`-L 1200M` means "make it 1200M in total". `-L +500M` means "add 500M". `-l +100%FREE` grows into all remaining space.
+
+### 6. Make a filesystem, then mount it by UUID or label
+
+An LV is still empty until you format it.
+
+```bash
+sudo mkfs.xfs -L files /dev/vgdata/lvfiles
+sudo mkdir -p /data/files
+sudo blkid /dev/vgdata/lvfiles
+```
+
+```text title="Example output"
+/dev/vgdata/lvfiles: LABEL="files" UUID="3f1e9a64-7c1d-4c58-b0a2-9f4a5d1b6e21" TYPE="xfs"
+```
+<!-- VERIFY: blkid field order on RHEL 10; UUID is illustrative -->
+
+Device names such as `/dev/vdb` can change between boots. A UUID or label does not, so use one of them in `/etc/fstab`:
+
+```text
+UUID=3f1e9a64-7c1d-4c58-b0a2-9f4a5d1b6e21  /data/files  xfs  defaults  0 0
+LABEL=files                                /data/files  xfs  defaults  0 0
+```
+
+The six fields, left to right:
+
+| Field | Meaning |
+|---|---|
+| 1 | What to mount: `UUID=...`, `LABEL=...` or a device path |
+| 2 | Where: the mount point (must exist) |
+| 3 | Filesystem type (`xfs`, `ext4`, `swap`) |
+| 4 | Options (`defaults` is normal) |
+| 5 | `dump` flag, almost always `0` |
+| 6 | `fsck` order: `0` for XFS, `2` for other data filesystems, `1` only for `/` |
+
+To set or change a label on an existing filesystem:
+
+```bash
+sudo xfs_admin -L files /dev/vgdata/lvfiles   # XFS (unmount first)
+sudo e2label /dev/vgdata/lvfiles files        # ext2/3/4
+```
+
+XFS labels are limited to 12 characters. **Validate before you reboot**, because a bad fstab line can drop the machine into emergency mode:
+
+```bash
+sudo mount -a
+findmnt --verify
+findmnt /data/files
+df -h /data/files
+```
+
+```text title="Example output"
+Filesystem                  Size  Used Avail Use% Mounted on
+/dev/mapper/vgdata-lvfiles  395M   24M  372M   7% /data/files
+```
+<!-- VERIFY: size and used figures for a fresh 400M XFS; they are approximate -->
+
+`mount -a` mounts everything in fstab that is not mounted yet. If it prints an error, fix the line now. Lesson 11 covers filesystems and mounts in more depth.
+
+### 7. Create swap (partition, LV, then persist)
+
+Swap is disk space the kernel uses when RAM runs short. It needs a **swap signature** (`mkswap`) and must be **activated** (`swapon`).
+
+**Swap partition on `/dev/vdb2`:**
+
+```bash
+sudo parted --script /dev/vdb mkpart swap linux-swap 1025MiB 1537MiB
+sudo partprobe /dev/vdb
+sudo mkswap /dev/vdb2
+sudo swapon /dev/vdb2
+swapon --show
+free -h
+```
+
+```text title="Example output"
+NAME      TYPE      SIZE USED PRIO
+/dev/vdb2 partition 512M   0B   -2
+```
+<!-- VERIFY: swapon --show columns and default priority on RHEL 10 -->
+
+With `fdisk` on MBR, set the type with `t` and `82`. On GPT use `fdisk`'s `t` with the `swap` alias, or `gdisk` type `8200`. The type code is only a hint; `mkswap` is what makes it swap.
+
+**Swap on an LV** works the same way, which makes it easy to resize later:
+
+```bash
+sudo lvcreate -n lvswap -L 512M vgdata
+sudo mkswap /dev/vgdata/lvswap
+sudo swapon /dev/vgdata/lvswap
+```
+
+**Make swap persistent** with its UUID in `/etc/fstab`:
+
+```bash
+sudo blkid /dev/vdb2
+```
+
+```text
+UUID=<uuid-from-blkid>  none  swap  defaults  0 0
+```
+
+Test it without rebooting: `sudo swapoff -a && sudo swapon -a && swapon --show`.
+
+**Remove swap safely:**
+
+```bash
+sudo swapoff /dev/vdb2
+# delete the swap line from /etc/fstab, then
+sudo systemctl daemon-reload
+```
+
+If you leave the fstab line behind, the device is still requested at every boot.
+
+### 8. Remove LVM objects safely
+
+Delete in reverse order, and unmount and remove the fstab line first:
+
+```bash
+sudo umount /data/files
+sudo lvremove /dev/vgdata/lvfiles
 sudo vgremove vgdata
 sudo pvremove /dev/vdb1
 ```
 
-### Inspect LVM
+## Worked examples
 
-```bash
-pvs
-vgs
-lvs
-```
-
-### Create swap
-
-```bash
-sudo mkswap /dev/vdb2
-sudo swapon /dev/vdb2
-free -h
-```
-
-### Remove swap safely
-
-```bash
-sudo swapoff /dev/vdb2
-```
-
-## Worked Examples
-
-### Worked Example 1: Inspect Disks Safely
+### Worked example 1: Inspect disks safely
 
 ```bash
 lsblk
 blkid
 ```
 
-Verification:
+Verification: identify which device is new and unused before making changes.
 
-- identify which device is new and unused before making changes
-
-### Worked Example 2: Build a Small LVM Stack
+### Worked example 2: Build a small LVM stack
 
 ```bash
 sudo pvcreate /dev/vdb1
@@ -225,11 +402,9 @@ sudo lvcreate -n lvexam -L 256M vgexam
 sudo lvs
 ```
 
-Verification:
+Verification: `lvs` should show the new logical volume.
 
-- `lvs` should show the new logical volume
-
-### Worked Example 3: Create and Activate Swap
+### Worked example 3: Create and activate swap
 
 ```bash
 sudo mkswap /dev/vdb2
@@ -238,11 +413,9 @@ swapon --show
 free -h
 ```
 
-Verification:
+Verification: swap should appear in `swapon --show`.
 
-- swap should appear in `swapon --show`
-
-### Worked Example 4: Remove a Throwaway LVM Lab Stack
+### Worked example 4: Remove a throwaway LVM lab stack
 
 ```bash
 sudo lvremove /dev/vgexam/lvexam
@@ -250,49 +423,92 @@ sudo vgremove vgexam
 sudo pvremove /dev/vdb1
 ```
 
-Verification:
+Verification: `lvs`, `vgs`, and `pvs` should no longer show the removed lab objects.
 
-- `lvs`, `vgs`, and `pvs` should no longer show the removed lab objects
+## Common mistakes
 
-## Guided Hands-On Lab
+- **Mistake:** Editing the wrong disk. **Recovery:** inspect with `lsblk` before every destructive step, and note the target disk name.
+- **Mistake:** Forgetting to inspect the current layout before changes. **Recovery:** run `lsblk -f` and `parted <disk> print free` first.
+- **Mistake:** Creating a filesystem or swap on the wrong device, for example on the whole disk instead of the intended partition or LV. **Recovery:** stop and verify device names before proceeding further.
+- **Mistake:** Removing the VG before the LV. **Recovery:** delete in reverse dependency order: LV, then VG, then PV.
+- **Mistake:** Making storage changes but forgetting the persistent mount or swap configuration. **Recovery:** add the fstab line, run `mount -a` or `swapon -a`, and verify after a reboot.
+- **Mistake:** Not verifying active swap. **Recovery:** check with `swapon --show`.
+- **Mistake:** Extending the LV but not the filesystem. **Recovery:** `sudo xfs_growfs <mountpoint>` or `sudo resize2fs <device>`, or use `lvextend -r` next time.
 
-### Lab Goal
+### Troubleshooting
 
-Practice a complete safe storage workflow using an extra lab disk.
+| Problem | Cause | Fix |
+|---|---|---|
+| `Device or resource busy` | The device is mounted, active as swap, or in use by LVM | Unmount or deactivate (`umount`, `swapoff`, `lvremove`) before removing |
+| `pvcreate` fails | Wrong device, partition table not re-read, or device already in use | Check `lsblk` and `blkid`, run `partprobe` and `udevadm settle` |
+| Swap works now but not after reboot | No persistent entry configured | Add the `UUID=... none swap defaults 0 0` line to `/etc/fstab` and verify after reboot |
+| Wrong size calculations | MB and MiB confusion or a typing error | Inspect the real result with `lsblk` and `lvs` (LVM `M` means MiB) |
+| `vgextend` says the PV is not found | `pvcreate` was skipped or the partition node is missing | Run `pvcreate` on the new partition first; check `lsblk` |
 
-### Setup
+## Hands-on lab
 
-You need an unused disk such as `/dev/vdb`. Never practice on a disk that contains important data.
+**Setup:** shared lab environment, `servera`, user `student`, spare disks `/dev/vdb` and `/dev/vdc` (2 GiB each, empty). If the disks were used before, run the shared **disk reset snippet** (from the contributor style guide) on `/dev/vdb`, repeat it with `vdc` for `/dev/vdc`, and remove old lines from `/etc/fstab`. Never practice on a disk that contains important data.
 
-### Task Steps
+**Task:**
 
-1. Identify the extra disk with `lsblk`.
-2. Open it with `parted`.
-3. Create a GPT label if the disk is empty.
-4. Create one partition for LVM (set the `lvm` flag) and one partition for swap.
-5. Run `sudo partprobe` and verify the partitions appear in `lsblk`.
-6. Create a PV on the LVM partition.
-7. Create a VG named `vgdata`.
-8. Create an LV named `lvfiles`.
-9. Create swap on the second partition and activate it.
-10. Inspect all layers with `lsblk`, `pvs`, `vgs`, `lvs`, and `swapon --show`.
+- [ ] Identify the two spare disks with `lsblk` and prove they are blank (`blkid`, `wipefs`).
+- [ ] On `/dev/vdb`, create a GPT label, partition 1 (1 GiB, `lvm` flag) and partition 2 (512 MiB, swap).
+- [ ] Re-read the table and confirm `/dev/vdb1` and `/dev/vdb2` appear in `lsblk`.
+- [ ] Create a PV on `/dev/vdb1`, a VG named `vgdata`, and a 400 MiB LV named `lvfiles`.
+- [ ] Put an XFS filesystem with label `files` on it, and mount it at `/data/files` through `/etc/fstab` by UUID.
+- [ ] Create swap on `/dev/vdb2`, activate it, and make it persistent by UUID.
+- [ ] Grow `lvfiles` to 1200 MiB with its filesystem. The VG has only about 620 MiB free, so first add a 1 GiB LVM partition on `/dev/vdc` to `vgdata`.
+- [ ] Validate with `mount -a`, `findmnt --verify`, then reboot and check everything is still in place.
 
-### Expected Result
+??? question "Hint 1"
+    You cannot create a 1200 MiB LV from a pool with 1020 MiB in total. Check `VFree` in `vgs` and decide what the pool needs before the LV can grow.
 
-You can identify storage devices, create partitions safely, build an LVM layout, and add swap space without touching the wrong disk.
+??? question "Hint 2"
+    Order for the growth: `pvcreate` on the new partition, then `vgextend`, then `lvextend` with the resize-filesystem option. For fstab you need the UUIDs from `blkid`.
 
-### Verification Commands
+??? success "Solution"
+    ```bash
+    lsblk
+    sudo blkid /dev/vdb /dev/vdc          # no output: blank disks
+    sudo parted --script /dev/vdb mklabel gpt
+    sudo parted --script /dev/vdb mkpart primary 1MiB 1025MiB
+    sudo parted --script /dev/vdb set 1 lvm on
+    sudo parted --script /dev/vdb mkpart swap linux-swap 1025MiB 1537MiB
+    sudo partprobe /dev/vdb
+    sudo udevadm settle
+    lsblk /dev/vdb
 
-```bash
-lsblk
-pvs
-vgs
-lvs
-swapon --show
-free -h
-```
+    sudo pvcreate /dev/vdb1
+    sudo vgcreate vgdata /dev/vdb1
+    sudo lvcreate -n lvfiles -L 400M vgdata
+    sudo mkfs.xfs -L files /dev/vgdata/lvfiles
+    sudo mkdir -p /data/files
+    sudo mkswap /dev/vdb2
+    sudo blkid /dev/vgdata/lvfiles /dev/vdb2    # copy both UUIDs
+    ```
+    Edit `/etc/fstab` (use `sudo vi /etc/fstab`) and add, with the real UUIDs from `blkid`:
+    ```text
+    UUID=<uuid-of-lvfiles>  /data/files  xfs   defaults  0 0
+    UUID=<uuid-of-vdb2>     none         swap  defaults  0 0
+    ```
+    ```bash
+    sudo systemctl daemon-reload
+    sudo mount -a
+    sudo swapon -a
 
-## Independent Practice Tasks
+    # extend: add vdc, grow the VG, then grow the LV and the filesystem
+    sudo parted --script /dev/vdc mklabel gpt mkpart primary 1MiB 1025MiB set 1 lvm on
+    sudo partprobe /dev/vdc
+    sudo pvcreate /dev/vdc1
+    sudo vgextend vgdata /dev/vdc1
+    sudo lvextend -r -L 1200M /dev/vgdata/lvfiles
+
+    findmnt --verify
+    ```
+    **Verify:** `lsblk -f` shows `xfs` on the LV mounted at `/data/files` and `swap` on `vdb2`. `sudo vgs` lists `#PV` 2. `sudo lvs` shows `lvfiles` at 1.17g (1200 MiB). `df -h /data/files` shows roughly 1.2G. `swapon --show` lists `/dev/vdb2`. Reboot and repeat the checks.
+    <!-- VERIFY: lvs rounding of 1200M as 1.17g -->
+
+## More practice
 
 1. List current block devices and explain what each major device is used for.
 2. Create a new GPT partition on a spare disk.
@@ -302,71 +518,73 @@ free -h
 6. Activate a swap device and verify it.
 7. Remove an LV, then remove the VG and PV in the correct order in a throwaway lab setup.
 
-## Verification Steps
+### Exam-style task 1
 
-1. Verify device names carefully before creation or deletion.
-2. Verify each layer with the matching command: `pvs`, `vgs`, `lvs`.
-3. Verify swap with both `swapon --show` and `free -h`.
-4. If later mounted or configured in `/etc/fstab`, verify persistence after reboot.
-5. When removing lab storage, verify each layer is gone in reverse order.
+On an unused disk, create a GPT partition for LVM, create a volume group named `vgexam`, and create a logical volume named `lvexam` of the size requested by your lab scenario.
 
-## Troubleshooting Section
+**Grader mindset checklist:**
 
-### Problem: `Device or resource busy`
+- [ ] correct disk and partition must exist
+- [ ] PV, VG, and LV must exist
+- [ ] names and sizes must match the task
 
-Cause:
+??? success "Solution"
+    ```bash
+    lsblk
+    sudo parted --script /dev/vdb mklabel gpt
+    sudo parted --script /dev/vdb mkpart primary 1MiB 1025MiB
+    sudo parted --script /dev/vdb set 1 lvm on
+    sudo partprobe /dev/vdb
+    sudo pvcreate /dev/vdb1
+    sudo vgcreate vgexam /dev/vdb1
+    sudo lvcreate -n lvexam -L 512M vgexam
+    sudo lvs
+    ```
 
-- device is mounted, active as swap, or in use by LVM
+### Exam-style task 2
 
-Fix:
+Add a new swap area on an unused partition, activate it, and make it persistent through `/etc/fstab`.
 
-- unmount or deactivate before removing
+**Grader mindset checklist:**
 
-### Problem: `pvcreate` fails
+- [ ] swap signature must exist
+- [ ] swap must be active now
+- [ ] UUID should be identifiable for persistent configuration
+- [ ] must still work after reboot once persistence is configured
 
-Cause:
+??? success "Solution"
+    ```bash
+    sudo mkswap /dev/vdb2
+    sudo swapon /dev/vdb2
+    swapon --show
+    sudo blkid /dev/vdb2
+    ```
+    Add `UUID=<uuid-from-blkid>  none  swap  defaults  0 0` to `/etc/fstab`, then check with `sudo swapoff -a && sudo swapon -a && swapon --show`.
 
-- wrong device, missing partition table update, or device already in use
+## Exam tips
 
-Fix:
+!!! tip "What the exam expects"
+    The exact device, partition, VG, LV and swap names and sizes from the task exist and are active now, and the mounts and swap are still correct after a reboot. Slow down, check the target disk name twice, and verify each layer with its own command: `pvs`, `vgs`, `lvs`.
 
-- check `lsblk`, `blkid`, and partprobe if needed
+!!! warning "Must survive reboot"
+    | Change | Persistent? | Make it persist with |
+    |---|---|---|
+    | Partition table (`parted`, `fdisk`) | Yes | Nothing, it is on disk |
+    | PV, VG, LV | Yes | Nothing, the metadata is on disk |
+    | `mount /dev/vgdata/lvfiles /data/files` | No | an fstab line (UUID or label), then `mount -a` |
+    | `swapon /dev/vdb2` | No | an fstab line, then `swapon -a` |
+    | `mkswap` signature | Yes | Nothing, but swap is still not active at boot without fstab |
 
-### Problem: swap activates now but not after reboot
+**Verify like a grader:**
 
-Cause:
+1. Check device names carefully before creation or deletion.
+2. Check each layer with the matching command: `lsblk -f`, `pvs`, `vgs`, `lvs`.
+3. Check swap with both `swapon --show` and `free -h`.
+4. Run `sudo mount -a` and `findmnt --verify` with no errors.
+5. Reboot, then run `lsblk -f`, `df -h`, `swapon --show` again.
+6. When removing lab storage, verify each layer is gone in reverse order.
 
-- no persistent entry configured
-
-Fix:
-
-- add correct UUID entry to `/etc/fstab` later and verify after reboot
-
-### Problem: wrong size calculations
-
-Cause:
-
-- MB and MiB confusion or typing error
-
-Fix:
-
-- inspect the actual result with `lsblk` and `lvs`
-
-## Common Mistakes And Recovery
-
-- Mistake: forgetting to note the target disk name.
-  Recovery: inspect before every destructive step.
-
-- Mistake: creating a filesystem on the whole disk instead of the intended partition or LV.
-  Recovery: stop and verify device names before proceeding further.
-
-- Mistake: removing VG before LV.
-  Recovery: delete in reverse dependency order: LV, then VG, then PV.
-
-- Mistake: not verifying active swap.
-  Recovery: check with `swapon --show`.
-
-## Mini Quiz
+## Quiz
 
 1. What is the order from PV to VG to LV?
 2. What command shows logical volumes?
@@ -378,98 +596,46 @@ Fix:
 8. Which command re-reads the partition table so a new partition node appears?
 9. How do you create a logical volume that uses all remaining free space in a volume group?
 10. Which tool creates an MBR partition, and what type code marks a partition as Linux LVM?
+11. What two commands add a new partition to an existing VG, in order?
+12. How do you grow an LV and its XFS filesystem in one command?
 
-## Exam-Style Tasks
+??? success "Answers"
+    1. Physical volume, then volume group, then logical volume.
+    2. `lvs`
+    3. `swapon`
+    4. `free -h` or `swapon --show`
+    5. It shows actual device layout so you do not edit the wrong disk.
+    6. Because the wrong command can destroy data.
+    7. Remove the LV first, then the VG, then the PV.
+    8. `partprobe` (run `sudo partprobe /dev/vdb`).
+    9. `sudo lvcreate -n NAME -l 100%FREE VGNAME`.
+    10. `fdisk` creates MBR partitions; type code `8e` marks Linux LVM (`82` marks swap).
+    11. `pvcreate /dev/vdc1`, then `vgextend VGNAME /dev/vdc1`.
+    12. `sudo lvextend -r -L <size> /dev/VG/LV` (XFS is grown with `xfs_growfs` behind the scenes).
 
-### Task 1
+## Summary
 
-On an unused disk, create a GPT partition for LVM, create a volume group named `vgexam`, and create a logical volume named `lvexam` of the size requested by your lab scenario.
-
-### Grader Mindset Checklist
-
-- correct disk and partition must exist
-- PV, VG, and LV must exist
-- names and sizes must match the task
-
-### Task 2
-
-Add a new swap area on an unused partition, activate it, and prepare to make it persistent later through `/etc/fstab`.
-
-### Grader Mindset Checklist
-
-- swap signature must exist
-- swap must be active now
-- UUID should be identifiable for persistent configuration
-- must still work after reboot once persistence is configured
-
-## Answer Key / Solution Guide
-
-### Quiz Answers
-
-1. Physical volume, then volume group, then logical volume.
-2. `lvs`
-3. `swapon`
-4. `free -h` or `swapon --show`
-5. It shows actual device layout so you do not edit the wrong disk.
-6. Because the wrong command can destroy data.
-7. Remove the LV first, then the VG, then the PV.
-8. `partprobe` (run `sudo partprobe /dev/vdb`).
-9. `sudo lvcreate -n NAME -l 100%FREE VGNAME`.
-10. `fdisk` creates MBR partitions; type code `8e` marks Linux LVM (`82` marks swap).
-
-### Exam-Style Task 1 Example Solution
-
-```bash
-lsblk
-sudo parted --script /dev/vdb mklabel gpt
-sudo parted --script /dev/vdb mkpart primary 1MiB 1025MiB
-sudo parted --script /dev/vdb set 1 lvm on
-sudo partprobe /dev/vdb
-sudo pvcreate /dev/vdb1
-sudo vgcreate vgexam /dev/vdb1
-sudo lvcreate -n lvexam -L 512M vgexam
-sudo lvs
-```
-
-### Exam-Style Task 2 Example Solution
-
-```bash
-sudo mkswap /dev/vdb2
-sudo swapon /dev/vdb2
-swapon --show
-blkid /dev/vdb2
-```
-
-## Recap / Memory Anchors
-
-- inspect first with `lsblk`
-- partitions live on disks (`parted` for GPT, `fdisk` for MBR)
-- run `partprobe` after partitioning so the new node appears
-- LVM stack is PV then VG then LV
+- inspect first with `lsblk`, and prove space is free before you add anything
+- partitions live on disks (`parted` for GPT, `fdisk` for MBR); run `partprobe` afterward so the node appears
+- LVM stack is PV then VG then LV; `vgextend` adds space to the pool, `lvextend -r` grows the LV and its filesystem
 - `-L` is a size, `-l` is extents or `100%FREE`
 - swap uses `mkswap` and `swapon`
 - verify every layer separately
-- persistence later depends on correct `/etc/fstab` entries
+- persistence depends on correct `/etc/fstab` entries, tested with `mount -a`
 
-## Quick Command Summary
+| Task | Command |
+|---|---|
+| Show devices | `lsblk -f`, `blkid` |
+| GPT partition | `parted --script /dev/vdb mklabel gpt mkpart primary 1MiB 1025MiB set 1 lvm on` |
+| Re-read table | `partprobe /dev/vdb; udevadm settle` |
+| PV / VG / LV | `pvcreate /dev/vdb1`, `vgcreate vgdata /dev/vdb1`, `lvcreate -n lvdata -L 500M vgdata` |
+| LV from all free space | `lvcreate -n lvall -l 100%FREE vgdata` |
+| Extend VG | `pvcreate /dev/vdc1; vgextend vgdata /dev/vdc1` |
+| Extend LV + filesystem | `lvextend -r -L +500M /dev/vgdata/lvdata` |
+| Show LVM | `pvs`, `vgs`, `lvs`, `vgs -o +vg_extent_size` |
+| Make swap | `mkswap /dev/vdb2; swapon /dev/vdb2` |
+| Stop swap | `swapoff /dev/vdb2` (and remove its fstab line) |
+| Check fstab | `mount -a`, `findmnt --verify` |
+| MBR partition (supporting) | `fdisk /dev/vdb` |
 
-```bash
-lsblk
-blkid
-parted --script /dev/vdb mklabel gpt
-parted --script /dev/vdb mkpart primary 1MiB 1025MiB
-parted --script /dev/vdb set 1 lvm on
-partprobe /dev/vdb
-fdisk /dev/vdb            # alternative, for MBR layouts
-pvcreate /dev/vdb1
-vgcreate vgdata /dev/vdb1
-lvcreate -n lvdata -L 500M vgdata
-lvcreate -n lvall -l 100%FREE vgdata
-pvs
-vgs
-lvs
-mkswap /dev/vdb2
-swapon /dev/vdb2
-swapoff /dev/vdb2
-free -h
-```
+**Previous:** [09 Boot Targets, Processes, Logs, and Tuning](09-boot-targets-processes-logs-and-tuning.md) · **Next:** [11 Filesystems, Mounts, NFS, and Autofs](11-filesystems-mounts-nfs-and-autofs.md): now that storage exists, you learn the filesystem types and mount options it relies on, plus network mounts.
