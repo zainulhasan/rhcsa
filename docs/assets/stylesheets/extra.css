@@ -525,6 +525,7 @@
 .md-typeset h1 {
   font-weight: 750;
   margin-bottom: 0.8em;
+  color: var(--md-default-fg-color);
 }
 
 .md-typeset h2 {
@@ -568,9 +569,22 @@
   font-size: 0.82rem;
 }
 
-/* "Try it now" is the hook of every lesson: give it presence. */
-.md-typeset .admonition.example {
+/* "Try it now" is the hook of every lesson: give it presence (amber, not
+   Material's default purple "example" colour). */
+.md-typeset .admonition.example,
+.md-typeset details.example {
+  border-color: var(--md-accent-fg-color);
   background: rgba(180, 106, 31, 0.07);
+}
+
+.md-typeset .example > .admonition-title,
+.md-typeset .example > summary {
+  background-color: rgba(180, 106, 31, 0.14);
+}
+
+.md-typeset .example > .admonition-title::before,
+.md-typeset .example > summary::before {
+  background-color: var(--md-accent-fg-color);
 }
 
 [data-md-color-scheme="slate"] .md-typeset .admonition.example {
