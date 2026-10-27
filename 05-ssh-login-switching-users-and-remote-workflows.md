@@ -20,7 +20,7 @@ description: Log in to remote systems with SSH, check who and where you are, run
 
 ## Why it matters
 
-The exam gives you more than one machine and expects you to move between them without losing track of where you are. A command run on the wrong host is a wrong answer, or a broken server. In real life nearly every Linux server is reached over SSH, so clear habits about host, user and connection method prevent expensive mistakes.
+Expect to work on more than one machine, and be ready to move between them without losing track of where you are. A command run on the wrong host is a wrong answer, or a broken server. In real life nearly every Linux server is reached over SSH, so clear habits about host, user and connection method prevent expensive mistakes.
 
 **Objectives covered:**
 

@@ -41,7 +41,7 @@ Software management is a direct exam objective. A typical task reads "create a r
 **Offline help for this topic:** `man dnf`, `man rpm`, `dnf --help`, `man flatpak`, `flatpak --help`, `man yum.conf` or `man dnf.conf` (repo file options), and the directory `/etc/yum.repos.d/`
 
 !!! note "Offline reality (read this)"
-    The RHCSA exam is performed **without internet access**. You will install packages from a **local repository** that the exam provides, usually an HTTP URL on the lab network or a directory on attached install media, not from the public Red Hat CDN or the internet. The skill being tested is *writing a working `.repo` file and installing from it*, not registering a system online. Treat every step in this lesson that reaches the internet (`subscription-manager` registration, `flathub.org`, public mirrors) as **study-time-only practice**. The `dnf`, `rpm`, and `.repo` mechanics are identical whether the source is local or remote, so practice them against a local repo and you are exam-ready.
+    Red Hat's EX200 page says the exam has **no internet access** and that the product documentation shipped with the system is available. Expect to install packages from a **local repository** rather than the public Red Hat CDN, so be ready to write a working `.repo` file for a URL or path you are given (an HTTP URL on the lab network or a local directory are the usual shapes) and install from it, rather than registering a system online. Treat every step in this lesson that reaches the internet (`subscription-manager` registration, `flathub.org`, public mirrors) as **study-time-only practice**. The `dnf`, `rpm`, and `.repo` mechanics are identical whether the source is local or remote, so practice them against a local repo.
 
 ## How it works
 
@@ -136,19 +136,20 @@ gpgcheck=0
 - `gpgcheck=0` skips signature checks. That is acceptable only for a trusted local lab repo, and it is the right fix if a practice repo is unsigned and `dnf` refuses to install.
 - To import a key by hand: `sudo rpm --import /path/to/key`.
 
-The exam gives you BaseOS and AppStream, so a real task often needs **two** repo files (or two sections), one for each `baseurl`.
+Expect to be given BaseOS and AppStream locations, so a real task often needs **two** repo files (or two sections), one for each `baseurl`.
 
 After creating or editing a repo file:
 
 ```bash
 sudo dnf clean all
+sudo dnf makecache
 sudo dnf repolist
 ```
 
-`dnf clean all` throws away cached metadata so dnf re-reads your new definition. If the URL is wrong you will see an error here, not at install time.
+`dnf clean all` throws away cached metadata so dnf re-reads your new definition. `sudo dnf makecache` actually downloads the metadata (`repodata/repomd.xml`) from every enabled repo, so a wrong `baseurl` fails here, not at install time. `dnf repolist` alone only lists the repo definitions it knows about; it does not prove the URL works. `dnf repoinfo REPO_ID` shows the details of one repo (its URL, status and package count).
 
 !!! note "Supporting skill (not a listed RHEL 10 objective)"
-    You can also create repo definitions with a plugin command instead of an editor: `sudo dnf config-manager --add-repo URL` and `sudo dnf config-manager --set-enabled REPO_ID` (needs the `dnf-plugins-core` package). The DNF 5 syntax differs (`dnf config-manager addrepo --from-repofile=URL` and `dnf config-manager setopt REPO_ID.enabled=1`). <!-- VERIFY: whether RHEL 10 ships DNF 4 or DNF 5 and which config-manager syntax applies --> Writing the file by hand always works, which is why it is the method to learn.
+    You can also create repo definitions with a plugin command instead of an editor: `sudo dnf config-manager --add-repo URL` and `sudo dnf config-manager --set-enabled REPO_ID` (needs the `dnf-plugins-core` package). That is the DNF 4 syntax that RHEL 10 ships; DNF 5 (for example on current Fedora) uses `dnf config-manager addrepo --from-repofile=URL` and `dnf config-manager setopt REPO_ID.enabled=1`. Writing the file by hand always works, which is why it is the method to learn.
 
 ### 3. Install, update and remove with `dnf`
 
@@ -253,7 +254,7 @@ $ rpm -ql tree
 ### 6. Red Hat CDN and subscription checks
 
 !!! warning "Study-time only: needs internet"
-    `subscription-manager register` and `refresh` talk to Red Hat over the internet, so they are **not** an exam-day task. Practice these only to understand registration state; on the exam you use the provided local repo.
+    `subscription-manager register` and `refresh` talk to Red Hat over the internet, which the exam does not offer, so do not expect them to be an exam task. Practice these only to understand registration state; expect to use a locally provided repo instead.
 
 The Content Delivery Network (CDN) is Red Hat's own download service. A registered, subscribed system gets BaseOS and AppStream repositories from it automatically. If your lab uses real subscription access, these commands matter:
 
@@ -275,7 +276,7 @@ Registration generates `/etc/yum.repos.d/redhat.repo`, so a CDN-backed system us
 ### 7. Flatpak: remotes, install, update, remove
 
 !!! warning "Study-time only: needs a reachable remote"
-    Adding the `flathub.org` remote and installing from it requires internet access, so those steps are **practice-time only**. For the exam, know the command shapes; any graded Flatpak task uses a remote the exam provides.
+    Adding the `flathub.org` remote and installing from it requires internet access, so those steps are **practice-time only**. For the exam, know the command shapes; expect any Flatpak task to use a remote you are given.
 
 A Flatpak **remote** is the Flatpak equivalent of a repository: a named source of apps. An **application ID** such as `org.gnome.gedit` (reverse-DNS style) names an app. Flatpak is installed from RPM if missing:
 
@@ -336,21 +337,21 @@ RHEL 10 ships its own Flatpak content from Red Hat rather than Flathub. The remo
 - **Mistake:** Installing from an unverified source. **Recovery:** use the repositories the task provides, keep `gpgcheck=1` where a key exists, and check the source with `dnf info PKG` (the `Repository` line).
 - **Mistake:** Confusing `rpm` with dependency-resolving package managers such as `dnf`. **Recovery:** install with `dnf install`; use `rpm` for queries. A direct `rpm -ivh` install fails with "Failed dependencies" when a library is missing.
 - **Mistake:** Using `rpm -ivh` first for everything. **Recovery:** prefer `dnf install` unless the task explicitly requires raw `rpm`.
-- **Mistake:** Forgetting to enable a repository. **Recovery:** set `enabled=1` in the `.repo` file, then `sudo dnf repolist` (or `repolist --all` to see disabled ones).
+- **Mistake:** Forgetting to enable a repository. **Recovery:** set `enabled=1` in the `.repo` file, then `sudo dnf makecache` (or `dnf repolist --all` to see disabled ones).
 - **Mistake:** Assuming a package installed correctly without verifying it. **Recovery:** `rpm -q PKG` after every install, and run the command if the package provides one.
 - **Mistake:** Not verifying installed software at all. **Recovery:** query the package after installation, and again after removal.
 - **Mistake:** Removing the wrong package. **Recovery:** inspect package names carefully before deletion (`dnf remove` also removes dependencies, so read the transaction list before you answer `y`). `dnf history undo last` reverses a mistake.
 - **Mistake:** Mixing system packages and Flatpak packages in your thinking. **Recovery:** treat Flatpak remotes as a separate system; `dnf repolist` never shows them, and `flatpak list` never shows RPMs.
 - **Mistake:** Assuming Flatpak uses the same repo system as `dnf`. **Recovery:** use `flatpak remotes`, not `/etc/yum.repos.d/`.
-- **Mistake:** Adding a Flatpak remote with `sudo`, then listing it without `sudo` (or `--user`). **Recovery:** list in the same scope you added it: `flatpak remotes --system` or `--user`.
+- **Mistake:** Adding a remote with `--user` (or as a normal user) and then listing it with `sudo flatpak remotes`, or the reverse. `sudo` runs as root, whose `--user` scope is root's own, and a remote added to one scope is invisible in the other. **Recovery:** list in the same scope you added it: `flatpak remotes --user` or `flatpak remotes --system`, with `sudo` only for `--system` changes.
 
 ### Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|
-| `No match for argument` | Wrong package name, or the repository is missing or disabled | `dnf search name`, then `dnf repolist --all` |
+| `No match for argument` | Wrong package name, or the repository is missing or disabled | `dnf search name`, then `dnf repolist --all` and `sudo dnf makecache` |
 | Dependency failure with `rpm` | Direct `rpm` installs do not resolve dependencies | Use `dnf install ./package.rpm` |
-| Repo file exists but package still unavailable | Repo disabled, wrong `baseurl`, stale metadata, or a network or subscription problem | Inspect the file, run `sudo dnf clean all`, then `dnf repolist --all` |
+| Repo file exists but package still unavailable | Repo disabled, wrong `baseurl`, stale metadata, or a network or subscription problem | Inspect the file, run `sudo dnf clean all`, then `sudo dnf makecache` and `dnf repolist --all` |
 | `Cannot download repomd.xml` or `Failed to download metadata` | `baseurl` is wrong or does not contain a `repodata/` directory | Open the URL path again; the folder must hold `repodata/repomd.xml` |
 | `GPG check FAILED` / `Public key ... is not installed` | `gpgcheck=1` but the key is missing, or the repo is unsigned | Add a correct `gpgkey=` and `rpm --import` it, or set `gpgcheck=0` for a trusted lab repo |
 | `flatpak: command not found` | Flatpak is not installed | `sudo dnf install -y flatpak` |
@@ -371,7 +372,7 @@ sudo chown student: /srv/labrepo
 - [ ] List the enabled repositories and read the files in `/etc/yum.repos.d/`.
 - [ ] Query whether `bash`, `tar` and `vim-minimal` are installed, and find which package owns `/usr/bin/passwd`.
 - [ ] Download the `tree` RPM into `/srv/labrepo` and turn that folder into a repository with `createrepo_c`.
-- [ ] Create `/etc/yum.repos.d/lab-local.repo` with id `lab-local`, name `Lab Local Repo`, `baseurl=file:///srv/labrepo`, enabled, `gpgcheck=0`. Confirm it appears in `dnf repolist`.
+- [ ] Create `/etc/yum.repos.d/lab-local.repo` with id `lab-local`, name `Lab Local Repo`, `baseurl=file:///srv/labrepo`, enabled, `gpgcheck=0`. Confirm it appears in `dnf repolist` and that `sudo dnf makecache` succeeds for it.
 - [ ] Install `tree` using **only** the `lab-local` repository, and verify with `rpm -q` and `command -v`.
 - [ ] Remove `tree` and confirm it is gone. Then install it again from the file `/srv/labrepo/tree-*.rpm` by path.
 - [ ] Run `dnf check-update` and update the `tree` package.
@@ -405,6 +406,7 @@ sudo chown student: /srv/labrepo
     ```
     ```bash
     sudo dnf clean all
+    sudo dnf makecache
     sudo dnf repolist
     sudo dnf install -y --disablerepo='*' --enablerepo=lab-local tree
     rpm -q tree
@@ -425,7 +427,7 @@ sudo chown student: /srv/labrepo
     flatpak list --user
     flatpak uninstall --user -y org.gnome.gedit
     ```
-    **Verify:** `dnf repolist` lists `lab-local`; `rpm -q tree` prints a name, and prints "package tree is not installed" after removal; `flatpak list --user` shows the app after install and nothing after uninstall. Reboot and repeat `dnf repolist` and `flatpak remotes --user` to confirm the repo file and remote persist.
+    **Verify:** `dnf repolist` lists `lab-local` and `sudo dnf makecache` completes without error for it (`dnf repoinfo lab-local` shows its details); `rpm -q tree` prints a name, and prints "package tree is not installed" after removal; `flatpak list --user` shows the app after install and nothing after uninstall. Reboot and repeat `dnf repolist` and `flatpak remotes --user` to confirm the repo file and remote persist.
     <!-- VERIFY: dnf install with --disablerepo='*' --enablerepo works on RHEL 10 for a file:// repo; flathub user remote needs internet -->
 
     Clean up when done: `sudo rm /etc/yum.repos.d/lab-local.repo; sudo rm -rf /srv/labrepo; sudo dnf clean all`.
@@ -458,11 +460,12 @@ Configure repository access available in your lab, then install a package that p
 ??? success "Solution"
     ```bash
     sudo dnf repolist
+    sudo dnf makecache
     sudo dnf install -y tree
     rpm -q tree
     command -v tree
     ```
-    If `dnf repolist` shows no usable repository, create a `.repo` file for the URL you were given (see step 2) before installing.
+    `repolist` only shows that a repository is defined; `makecache` proves its metadata can actually be downloaded. If no usable repository is listed, or `makecache` fails, create a `.repo` file for the URL you were given (see step 2) before installing.
 
 ### Exam-style task 2
 
@@ -487,7 +490,7 @@ Add a Flatpak remote if your environment supports it, install one Flatpak applic
 ## Exam tips
 
 !!! tip "What the exam expects"
-    The repository is defined and shown by `dnf repolist`, the requested package is installed (and, when asked, updated) from it, and removed packages are really gone. For Flatpak, the remote exists and the app is in `flatpak list`. Verify each with its own command.
+    Expect the repository to be defined (shown by `dnf repolist`) and actually reachable (`sudo dnf makecache` succeeds), the requested package is installed (and, when asked, updated) from it, and removed packages are really gone. For Flatpak, the remote exists and the app is in `flatpak list`. Verify each with its own command.
 
 !!! warning "Must survive reboot"
     | Change | Persistent? | Make it persist with |
@@ -501,7 +504,7 @@ Add a Flatpak remote if your environment supports it, install one Flatpak applic
 
 **Verify like a grader:**
 
-1. `sudo dnf repolist` shows the repository, with no errors.
+1. `sudo dnf repolist` shows the repository, and `sudo dnf makecache` downloads its metadata with no errors.
 2. `rpm -q PACKAGE` prints the package, and the command it provides runs.
 3. After removal, `rpm -q PACKAGE` says "is not installed".
 4. `flatpak remotes` and `flatpak list` show the remote and the app (or nothing, after uninstall).

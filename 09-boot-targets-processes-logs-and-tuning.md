@@ -396,7 +396,7 @@ Many logs live in `/var/log`, and the journal holds the rest.
 
 | Where | What it holds |
 |---|---|
-| `/var/log/messages` | General system messages (needs `rsyslog`; may not be installed by default on RHEL 10) <!-- VERIFY: rsyslog installed and /var/log/messages present on RHEL 10 --> |
+| `/var/log/messages` | General system messages (needs `rsyslog`; may not be installed by default on RHEL 10) |
 | `/var/log/secure` | Logins, `sudo`, `ssh` authentication <!-- VERIFY: also depends on rsyslog on RHEL 10 --> |
 | `/var/log/audit/audit.log` | Audit and SELinux denials (`auditd`) |
 | `/var/log/dnf*.log` | Package manager activity <!-- VERIFY: exact dnf log filename on RHEL 10 --> |
@@ -444,22 +444,16 @@ journalctl --list-boots
 
 Two ways to make it persistent. Pick one.
 
-**Method A, the configuration route:**
+**Method A, the configuration route.** Use a drop-in file rather than editing `/etc/systemd/journald.conf`: it works whether or not the main file has a `Storage=` line, and a package update never overwrites it.
 
 ```bash
-sudo vi /etc/systemd/journald.conf
-```
-
-Set, in the `[Journal]` section:
-
-```ini
-[Journal]
-Storage=persistent
-```
-
-```bash
+sudo mkdir -p /etc/systemd/journald.conf.d
+printf '[Journal]\nStorage=persistent\n' | sudo tee /etc/systemd/journald.conf.d/persistent.conf
 sudo systemctl restart systemd-journald
+systemd-analyze cat-config systemd/journald.conf
 ```
+
+`systemd-analyze cat-config` prints the main file followed by every drop-in, so you can see `Storage=persistent` in effect. <!-- VERIFY: systemd-analyze cat-config output and journald.conf.d drop-in handling on RHEL 10 -->
 
 **Method B, the directory route** (`Storage=auto` is the default, which writes to disk when `/var/log/journal` exists):
 
@@ -564,7 +558,7 @@ Verification: explain why you must append `rd.break` and remount `/sysroot` read
 - **Mistake:** Changing runtime behaviour but not making it persistent. **Recovery:** use the persistent form (`set-default`, `enable`, `Storage=persistent`) and test with a reboot.
 - **Mistake (service starts now but not after reboot):** the service was started but not enabled. **Recovery:** `sudo systemctl enable service`.
 - **Mistake (`kill` did nothing):** wrong PID, or the signal was not enough. **Recovery:** verify the PID again, then escalate carefully (`kill -9` last).
-- **Mistake (journal empty after reboot):** persistent storage was never configured. **Recovery:** set `Storage=persistent` (or create `/var/log/journal`) and restart `systemd-journald`; only boots after that are kept.
+- **Mistake (journal empty after reboot):** persistent storage was never configured. **Recovery:** create the `journald.conf.d/persistent.conf` drop-in with `Storage=persistent` (or create `/var/log/journal`) and restart `systemd-journald`; only boots after that are kept.
 - **Mistake (boot target change did not persist):** `isolate` was used instead of `set-default`. **Recovery:** `sudo systemctl set-default multi-user.target`.
 - **Mistake:** pressing Enter instead of `e` at GRUB, so no edit happens. **Recovery:** reboot and try again; `e` edits, Enter boots.
 - **Mistake:** skipping `touch /.autorelabel` after a password reset, or trying `restorecon` in the early shell. **Recovery:** boot with `rd.break` again and create `/.autorelabel`.
@@ -588,7 +582,7 @@ Verification: explain why you must append `rd.break` and remount `/sysroot` read
     Nothing you do with `systemctl start`, `isolate` or an edited GRUB line survives a reboot. Ask yourself for each step: which command stores the change on disk?
 
 ??? question "Hint 2"
-    Use `set-default`, `Storage=persistent` in `/etc/systemd/journald.conf`, `renice -n`, `tuned-adm profile`, and for the GRUB steps `systemd.unit=rescue.target` and `rd.break` on the `linux` line.
+    Use `set-default`, a `Storage=persistent` drop-in in `/etc/systemd/journald.conf.d/`, `renice -n`, `tuned-adm profile`, and for the GRUB steps `systemd.unit=rescue.target` and `rd.break` on the `linux` line.
 
 ??? success "Solution"
     ```bash
@@ -605,8 +599,10 @@ Verification: explain why you must append `rd.break` and remount `/sysroot` read
     sudo renice -n 10 -p $(pgrep -n sha1sum)
     pkill sha1sum
 
-    sudo sed -i 's/^#\?Storage=.*/Storage=persistent/' /etc/systemd/journald.conf
+    sudo mkdir -p /etc/systemd/journald.conf.d
+    printf '[Journal]\nStorage=persistent\n' | sudo tee /etc/systemd/journald.conf.d/persistent.conf
     sudo systemctl restart systemd-journald
+    systemd-analyze cat-config systemd/journald.conf
     ls /var/log/journal
     sudo reboot
 
@@ -671,9 +667,10 @@ Enable persistent journaling, then prove that log storage is configured and jour
 
 ??? success "Solution"
     ```bash
-    sudo mkdir -p /var/log/journal
-    sudo sed -i 's/^#\?Storage=.*/Storage=persistent/' /etc/systemd/journald.conf
+    sudo mkdir -p /etc/systemd/journald.conf.d
+    printf '[Journal]\nStorage=persistent\n' | sudo tee /etc/systemd/journald.conf.d/persistent.conf
     sudo systemctl restart systemd-journald
+    systemd-analyze cat-config systemd/journald.conf
     ls /var/log/journal
     journalctl --disk-usage
     systemctl is-active systemd-journald
@@ -696,7 +693,7 @@ Enable persistent journaling, then prove that log storage is configured and jour
     | `systemctl enable service` | Yes | Nothing, but it does not start it now |
     | Edited kernel line at GRUB | No | Not meant to persist; use `set-default` or the bootloader tools in lesson 12 |
     | `nice` / `renice` | No | The process ends at reboot; start it with the right niceness again |
-    | Journal in `/run/log/journal` | No | `Storage=persistent` or `/var/log/journal`, then restart journald |
+    | Journal in `/run/log/journal` | No | `Storage=persistent` drop-in in `/etc/systemd/journald.conf.d/` or `/var/log/journal`, then restart journald |
     | `tuned-adm profile NAME` | Yes | Nothing, but check `tuned-adm active` after reboot |
     | Root password set via `rd.break` | Yes | `touch /.autorelabel` so SELinux labels are right |
 
@@ -729,7 +726,7 @@ Enable persistent journaling, then prove that log storage is configured and jour
     3. `journalctl -u service`
     4. `ps aux --sort=-%cpu | head` or `top`
     5. Scheduling priority
-    6. `/var/log/journal` (or `Storage=persistent` in `/etc/systemd/journald.conf`)
+    6. `/var/log/journal` (or `Storage=persistent` in a drop-in under `/etc/systemd/journald.conf.d/`)
     7. Because recovery boot work can make a system temporarily unbootable if done carelessly.
     8. `systemd.unit=rescue.target`, then Ctrl-x.
     9. Rescue mounts local filesystems read-write and starts basic services; emergency gives only a read-only root and nothing else.
@@ -758,7 +755,7 @@ Enable persistent journaling, then prove that log storage is configured and jour
 | Kill | `kill PID`, `kill -9 PID`, `pkill name`, `pgrep -a name` |
 | Priority | `nice -n 10 cmd`, `renice -n 5 -p PID` |
 | Logs | `journalctl -b`, `-u sshd`, `-p err -b`, `--since today` |
-| Persistent journal | `Storage=persistent` in `/etc/systemd/journald.conf`, restart journald, `journalctl --list-boots` |
+| Persistent journal | `Storage=persistent` drop-in in `/etc/systemd/journald.conf.d/persistent.conf`, restart journald, `journalctl --list-boots` |
 | Tuning | `tuned-adm list`, `active`, `recommend`, `profile NAME` |
 
 **Previous:** [08 Shell Scripting Basics](08-shell-scripting-basics.md) · **Next:** [10 Storage, Partitions, LVM, and Swap](10-storage-partitions-lvm-and-swap.md): now that you can boot and recover a system, you learn to add and manage the disks it runs on.
