@@ -91,6 +91,7 @@ extra:
 nav:
   - Home: index.md
   - How To Study: repository-guide.md
+  - Objectives Map: objectives-map.md
   - Foundations:
       - 00 Study Skills and Offline Help: 00-study-skills-and-offline-help.md
       - 01 Shell Basics and Command Syntax: 01-shell-basics-and-command-syntax.md

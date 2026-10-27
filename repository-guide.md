@@ -17,7 +17,7 @@ Use this course with one rule:
 - the lab files test the skill
 - the mock exams pressure-test the skill
 
-An objectives map (`objectives-map.md`) lists each official objective and the lessons, labs, and mock tasks that cover it. <!-- LINK: make this a real link once objectives-map.md is added to the nav -->
+The [Objectives Map](objectives-map.md) lists each official objective and the lessons, labs, and mock tasks that cover it.
 
 ## Best Route For Most Learners
 
