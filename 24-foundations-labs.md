@@ -25,7 +25,7 @@ Every drill has the same shape:
 The shared environment is the one from [23 VM Lab Setup and Baseline Checks](23-vm-lab-setup-and-baseline-checks.md): `servera.lab.example` (192.168.122.10) is the main machine, `serverb.lab.example` (192.168.122.11) is the remote one, you log in as `student` (password `student`, has sudo), and the root password is `redhat` (lab only). Run the drills on servera unless a drill says otherwise.
 
 !!! note "Users and groups in Setup"
-    Setup lines create the accounts a drill needs (`alice`, `bob`, `carol`, `dana`, groups `labteam`, `projectops`). If an account already exists from an earlier attempt, `useradd` prints an "already exists" message. That is harmless; carry on.
+    Setup lines create the accounts a drill needs (`alice`, `bob`, `carol`, `dana`, groups `labteam`, `projectops`). Where a drill needs an account in a group, the Setup uses `id U &>/dev/null || sudo useradd U` and then `sudo usermod -aG GROUP U`. `useradd -G` does nothing when the user already exists (it only prints "already exists"), so the group membership would silently be missing on a re-run; `usermod -aG` is safe to repeat. A plain `sudo useradd NAME` on an existing account is harmless: it prints "already exists" and changes nothing.
 
 ## Drill index
 
@@ -287,9 +287,10 @@ These drills practise skills in the style of the exam objectives. Each one has i
 **Setup:**
 
 ```bash
-sudo useradd alice
+id alice &>/dev/null || sudo useradd alice
 sudo groupadd -f labteam
-sudo useradd -G labteam dana
+id dana &>/dev/null || sudo useradd dana
+sudo usermod -aG labteam dana
 ```
 
 **Task:** As `root` (use `sudo` for each command), copy `/etc/fstab` to `/var/tmp/fstab.practice`. Then:
@@ -349,8 +350,10 @@ sudo useradd -G labteam dana
 
 ```bash
 sudo groupadd -f projectops
-sudo useradd -G projectops alice
-sudo useradd -G projectops bob
+id alice &>/dev/null || sudo useradd alice
+id bob &>/dev/null || sudo useradd bob
+sudo usermod -aG projectops alice
+sudo usermod -aG projectops bob
 ```
 
 **Task:** As `root` (use `sudo`):
@@ -661,8 +664,8 @@ echo "nothing to see here" | sudo tee /etc/practice-plain.txt > /dev/null
 **Setup:**
 
 ```bash
-sudo useradd -m bob
-sudo useradd -m dana
+id bob &>/dev/null || sudo useradd -m bob
+id dana &>/dev/null || sudo useradd -m dana
 sudo -u bob touch /home/bob/existing.txt
 ```
 
@@ -698,7 +701,7 @@ sudo -u bob touch /home/bob/existing.txt
     ```bash
     getfacl /home/bob/existing.txt                    # user:dana:rwx
     sudo -u bob touch /home/bob/new-after-acl.txt
-    getfacl /home/bob/new-after-acl.txt               # user:dana:rw-  (inherited)
+    getfacl /home/bob/new-after-acl.txt               # user:dana:rwx  #effective:rw-  (inherited; the mask limits it)
     sudo -u dana ls /home/bob
     sudo -u dana touch /home/bob/from-dana.txt
     ls -ld /home/bob                                  # still owned by bob (note the trailing +)

@@ -64,7 +64,7 @@ Use the [17a Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sh
 | 4 | Scheduling, services, time, networking | 12, 13 | [25](25-administration-core-labs.md), [26](26-networking-users-and-security-labs.md) | Timers, chrony, nmcli, firewalld verified after reboot |
 | 5 | Users, sudo, security, persistence | 14, 15, 16 | [26](26-networking-users-and-security-labs.md) | SELinux, SSH keys, sudo verified after reboot |
 | 6 | Mock Exam 1, timed by you | all | [18](18-mock-exam-1.md), grade with [19](19-mock-exam-1-solutions.md) | Every missed task redone and understood |
-| 7 | Mock Exam 2, then rest | all | [20](20-mock-exam-2.md), grade with [21](21-mock-exam-2-solutions.md), then the day-before checklist | Mistake log read once, then stop |
+| 7 | Mock Exam 2, then rest | all | [20](20-mock-exam-2.md), grade with [21](21-mock-exam-2-solutions.md), then the day-before checklist; [31](31-mock-exam-3.md) with [32](32-mock-exam-3-solutions.md) only if you have a spare day | Mistake log read once, then stop |
 
 ### Day 1: Baseline, essential tools, software, scripts
 
@@ -121,6 +121,7 @@ Use the [17a Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sh
 - [ ] Reset both VMs. Do [20 Mock Exam 2](20-mock-exam-2.md) the same way.
 - [ ] Grade with [21 Mock Exam 2 Solutions](21-mock-exam-2-solutions.md) and redo only the misses.
 - [ ] Read `~/mistake-log.txt` once, then work through the **Day before** checklist below.
+- [ ] Spare day available (for example, you started the plan a day early)? Do [31 Mock Exam 3](31-mock-exam-3.md) before Day 7 and grade it with [32 Mock Exam 3 Solutions](32-mock-exam-3-solutions.md). It covers objectives Mocks 1 and 2 touch lightly. Do not start it on the day before the exam.
 - [ ] Containers are optional: if you have time, [15a Containers with Podman](15a-containers-with-podman.md) is bonus material and is not on the RHEL 10 objective list.
 
 ## Commands, step by step
@@ -422,12 +423,14 @@ These are self-assessment tasks, in the style of the objectives. They have no of
 | LVM | Partition `/dev/vdb`: 1 GiB for LVM. Build VG `vgapp`, LV `lvapp` (512 MiB), XFS, mounted at `/data/app` by UUID, then extend `lvapp` by 256 MiB with its filesystem. | `sudo lvs`, `findmnt /data/app`, `df -h /data/app` |
 
 ??? warning "Disk reset (destroys everything on the disk)"
-    Run before the LVM row. Remove any `/data/app` line from `/etc/fstab` afterwards.
+    Run before the LVM row. This is the course's standard reset with one extra pattern, `data/app`, for this row's mount point.
     ```bash
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgapp 2>/dev/null
-    sudo wipefs -a /dev/vdb
+    sudo umount /data/app 2>/dev/null
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp|data/app)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 - [ ] Three tasks completed and verified.

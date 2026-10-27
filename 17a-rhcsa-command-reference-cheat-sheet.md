@@ -610,10 +610,10 @@ Without `-r` you must grow the filesystem yourself: `sudo xfs_growfs /data` (XFS
 | `mount -a` | Tests `/etc/fstab` mounts | `sudo mount -a` |
 | `xfs_growfs MOUNTPOINT` | Grows mounted XFS filesystem | `sudo xfs_growfs /data` |
 | `resize2fs DEVICE` | Grows ext filesystem | `sudo resize2fs /dev/vgdata/lvfiles` |
-| `mount -t nfs HOST:PATH MOUNTPOINT` | Mounts NFS share now | `sudo mount -t nfs servera:/share /mnt/share` |
+| `mount -t nfs HOST:PATH MOUNTPOINT` | Mounts NFS share now | `sudo mount -t nfs serverb:/share /mnt/share` |
 | `umount MOUNTPOINT` | Unmounts NFS share too | `sudo umount /mnt/share` |
 | `exportfs -rav` | Re-exports NFS exports | `sudo exportfs -rav` |
-| `showmount -e HOST` | Lists NFS exports from server | `showmount -e servera` |
+| `showmount -e HOST` | Lists NFS exports from server | `showmount -e serverb` |
 | `systemctl enable --now nfs-server` | Starts and enables NFS server | `sudo systemctl enable --now nfs-server` |
 | `systemctl enable --now autofs` | Starts and enables autofs | `sudo systemctl enable --now autofs` |
 | `cat /etc/auto.master` | Shows autofs master map | `cat /etc/auto.master` |
@@ -1140,8 +1140,6 @@ Example service-side config reminder:
 
 ## Bonus (optional, not on the RHEL 10 list): Containers and Quadlet
 
-## Containers and systemd
-
 !!! note "Supporting skill (not a listed RHEL 10 objective)"
     The official RHEL 10 EX200 objective list has no container objectives. This section is an optional add-on for real-world administration; skip it until everything above is solid, and leave it out of your self-scoring.
 
@@ -1178,7 +1176,7 @@ Learn it first in [15a Containers with Podman](15a-containers-with-podman.md), t
 | `-p HOST:CTR` | maps host port to container port (this image listens on 8080 inside) | `-p 8080:8080` |
 | `-v HOSTDIR:CTRDIR:Z` | mounts volume and relabels for SELinux | `-v /webcontent:/var/www/html:Z` |
 | `--restart=always` | restart policy | `podman run --restart=always ...` |
-| `--rm` | remove container when it exits | `podman run --rm ubi10/ubi date` |
+| `--rm` | remove container when it exits | `podman run --rm registry.access.redhat.com/ubi10/ubi date` |
 
 ### Container Verification Pattern
 
@@ -1226,7 +1224,7 @@ Typical workflow (rootful):
 
 1. save file as `/etc/containers/systemd/web.container`
 2. run `sudo systemctl daemon-reload`
-3. run `sudo systemctl start web.service` (do not run `systemctl enable`: Quadlet-generated units are transient and enabling fails; autostart at boot comes from the `[Install]` section in the `.container` file)
+3. run `sudo systemctl start web.service` (do not run `systemctl enable`: Quadlet-generated units are generated at `daemon-reload` and cannot be enabled; autostart at boot comes from the `[Install]` section in the `.container` file)
 4. verify with `systemctl status web.service`
 5. verify ports with `ss -tuln`
 
@@ -1329,17 +1327,18 @@ sudo chage -l davis
 ### Create tar.gz Backup
 
 ```bash
-tar -czvf /tmp/backup.tar.gz /etc/ssh
-tar -tzvf /tmp/backup.tar.gz
+sudo tar -czvf /var/tmp/backup.tar.gz /etc/ssh
+sudo tar -tzvf /var/tmp/backup.tar.gz
 ```
 
-??? warning "Disk reset (destroys everything on the disk)"
-    Storage recipes below use the empty 2 GiB spare disk `/dev/vdb` (`/dev/vdc` for the second disk). Run this once before each recipe, replacing `vdb` with `vdc` where needed. Remove any related `/etc/fstab` lines afterwards.
+??? warning "Disk reset"
+    Storage recipes below use the empty 2 GiB spare disk `/dev/vdb` (`/dev/vdc` for the second disk). Run this once before each recipe, replacing `vdb` with `vdc` where needed. It also removes the related `/etc/fstab` lines.
     ```bash
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgapp 2>/dev/null
-    sudo wipefs -a /dev/vdb
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 ### Create GPT, PV, VG, LV, ext4, and Mount
@@ -1377,8 +1376,8 @@ sudo mkdir -p /record
 UUID=$(sudo blkid -s UUID -o value /dev/vgapp/lvapp)
 echo "UUID=$UUID /record ext4 defaults 0 0" | sudo tee -a /etc/fstab
 sudo mount -a
-vgs -o +vg_extent_size vgapp
-lvs /dev/vgapp/lvapp
+sudo vgs -o +vg_extent_size vgapp
+sudo lvs /dev/vgapp/lvapp
 findmnt /record
 ```
 
@@ -1386,7 +1385,7 @@ findmnt /record
 
 ```bash
 sudo mkdir -p /mnt/share
-sudo mount -t nfs servera:/share /mnt/share
+sudo mount -t nfs serverb:/share /mnt/share
 findmnt /mnt/share
 ```
 
@@ -1414,11 +1413,15 @@ sudo dnf repolist
 ### Open HTTPD on Port 85 with SELinux and Firewall
 
 ```bash
+sudo dnf install -y httpd
+echo 'Listen 85' | sudo tee /etc/httpd/conf.d/port85.conf
 sudo semanage port -a -t http_port_t -p tcp 85
 sudo firewall-cmd --add-port=85/tcp --permanent
 sudo firewall-cmd --reload
+sudo systemctl enable httpd
+sudo systemctl restart httpd        # restart, not enable --now: httpd may already be running on the old config
 sudo ss -tuln | grep :85
-sudo semanage port -l | grep http_port_t
+sudo semanage port -l | grep -w 85
 ```
 
 ### Create and Enable a Custom systemd Service
@@ -1480,7 +1483,7 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 sudo systemctl daemon-reload
-sudo systemctl start web.service        # not "enable": generated units cannot be enabled
+sudo systemctl start web.service        # not "enable": Quadlet-generated units cannot be enabled
 systemctl status web.service
 ss -tuln | grep :8080
 ```
