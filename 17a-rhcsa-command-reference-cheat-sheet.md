@@ -1,4 +1,16 @@
+---
+description: One-page command reference for the RHCSA (EX200, RHEL 10) objectives, with examples, verification commands and quick recipes.
+---
+
 # RHCSA Command Reference Cheat Sheet
+
+!!! info "How to use this sheet"
+    1. **Find the section** that matches the task type (each section starts with a line naming the official objective it covers).
+    2. **Copy the example, swap the placeholders** (`FILE`, `USER`, `DEVICE`, ...) for the real values.
+    3. **Run it, then verify** with one command from the "Verification Commands" table near the end.
+    4. **If it must survive a reboot, reboot and check again.**
+
+    This is a reference, not a lesson: if a command is new to you, read the matching lesson first. Search the page (press `/`) for a command name.
 
 This is a fast command reference for revision. It is not a replacement for the lesson files. Use it when you need to remember:
 
@@ -45,11 +57,13 @@ Use this sheet in the same order you would build exam muscle memory:
 8. Networking
 9. Users and groups
 10. Security
-11. Containers and advanced systemd work if your exam version expects it
+11. Containers and Quadlet (**optional, not on the RHEL 10 objective list**; practice only after everything above)
 
 ---
 
 ## Core: Essential Tools
+
+**Official objectives:** Understand and use essential tools (shell prompt and syntax, redirection, grep and regular expressions, SSH, switching users, tar/gzip/bzip2, editing and managing files, hard and soft links, ugo/rwx permissions, man/info//usr/share/doc).
 
 ## Shell and Offline Help
 
@@ -151,7 +165,7 @@ Use this sheet in the same order you would build exam muscle memory:
 | Find regular files only | `find DIR -type f` |
 | Stay at top level only | `find DIR -maxdepth 1 -type f` |
 | Find files older than 180 days | `find /etc -maxdepth 1 -type f -mtime +180` |
-| Copy search results somewhere | `find DIR ... -exec cp {} TARGETDIR \\;` |
+| Copy search results somewhere | `find DIR ... -exec cp {} TARGETDIR \;` |
 
 ## Archives and Compression
 
@@ -213,6 +227,10 @@ Use this sheet in the same order you would build exam muscle memory:
 |---|---|---|
 | `ln TARGET LINK` | Creates hard link | `ln report.txt report.hard` |
 | `ln -s TARGET LINK` | Creates symbolic link | `ln -s report.txt report.soft` |
+| `chown USER FILE` | Changes the owner | `sudo chown alice report.txt` |
+| `chown USER:GROUP FILE` | Changes owner and group together | `sudo chown alice:labteam report.txt` |
+| `chown :GROUP DIR` | Changes only the group | `sudo chown :labteam /srv/projects` |
+| `chgrp GROUP FILE` | Changes the group | `sudo chgrp labteam report.txt` |
 | `chmod MODE FILE` | Changes permissions numerically | `chmod 644 file.txt` |
 | `chmod u+x FILE` | Adds execute permission to user | `chmod u+x script.sh` |
 | `chmod g-w FILE` | Removes group write permission | `chmod g-w shared.txt` |
@@ -276,6 +294,8 @@ Use this sheet in the same order you would build exam muscle memory:
 
 ## Core: Manage Software
 
+**Official objectives:** Configure access to RPM repositories; Install and remove RPM software packages; Configure access to Flatpak repositories; Install and remove Flatpak software packages. Also covers: Install and update software packages from Red Hat Content Delivery Network, a remote repository, or from the local file system.
+
 ## Software Management
 
 | Command | What it does | Example with parameters |
@@ -300,6 +320,28 @@ Use this sheet in the same order you would build exam muscle memory:
 | `flatpak remote-add --if-not-exists NAME URL` | Adds Flatpak remote | `flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo` |
 | `flatpak install REMOTE APPID` | Installs Flatpak app | `flatpak install flathub org.gnome.gedit` |
 | `flatpak uninstall APPID` | Removes Flatpak app | `flatpak uninstall org.gnome.gedit` |
+| `flatpak list` | Lists installed Flatpak apps and runtimes | `flatpak list` |
+| `flatpak update` | Updates installed Flatpak apps and runtimes | `flatpak update` |
+| `flatpak remote-delete NAME` | Removes a Flatpak remote | `flatpak remote-delete flathub` |
+| `flatpak search TEXT` | Searches the configured remotes | `flatpak search gedit` |
+| `dnf update` | Updates all installed RPM packages | `sudo dnf update` |
+| `dnf install --nogpgcheck ./FILE.rpm` | Installs a local RPM without a signature check (lab only) | `sudo dnf install --nogpgcheck ./pkg.rpm` |
+
+### Flatpak Quick Pattern
+
+| Step | Command |
+|---|---|
+| 1. Add the remote (system-wide, needs root) | `sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo` |
+| 2. Check the remote exists | `flatpak remotes` |
+| 3. Install the app | `sudo flatpak install flathub org.gnome.gedit` (add `-y` to skip the prompt) |
+| 4. Verify | `flatpak list` |
+| 5. Update | `sudo flatpak update` |
+| 6. Remove | `sudo flatpak uninstall org.gnome.gedit` |
+
+- Without `sudo` (or with `--user`) the remote and app are installed for your user only; with `sudo` (or `--system`) they are system-wide. Use the same scope for every step.
+- A remote is a name plus a URL or a `.flatpakrepo` file; `flatpak remote-add NAME FILE_OR_URL` accepts either.
+
+<!-- VERIFY: which Flatpak remote(s) RHEL 10 ships preconfigured and whether the exam-style lab uses a local remote; the Flathub URL above is a placeholder example and needs internet access -->
 
 ### Add a `.repo` File Quickly
 
@@ -342,6 +384,8 @@ gpgcheck=0
 
 ## Core: Create Simple Shell Scripts
 
+**Official objectives:** Conditionally execute code (use of: if, test, [], etc.); Use Looping constructs (for, etc.) to process file, command line input; Process script inputs ($1, $2, etc.); Processing output of shell commands within a script.
+
 ## Scripting Basics
 
 | Command or Pattern | What it does | Example with parameters |
@@ -371,6 +415,8 @@ gpgcheck=0
 
 ## Core: Operate Running Systems
 
+**Official objectives:** Boot, reboot, and shut down a system normally; Boot systems into different targets manually; Interrupt the boot process in order to gain access to a system; Identify CPU/memory intensive processes and kill processes; Adjust process scheduling; Manage tuning profiles; Locate and interpret system log files and journals; Preserve system journals; Start, stop, and check the status of network services; Securely transfer files between systems.
+
 ## Boot, Targets, Processes, and Logs
 
 | Command | What it does | Example with parameters |
@@ -393,9 +439,19 @@ gpgcheck=0
 | `journalctl -b` | Shows current boot logs | `journalctl -b` |
 | `journalctl -u SERVICE` | Shows one service's logs | `journalctl -u sshd` |
 | `journalctl -p err -b` | Shows current boot error logs | `journalctl -p err -b` |
+| `journalctl -b -1` | Shows the previous boot (needs persistent journal) | `journalctl -b -1` |
+| `journalctl --list-boots` | Lists the boots the journal remembers | `journalctl --list-boots` |
+| `journalctl --since "TIME"` | Shows entries since a time | `journalctl --since "10 minutes ago"` |
+| `journalctl --disk-usage` | Shows how much disk the journal uses | `journalctl --disk-usage` |
+| `top` then `P` / `M` | Sorts `top` by CPU / memory | `top` |
+| `ps aux --sort=-%cpu` | Lists processes, busiest CPU first | `ps aux --sort=-%cpu | head` |
+| `ps aux --sort=-%mem` | Lists processes, biggest memory first | `ps aux --sort=-%mem | head` |
 | `tuned-adm list` | Lists tuning profiles | `tuned-adm list` |
 | `tuned-adm active` | Shows active tuning profile | `sudo tuned-adm active` |
 | `tuned-adm profile NAME` | Sets tuning profile | `sudo tuned-adm profile balanced` |
+| `tuned-adm recommend` | Shows the profile tuned recommends for this machine | `tuned-adm recommend` |
+| `tuned-adm verify` | Checks the active profile is applied | `sudo tuned-adm verify` |
+| `tuned-adm off` | Turns tuning off | `sudo tuned-adm off` |
 | `mount -o remount,rw /sysroot` | Makes the recovery root writable | `mount -o remount,rw /sysroot` |
 | `chroot /sysroot` | Enters the repaired system root | `chroot /sysroot` |
 | `touch /.autorelabel` | Forces SELinux relabel on next boot | `touch /.autorelabel` |
@@ -411,6 +467,45 @@ gpgcheck=0
 | Prepare SELinux relabel | `touch /.autorelabel` |
 | Leave and reboot | `exit` -> `exit` -> reboot |
 
+### Boot Into a Target From the GRUB Menu (one boot only)
+
+| Step | Action |
+|---|---|
+| 1 | Reboot and press `e` on the highlighted GRUB entry |
+| 2 | Find the line that starts with `linux` and go to its end (`End` key) |
+| 3 | Append a space and `systemd.unit=rescue.target` (or `emergency.target`, `multi-user.target`, `graphical.target`) |
+| 4 | Press `Ctrl+x` to boot with that edit |
+| 5 | Verify with `systemctl get-default` (the default is unchanged) and `systemctl list-units --type=target` |
+
+- The edit applies to this boot only. To change the default for every boot use `sudo systemctl set-default multi-user.target`.
+- Use `rd.break` on the same `linux` line instead of `systemd.unit=` for the root-password reset pattern below.
+
+<!-- VERIFY: rescue.target and emergency.target ask for the root password on RHEL 10; confirm the prompt and that rd.break still lands in the initramfs shell -->
+
+### tuned Quick Pattern
+
+| Step | Command |
+|---|---|
+| Make sure the daemon runs | `sudo dnf install tuned` then `sudo systemctl enable --now tuned` |
+| See profiles and the active one | `tuned-adm list` |
+| Ask for the recommended profile | `tuned-adm recommend` |
+| Switch profile | `sudo tuned-adm profile throughput-performance` |
+| Verify | `tuned-adm active` and `sudo tuned-adm verify` |
+
+The active profile is stored by `tuned` itself, so it survives a reboot as long as `tuned.service` is enabled.
+
+### Preserve System Journals (persist across reboots)
+
+| Step | Command |
+|---|---|
+| Set storage mode | `sudoedit /etc/systemd/journald.conf` and set `Storage=persistent` under `[Journal]` |
+| Create the directory | `sudo mkdir -p /var/log/journal` |
+| Apply ownership and permissions | `sudo systemd-tmpfiles --create --prefix /var/log/journal` |
+| Restart and flush to disk | `sudo systemctl restart systemd-journald` then `sudo journalctl --flush` |
+| Verify | `ls -ld /var/log/journal` and `journalctl --list-boots` (after a reboot there should be two or more boots) |
+
+See also "Persistent journald Pattern" in the Security section below.
+
 ### Running Systems Muscle Memory Drill
 
 | Goal | Fast command flow |
@@ -425,6 +520,8 @@ gpgcheck=0
 
 ## Core: Configure Local Storage
 
+**Official objectives:** List, create, and delete partitions on GPT disks; Create and remove physical volumes; Assign physical volumes to volume groups; Create and delete logical volumes; Configure systems to mount file systems at boot by universally unique ID (UUID) or label; Add new partitions and logical volumes, and swap to a system non-destructively.
+
 ## Storage, Partitions, LVM, and Swap
 
 | Command | What it does | Example with parameters |
@@ -438,12 +535,20 @@ gpgcheck=0
 | `pvcreate DEVICE` | Creates physical volume | `sudo pvcreate /dev/vdb1` |
 | `pvs` | Lists physical volumes | `pvs` |
 | `vgcreate VG DEVICE` | Creates volume group | `sudo vgcreate vgdata /dev/vdb1` |
-| `vgcreate -s SIZE VG DEVICE` | Creates volume group with custom PE size | `sudo vgcreate -s 16M vgi /dev/vdb1` |
+| `vgcreate -s SIZE VG DEVICE` | Creates volume group with custom PE size | `sudo vgcreate -s 16M vgapp /dev/vdb1` |
 | `vgs` | Lists volume groups | `vgs` |
 | `lvcreate -n LV -L SIZE VG` | Creates logical volume | `sudo lvcreate -n lvdata -L 500M vgdata` |
-| `lvcreate -l EXTENTS -n LV VG` | Creates logical volume by extent count | `sudo lvcreate -l 60 -n lvi vgi` |
+| `lvcreate -l EXTENTS -n LV VG` | Creates logical volume by extent count | `sudo lvcreate -l 60 -n lvapp vgapp` |
 | `lvs` | Lists logical volumes | `lvs` |
+| `vgextend VG DEVICE` | Adds a physical volume to an existing VG | `sudo vgextend vgdata /dev/vdc1` |
 | `lvextend -L +SIZE LVPATH` | Extends logical volume | `sudo lvextend -L +200M /dev/vgdata/lvdata` |
+| `lvextend -r -L +SIZE LVPATH` | Extends the LV and grows its filesystem (XFS or ext4) in one step | `sudo lvextend -r -L +200M /dev/vgdata/lvdata` |
+| `lvextend -r -l +100%FREE LVPATH` | Extends the LV into all free space and grows the filesystem | `sudo lvextend -r -l +100%FREE /dev/vgdata/lvdata` |
+| `parted -s DEVICE ...` | Runs `parted` non-interactively | `sudo parted -s /dev/vdb mklabel gpt mkpart primary 1MiB 1GiB` |
+| `fdisk DEVICE` | Interactive partitioning (`g` new GPT, `n` new partition, `d` delete, `w` write) | `sudo fdisk /dev/vdb` |
+| `partprobe DEVICE` | Asks the kernel to re-read the partition table | `sudo partprobe /dev/vdb` |
+| `vgs -o +vg_extent_size` | Shows the VG extent (PE) size, which plain `vgs` does not | `vgs -o +vg_extent_size vgdata` |
+| `pvs -o +pv_free` | Shows free space per PV | `pvs -o +pv_free` |
 | `lvremove LVPATH` | Removes logical volume | `sudo lvremove /dev/vgdata/lvdata` |
 | `vgremove VG` | Removes volume group | `sudo vgremove vgdata` |
 | `pvremove DEVICE` | Removes physical volume metadata | `sudo pvremove /dev/vdb1` |
@@ -464,6 +569,17 @@ gpgcheck=0
 | `LE` | logical extent in an LV | one LV chunk mapped to a PE |
 | LV path | full LV device path | `/dev/vgdata/lvfiles` |
 
+### Grow a Mounted LV (Add a PV, Extend, Resize the Filesystem)
+
+| Step | Command |
+|---|---|
+| 1. Check free space in the VG | `sudo vgs vgdata` (look at `VFree`) |
+| 2. If there is not enough, add a PV | `sudo pvcreate /dev/vdc1` then `sudo vgextend vgdata /dev/vdc1` |
+| 3. Extend the LV and grow the filesystem | `sudo lvextend -r -L +200M /dev/vgdata/lvdata` |
+| 4. Verify | `lvs /dev/vgdata/lvdata` and `df -h /data` |
+
+Without `-r` you must grow the filesystem yourself: `sudo xfs_growfs /data` (XFS, takes the mount point) or `sudo resize2fs /dev/vgdata/lvdata` (ext4, takes the device). XFS can only grow, never shrink.
+
 ### Storage Muscle Memory Drill
 
 | Goal | Fast command flow |
@@ -477,6 +593,8 @@ gpgcheck=0
 ---
 
 ## Core: Create and Configure File Systems
+
+**Official objectives:** Create, mount, unmount, and use VFAT, ext4, and XFS file systems; Mount and unmount network file systems using NFS; Configure autofs; Extend existing logical volumes; Diagnose and correct file permission problems.
 
 ## Filesystems, Mounts, NFS, and autofs
 
@@ -518,6 +636,19 @@ gpgcheck=0
 | Trigger the mount | `ls /remoteuser/user20` |
 | Verify the result | `mount | grep remoteuser` |
 
+### autofs Wildcard Map (one line for every user directory)
+
+| Goal | Command or file |
+|---|---|
+| Master map entry | `echo '/remoteuser /etc/auto.remoteuser' | sudo tee -a /etc/auto.master` (or a file in `/etc/auto.master.d/NAME.autofs`) |
+| Wildcard map line (`*` = the name you ask for, `&` = that same name) | `echo '* -rw,sync serverb:/remoteuser/&' | sudo tee /etc/auto.remoteuser` |
+| Start and enable | `sudo systemctl enable --now autofs` |
+| Trigger one mount | `ls /remoteuser/alice` (mounts `serverb:/remoteuser/alice`) |
+| Verify | `mount | grep remoteuser` |
+| After editing a map | `sudo systemctl reload autofs` |
+
+Single-quote the line so the shell does not expand `*` or `&`. The mount point does not exist until you access it; that is normal.
+
 ### Filesystems and Mounts Muscle Memory Drill
 
 | Goal | Fast command flow |
@@ -532,6 +663,8 @@ gpgcheck=0
 
 ## Core: Deploy, Configure, and Maintain Systems
 
+**Official objectives:** Schedule tasks using at, cron and systemd timer units; Start and stop services and configure services to start automatically at boot; Configure systems to boot into a specific target automatically; Configure time service clients; Install and update software packages from Red Hat Content Delivery Network, a remote repository, or from the local file system; Modify the system bootloader.
+
 ## Scheduling, Time, and Bootloader
 
 | Command | What it does | Example with parameters |
@@ -541,8 +674,8 @@ gpgcheck=0
 | `atrm JOBID` | Removes queued `at` job | `atrm 3` |
 | `crontab -e` | Edits current user's cron jobs | `crontab -e` |
 | `crontab -l` | Lists current user's cron jobs | `crontab -l` |
-| `crontab -e -u USER` | Edits another user's cron jobs | `sudo crontab -e -u natasha` |
-| `crontab -l -u USER` | Lists another user's cron jobs | `sudo crontab -l -u natasha` |
+| `crontab -e -u USER` | Edits another user's cron jobs | `sudo crontab -e -u alice` |
+| `crontab -l -u USER` | Lists another user's cron jobs | `sudo crontab -l -u alice` |
 | `systemctl list-timers` | Lists timer units | `systemctl list-timers` |
 | `timedatectl` | Shows time and sync status | `timedatectl` |
 | `chronyc sources` | Shows time sources | `chronyc sources` |
@@ -551,6 +684,22 @@ gpgcheck=0
 | `grubby --default-kernel` | Shows current default kernel | `sudo grubby --default-kernel` |
 | `grubby --update-kernel=ALL --args="ARG"` | Adds kernel argument | `sudo grubby --update-kernel=ALL --args="quiet"` |
 | `grubby --update-kernel=ALL --remove-args="ARG"` | Removes kernel argument | `sudo grubby --update-kernel=ALL --remove-args="quiet"` |
+| `grubby --set-default=PATH` | Sets the default kernel entry | `sudo grubby --set-default=/boot/vmlinuz-$(uname -r)` |
+| `grub2-mkconfig -o PATH` | Regenerates the GRUB configuration after editing `/etc/default/grub` | `sudo grub2-mkconfig -o /boot/grub2/grub.cfg` |
+| `grub2-editenv list` | Shows the saved GRUB environment (saved default entry) | `sudo grub2-editenv list` |
+
+### Modify the Bootloader (persistent kernel arguments)
+
+| Goal | Command |
+|---|---|
+| Add an argument to every kernel entry (preferred) | `sudo grubby --update-kernel=ALL --args="audit=1"` |
+| Check it was stored | `sudo grubby --info=ALL | grep args` |
+| Remove an argument | `sudo grubby --update-kernel=ALL --remove-args="audit=1"` |
+| Alternative: edit the defaults file | `sudoedit /etc/default/grub` (change `GRUB_CMDLINE_LINUX`, `GRUB_TIMEOUT`) |
+| Rebuild the config after that edit | `sudo grub2-mkconfig -o /boot/grub2/grub.cfg` |
+| Verify after a reboot | `cat /proc/cmdline` |
+
+<!-- VERIFY: on RHEL 10 the generated config path is /boot/grub2/grub.cfg on both BIOS and UEFI (older releases used /boot/efi/EFI/redhat/grub.cfg on UEFI) -->
 
 ### Common Cron Patterns
 
@@ -558,7 +707,7 @@ gpgcheck=0
 |---|---|
 | Run every 5 minutes | `*/5 * * * * COMMAND` |
 | Run at reboot | `@reboot /bin/bash /usr/local/bin/startup-check.sh` |
-| Edit another user's cron | `sudo crontab -e -u natasha` |
+| Edit another user's cron | `sudo crontab -e -u alice` |
 
 ### Chrony Client Pattern
 
@@ -662,6 +811,62 @@ Meaning:
 - run every hour on the hour
 - if the system was down, run missed jobs after boot
 
+### Full systemd Timer Example (service + timer)
+
+Setup: create the job, then the two unit files.
+
+```bash
+sudo tee /usr/local/bin/report.sh <<'EOF'
+#!/bin/bash
+date >> /var/tmp/report.log
+EOF
+sudo chmod +x /usr/local/bin/report.sh
+
+sudo tee /etc/systemd/system/report.service <<'EOF'
+[Unit]
+Description=Write a timestamp to the report log
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/report.sh
+EOF
+
+sudo tee /etc/systemd/system/report.timer <<'EOF'
+[Unit]
+Description=Run report.service every 5 minutes
+
+[Timer]
+OnCalendar=*:0/5
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now report.timer
+systemctl list-timers report.timer
+systemctl is-enabled report.timer
+```
+
+Rules that trip people up:
+
+- Enable and start the **`.timer`**, not the `.service`. The service has no `[Install]` section on purpose.
+- The `.timer` triggers the `.service` with the same base name.
+- `Type=oneshot` suits a job that runs and exits.
+
+Check a schedule before you rely on it:
+
+| Command | What it shows |
+|---|---|
+| `systemd-analyze calendar "*:0/5"` | the normalised form and the next elapse time |
+| `systemd-analyze calendar "Mon..Fri 09:00"` | weekdays at 09:00 |
+| `systemd-analyze calendar --iterations=3 "daily"` | the next three run times |
+| `systemctl list-timers --all` | every timer, when it last ran, when it runs next |
+| `journalctl -u report.service -b` | output of past runs |
+
+Other schedule forms: `OnBootSec=2min` (2 minutes after boot), `OnUnitActiveSec=1h` (1 hour after the last run).
+
 ### Fast systemd Verification Pattern
 
 | Task | Command |
@@ -686,6 +891,8 @@ Meaning:
 
 ## Core: Manage Basic Networking
 
+**Official objectives:** Configure IPv4 and IPv6 addresses; Configure hostname resolution; Configure network services to start automatically at boot; Restrict network access using firewalld and firewall-cmd.
+
 ## Networking and firewalld
 
 | Command | What it does | Example with parameters |
@@ -698,15 +905,40 @@ Meaning:
 | `nmcli connection modify NAME ipv4.method manual` | Sets static IPv4 mode | `sudo nmcli connection modify eth0 ipv4.method manual` |
 | `nmcli connection modify NAME ipv4.gateway GW` | Sets IPv4 gateway | `sudo nmcli connection modify eth0 ipv4.gateway 192.168.122.1` |
 | `nmcli connection modify NAME ipv4.dns DNS` | Sets DNS server | `sudo nmcli connection modify eth0 ipv4.dns 8.8.8.8` |
+| `nmcli connection modify NAME ipv6.method manual` | Sets static IPv6 mode | `sudo nmcli connection modify eth0 ipv6.method manual` |
+| `nmcli connection modify NAME ipv6.addresses ADDR/PREFIX` | Sets the IPv6 address | `sudo nmcli connection modify eth0 ipv6.addresses fd00:122::10/64` |
+| `nmcli connection modify NAME ipv6.gateway GW` | Sets the IPv6 gateway | `sudo nmcli connection modify eth0 ipv6.gateway fd00:122::1` |
+| `nmcli connection modify NAME ipv6.dns DNS` | Sets an IPv6 DNS server | `sudo nmcli connection modify eth0 ipv6.dns fd00:122::1` |
+| `nmcli connection modify NAME +ipv4.dns DNS` | Adds a DNS server without replacing the existing ones | `sudo nmcli connection modify eth0 +ipv4.dns 192.168.122.1` |
+| `nmcli connection modify NAME connection.autoconnect yes` | Brings the profile up automatically at boot | `sudo nmcli connection modify eth0 connection.autoconnect yes` |
 | `nmcli connection up NAME` | Brings connection up | `sudo nmcli connection up eth0` |
+| `ip -6 addr` | Shows IPv6 addresses | `ip -6 addr` |
+| `ip -6 route` | Shows the IPv6 routing table | `ip -6 route` |
+| `ping -6 ADDR` | Tests IPv6 reachability | `ping -6 -c 2 fd00:122::11` |
 | `hostnamectl set-hostname NAME` | Sets system hostname | `sudo hostnamectl set-hostname servera.lab.example` |
 | `getent hosts NAME` | Tests hostname resolution | `getent hosts servera.lab.example` |
+| `/etc/hosts` line | Static name resolution, checked before DNS | `echo '192.168.122.11 serverb.lab.example serverb' | sudo tee -a /etc/hosts` |
+| `cat /etc/resolv.conf` | Shows the resolvers in use (managed by NetworkManager) | `cat /etc/resolv.conf` |
+| `hostnamectl` | Shows the static hostname | `hostnamectl` |
 | `ss -tuln` | Shows listening TCP and UDP sockets | `ss -tuln` |
 | `firewall-cmd --list-all` | Shows zone details and allowed rules | `sudo firewall-cmd --list-all` |
 | `firewall-cmd --get-active-zones` | Shows active zones | `sudo firewall-cmd --get-active-zones` |
 | `firewall-cmd --add-service=NAME --permanent` | Permanently allows named service | `sudo firewall-cmd --add-service=http --permanent` |
 | `firewall-cmd --add-port=PORT/proto --permanent` | Permanently allows custom port | `sudo firewall-cmd --add-port=8080/tcp --permanent` |
 | `firewall-cmd --reload` | Reloads firewalld | `sudo firewall-cmd --reload` |
+
+### Static IPv4 + IPv6 Recipe (persistent)
+
+```bash
+nmcli -t -f NAME,DEVICE connection show --active      # find the profile name, e.g. "eth0"
+sudo nmcli connection modify eth0 ipv4.method manual ipv4.addresses 192.168.122.10/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.1
+sudo nmcli connection modify eth0 ipv6.method manual ipv6.addresses fd00:122::10/64
+sudo nmcli connection up eth0
+ip -4 addr show eth0
+ip -6 addr show eth0
+```
+
+`nmcli connection modify` writes a profile that survives reboot; `connection up` applies it now. Services that must start at boot: `sudo systemctl enable --now SERVICE`, then `systemctl is-enabled SERVICE`.
 
 ### Networking Muscle Memory Drill
 
@@ -721,6 +953,8 @@ Meaning:
 ---
 
 ## Core: Manage Users and Groups
+
+**Official objectives:** Create, delete, and modify local user accounts; Change passwords and adjust password aging for local user accounts; Create, delete, and modify local groups and group memberships; Configure privileged access.
 
 ## Users, Groups, Passwords, and Sudo
 
@@ -743,7 +977,15 @@ Meaning:
 | `passwd USER` | Sets or changes password | `sudo passwd alice` |
 | `chage -l USER` | Lists password aging | `sudo chage -l alice` |
 | `chage -M DAYS -m DAYS -W DAYS USER` | Sets password aging values | `sudo chage -M 90 -m 7 -W 14 alice` |
-| `chage -E DATE USER` | Sets account expiration date | `sudo chage -E 2026-05-01 alice` |
+| `chage -E DATE USER` | Sets account expiration date (use a future date; a past date locks the account at once) | `sudo chage -E 2027-12-31 alice` |
+| `chage -E -1 USER` | Removes the account expiration date | `sudo chage -E -1 alice` |
+| `chage -d 0 USER` | Forces a password change at next login | `sudo chage -d 0 alice` |
+| `chage -I DAYS USER` | Sets days of inactivity after password expiry before the account locks | `sudo chage -I 10 alice` |
+| `chage -M 99999 USER` | Effectively disables password expiry | `sudo chage -M 99999 alice` |
+| `usermod -L USER` / `usermod -U USER` | Locks / unlocks the password | `sudo usermod -L alice` |
+| `groupadd -g GID GROUP` | Creates a group with a specific GID | `sudo groupadd -g 3000 labteam` |
+| `gpasswd -d USER GROUP` | Removes a user from a group | `sudo gpasswd -d alice labteam` |
+| `echo 'USER:PASS' | chpasswd` | Sets a password non-interactively | `echo 'alice:Passw0rd!' | sudo chpasswd` |
 | `groups USER` | Shows user's groups | `groups alice` |
 | `visudo` | Safely edits sudoers | `sudo visudo` |
 | `visudo -c` | Checks sudoers syntax | `sudo visudo -c` |
@@ -757,6 +999,28 @@ Meaning:
 | Create user with custom home | `sudo useradd -m -d /custom/home USER` |
 | Move an existing user to a new home | `sudo usermod -d /custom/home -m USER` |
 | Create non-login account | `sudo useradd -s /sbin/nologin USER` |
+
+### Password Aging Recipe (`chage`)
+
+```bash
+sudo useradd -m alice
+echo 'alice:Passw0rd!' | sudo chpasswd
+sudo chage -M 90 -m 7 -W 14 -E 2027-12-31 alice
+sudo chage -l alice
+```
+
+```text title="Example output"
+Last password change                                    : Oct 27, 2026
+Password expires                                        : Jan 25, 2027
+Account expires                                         : Dec 31, 2027
+Minimum number of days between password change          : 7
+Maximum number of days between password change          : 90
+Number of days of warning before password expires       : 14
+```
+
+<!-- VERIFY: exact chage -l output layout; dates above are illustrative -->
+
+`/etc/login.defs` (`PASS_MAX_DAYS`, `PASS_MIN_DAYS`, `PASS_WARN_AGE`) sets the defaults for **new** users only; `chage` changes one existing user.
 
 ### Users and Groups Muscle Memory Drill
 
@@ -772,6 +1036,8 @@ Meaning:
 
 ## Core: Manage Security
 
+**Official objectives:** Configure firewall settings using firewall-cmd/firewalld; Manage default file permissions; Configure key-based authentication for SSH; Set enforcing and permissive modes for SELinux; List and identify SELinux file and process context; Restore default file contexts; Manage SELinux port labels; Use Boolean settings to modify system SELinux settings.
+
 ## SELinux and SSH Keys
 
 | Command | What it does | Example with parameters |
@@ -783,15 +1049,31 @@ Meaning:
 | `ls -Z PATH` | Shows file contexts | `ls -Z /var/www/html` |
 | `ps -eZ` | Shows process contexts | `ps -eZ | grep sshd` |
 | `restorecon -Rv PATH` | Restores default contexts recursively | `sudo restorecon -Rv /var/www/html` |
-| `semanage fcontext -a -t TYPE 'REGEX'` | Adds persistent file-context rule | `sudo semanage fcontext -a -t user_home_dir_t '/xfs(/.*)?'` |
+| `semanage fcontext -a -t TYPE 'REGEX'` | Adds persistent file-context rule | `sudo semanage fcontext -a -t httpd_sys_content_t '/data/xfs(/.*)?'` |
 | `getsebool -a` | Lists booleans | `getsebool -a | grep httpd` |
 | `setsebool -P BOOLEAN on` | Sets boolean persistently | `sudo setsebool -P httpd_can_network_connect on` |
 | `semanage port -l` | Lists SELinux port labels | `sudo semanage port -l | grep http` |
-| `semanage port -a -t TYPE -p proto PORT` | Adds SELinux port label | `sudo semanage port -a -t http_port_t -p tcp 8080` |
-| `semanage port -m -t TYPE -p proto PORT` | Modifies existing port label | `sudo semanage port -m -t http_port_t -p tcp 85` |
-| `semanage port -d -t TYPE -p proto PORT` | Deletes port label | `sudo semanage port -d -t http_port_t -p tcp 8080` |
+| `semanage port -a -t TYPE -p proto PORT` | Adds SELinux port label for a port that has no label yet | `sudo semanage port -a -t http_port_t -p tcp 85` |
+| `semanage port -m -t TYPE -p proto PORT` | Changes the label of a port that already has one (`-a` fails with "already defined") | `sudo semanage port -m -t http_port_t -p tcp 8080` |
+| `semanage port -d -t TYPE -p proto PORT` | Deletes a label you added locally (policy-defined ports cannot be deleted) | `sudo semanage port -d -t http_port_t -p tcp 85` |
 | `ssh-keygen` | Creates SSH key pair | `ssh-keygen` |
-| `ssh-copy-id USER@HOST` | Installs public key remotely | `ssh-copy-id student@serverb` |
+| `ssh-copy-id USER@HOST` | Installs public key remotely (the remote user needs a password the first time) | `ssh-copy-id student@serverb` |
+
+<!-- VERIFY: `semanage port -m` on a policy-defined port such as 8080 (http_cache_port_t) succeeds on RHEL 10 and `semanage port -d` on a locally added port (85) removes it -->
+
+
+### Label a Custom Directory (`semanage fcontext` + `restorecon`)
+
+Setup: create the directory first; `restorecon` on a path that does not exist fails.
+
+```bash
+sudo mkdir -p /data/xfs
+sudo semanage fcontext -a -t httpd_sys_content_t '/data/xfs(/.*)?'
+sudo restorecon -Rv /data/xfs
+ls -Zd /data/xfs
+```
+
+`semanage fcontext` only records the rule; `restorecon` applies it. `ls -Zd /home` shows `home_root_t` and `/home/USER` shows `user_home_dir_t`, so do not copy those types onto an unrelated directory. Check what a path would get with `matchpathcon /data/xfs`.
 
 ### HTTPD on Custom Port 85 with SELinux and firewalld
 
@@ -815,11 +1097,14 @@ Example service-side config reminder:
 
 | Goal | Command |
 |---|---|
+| Install the web server first | `sudo dnf install httpd` (this creates `/var/www/html`) and `sudo systemctl enable --now httpd` |
+| Change the document root | edit `/etc/httpd/conf/httpd.conf`: set `DocumentRoot "/srv/webcontent"` and add a `<Directory "/srv/webcontent">` block with `Require all granted` |
 | Change listening port | edit `/etc/httpd/conf/httpd.conf` and set `Listen 93` |
 | Label new SELinux port | `sudo semanage port -a -t http_port_t -p tcp 93` |
-| Label custom content root | `sudo semanage fcontext -a -t httpd_sys_content_t '/tekup/html(/.*)?'` |
-| Apply labels | `sudo restorecon -Rv /tekup/html` |
+| Label custom content root | `sudo semanage fcontext -a -t httpd_sys_content_t '/srv/webcontent(/.*)?'` |
+| Apply labels | `sudo restorecon -Rv /srv/webcontent` |
 | Open firewall | `sudo firewall-cmd --add-port=93/tcp --permanent` then `sudo firewall-cmd --reload` |
+| Restart the service | `sudo systemctl restart httpd` |
 | Verify locally | `curl http://localhost:93/` |
 
 ### SELinux Runtime and Boot Reminder
@@ -835,9 +1120,11 @@ Example service-side config reminder:
 | Goal | Command or file |
 |---|---|
 | Set persistent storage mode | edit `/etc/systemd/journald.conf` and set `Storage=persistent` |
+| Create the directory | `sudo mkdir -p /var/log/journal` then `sudo systemd-tmpfiles --create --prefix /var/log/journal` |
 | Restart journald | `sudo systemctl restart systemd-journald` |
+| Flush runtime logs to disk | `sudo journalctl --flush` |
 | Verify storage path | `ls -ld /var/log/journal` |
-| Verify logs after reboot | `journalctl -b` |
+| Verify logs after reboot | `journalctl --list-boots` and `journalctl -b -1` |
 
 ### Security Muscle Memory Drill
 
@@ -846,28 +1133,35 @@ Example service-side config reminder:
 | Check SELinux mode | `getenforce` and `sestatus` |
 | Fix file context | `ls -Z PATH` -> `restorecon -Rv PATH` |
 | Allow service behavior | `getsebool -a | grep NAME` -> `setsebool -P BOOLEAN on` |
-| Allow custom port | `semanage port -a/-m ...` |
+| Allow custom port | `semanage port -l | grep PORT` -> `semanage port -a ...` (new) or `-m ...` (already labelled) |
 | Use SSH keys | `ssh-keygen` -> `ssh-copy-id USER@HOST` |
 
 ---
 
-## Optional or Version-Specific: Containers and systemd Add-On
+## Bonus (optional, not on the RHEL 10 list): Containers and Quadlet
 
 ## Containers and systemd
 
-This section is useful for modern RHEL-style administration and may be version-specific depending on the exact RHCSA objective set. Keep it as an add-on reference.
+!!! note "Supporting skill (not a listed RHEL 10 objective)"
+    The official RHEL 10 EX200 objective list has no container objectives. This section is an optional add-on for real-world administration; skip it until everything above is solid, and leave it out of your self-scoring.
+
+Image used below: `registry.access.redhat.com/ubi10/httpd-24`. It serves on port **8080** inside the container, so publish it as `8080:8080`.
+
+<!-- VERIFY: the ubi10/httpd-24 image exists on registry.access.redhat.com, listens on 8080 and serves /var/www/html -->
+
+Learn it first in [15a Containers with Podman](15a-containers-with-podman.md), then use this section as the quick reference.
 
 ### Podman Core Commands
 
 | Command | What it does | Example with parameters |
 |---|---|---|
 | `podman images` | Lists local container images | `podman images` |
-| `podman pull IMAGE` | Downloads image | `podman pull registry.access.redhat.com/ubi9/ubi` |
+| `podman pull IMAGE` | Downloads image | `podman pull registry.access.redhat.com/ubi10/ubi` |
 | `podman ps` | Lists running containers | `podman ps` |
 | `podman ps -a` | Lists all containers | `podman ps -a` |
-| `podman run IMAGE` | Runs a container | `podman run ubi9/ubi echo hello` |
-| `podman run -d --name NAME IMAGE` | Runs detached named container | `podman run -d --name web quay.io/httpd/httpd-24` |
-| `podman run -d -p HOSTPORT:CONTAINERPORT IMAGE` | Publishes container port | `podman run -d --name web -p 8080:80 quay.io/httpd/httpd-24` |
+| `podman run IMAGE` | Runs a container | `podman run registry.access.redhat.com/ubi10/ubi echo hello` |
+| `podman run -d --name NAME IMAGE` | Runs detached named container | `podman run -d --name web registry.access.redhat.com/ubi10/httpd-24` |
+| `podman run -d -p HOSTPORT:CONTAINERPORT IMAGE` | Publishes container port | `podman run -d --name web -p 8080:8080 registry.access.redhat.com/ubi10/httpd-24` |
 | `podman exec -it NAME COMMAND` | Runs command inside running container | `podman exec -it web /bin/bash` |
 | `podman logs NAME` | Shows container logs | `podman logs web` |
 | `podman stop NAME` | Stops container | `podman stop web` |
@@ -881,10 +1175,10 @@ This section is useful for modern RHEL-style administration and may be version-s
 |---|---|---|
 | `-d` | detached mode | `podman run -d ...` |
 | `--name NAME` | assigns container name | `podman run --name db ...` |
-| `-p HOST:CTR` | maps host port to container port | `-p 8080:80` |
+| `-p HOST:CTR` | maps host port to container port (this image listens on 8080 inside) | `-p 8080:8080` |
 | `-v HOSTDIR:CTRDIR:Z` | mounts volume and relabels for SELinux | `-v /webcontent:/var/www/html:Z` |
 | `--restart=always` | restart policy | `podman run --restart=always ...` |
-| `--rm` | remove container when it exits | `podman run --rm ubi9/ubi date` |
+| `--rm` | remove container when it exits | `podman run --rm ubi10/ubi date` |
 
 ### Container Verification Pattern
 
@@ -917,8 +1211,8 @@ Description=HTTP container
 After=network-online.target
 
 [Container]
-Image=quay.io/httpd/httpd-24
-PublishPort=8080:80
+Image=registry.access.redhat.com/ubi10/httpd-24
+PublishPort=8080:8080
 Volume=/webcontent:/var/www/html:Z
 
 [Service]
@@ -932,20 +1226,25 @@ Typical workflow (rootful):
 
 1. save file as `/etc/containers/systemd/web.container`
 2. run `sudo systemctl daemon-reload`
-3. run `sudo systemctl enable --now web.service`
+3. run `sudo systemctl start web.service` (do not run `systemctl enable`: Quadlet-generated units are transient and enabling fails; autostart at boot comes from the `[Install]` section in the `.container` file)
 4. verify with `systemctl status web.service`
 5. verify ports with `ss -tuln`
 
+<!-- VERIFY: on RHEL 10 a rootful Quadlet unit with WantedBy=multi-user.target starts at boot without systemctl enable; check by rebooting and running systemctl is-active web.service -->
+
 #### Pattern 2 (legacy): Generate a systemd Unit From an Existing Container
 
-`podman generate systemd` is **deprecated** in favor of Quadlet, but you may still see it.
+!!! warning "Deprecated"
+    `podman generate systemd` is **deprecated** in favor of Quadlet (Pattern 1 above). It is kept here only so you can recognise it in older notes. Prefer a `.container` file.
+
+    <!-- VERIFY: podman generate systemd still present (deprecated) in the RHEL 10 podman package -->
 
 | Command | What it does | Example |
 |---|---|---|
 | `podman generate systemd --name NAME --files` | creates a unit file for a container | `podman generate systemd --name web --files` |
 
 ```bash
-sudo podman run -d --name web -p 8080:80 quay.io/httpd/httpd-24
+sudo podman run -d --name web -p 8080:8080 registry.access.redhat.com/ubi10/httpd-24
 sudo podman generate systemd --name web --files
 sudo mv container-web.service /etc/systemd/system/
 sudo systemctl daemon-reload
@@ -963,7 +1262,7 @@ When binding host directories into containers on SELinux systems:
 Example:
 
 ```bash
-sudo podman run -d --name web -p 8080:80 -v /webcontent:/var/www/html:Z quay.io/httpd/httpd-24
+sudo podman run -d --name web -p 8080:8080 -v /webcontent:/var/www/html:Z registry.access.redhat.com/ubi10/httpd-24
 ```
 
 ### Container Plus systemd Fast Verification Pattern
@@ -971,7 +1270,7 @@ sudo podman run -d --name web -p 8080:80 -v /webcontent:/var/www/html:Z quay.io/
 | Task | Command |
 |---|---|
 | Prove unit exists | `systemctl status web.service` |
-| Prove it starts at boot | `systemctl is-enabled web.service` |
+| Prove it starts at boot | Quadlet unit: reboot, then `systemctl is-active web.service` (`is-enabled` does not apply to generated units); legacy `generate systemd` unit: `systemctl is-enabled web.service` |
 | Prove container runs | `podman ps` |
 | Prove app port is listening | `ss -tuln | grep :8080` |
 | Prove logs | `journalctl -u web.service -b` and `podman logs web` |
@@ -995,8 +1294,8 @@ sudo podman run -d --name web -p 8080:80 -v /webcontent:/var/www/html:Z quay.io/
 | `semanage port -l | grep TYPE` | prove SELinux port label exists |
 | `journalctl -u SERVICE -b` | inspect current boot logs for a service |
 | `getent hosts HOST` | prove name resolution |
-| `podman ps` | prove container runs now |
-| `podman logs NAME` | inspect container logs |
+| `podman ps` | (Bonus, optional) prove container runs now |
+| `podman logs NAME` | (Bonus, optional) inspect container logs |
 
 ## Exam Habits for Using This Sheet
 
@@ -1034,10 +1333,19 @@ tar -czvf /tmp/backup.tar.gz /etc/ssh
 tar -tzvf /tmp/backup.tar.gz
 ```
 
+??? warning "Disk reset (destroys everything on the disk)"
+    Storage recipes below use the empty 2 GiB spare disk `/dev/vdb` (`/dev/vdc` for the second disk). Run this once before each recipe, replacing `vdb` with `vdc` where needed. Remove any related `/etc/fstab` lines afterwards.
+    ```bash
+    sudo umount /dev/vdb* 2>/dev/null
+    sudo swapoff /dev/vdb* 2>/dev/null
+    sudo vgremove -ff -y vgdata vgexam vgapp 2>/dev/null
+    sudo wipefs -a /dev/vdb
+    ```
+
 ### Create GPT, PV, VG, LV, ext4, and Mount
 
 ```bash
-sudo parted /dev/vdb
+sudo parted -s /dev/vdb mklabel gpt mkpart primary 1MiB 100% set 1 lvm on
 sudo pvcreate /dev/vdb1
 sudo vgcreate vgdata /dev/vdb1
 sudo lvcreate -n lvfiles -L 1G vgdata
@@ -1047,18 +1355,30 @@ sudo mount /dev/vgdata/lvfiles /data
 findmnt /data
 ```
 
-### Create LV by Extents and Mount
+That mount is gone after a reboot. Make it persistent:
 
 ```bash
-sudo vgcreate -s 16M vgi /dev/vdb1
-sudo lvcreate -l 60 -n lvi vgi
-sudo mkfs.ext4 /dev/vgi/lvi
+UUID=$(sudo blkid -s UUID -o value /dev/vgdata/lvfiles)
+echo "UUID=$UUID /data ext4 defaults 0 0" | sudo tee -a /etc/fstab
+sudo umount /data && sudo mount -a && findmnt /data
+```
+
+### Create LV by Extents and Mount
+
+Run the "Disk reset" block above first, then:
+
+```bash
+sudo parted -s /dev/vdb mklabel gpt mkpart primary 1MiB 100% set 1 lvm on
+sudo pvcreate /dev/vdb1
+sudo vgcreate -s 16M vgapp /dev/vdb1
+sudo lvcreate -l 60 -n lvapp vgapp
+sudo mkfs.ext4 /dev/vgapp/lvapp
 sudo mkdir -p /record
-UUID=$(sudo blkid -s UUID -o value /dev/vgi/lvi)
+UUID=$(sudo blkid -s UUID -o value /dev/vgapp/lvapp)
 echo "UUID=$UUID /record ext4 defaults 0 0" | sudo tee -a /etc/fstab
 sudo mount -a
-vgs vgi
-lvs /dev/vgi/lvi
+vgs -o +vg_extent_size vgapp
+lvs /dev/vgapp/lvapp
 findmnt /record
 ```
 
@@ -1079,6 +1399,8 @@ sudo systemctl enable --now autofs
 ls /remoteuser/user20
 mount | grep remoteuser
 ```
+
+Wildcard variant (every user directory with one line): `echo '* -rw,sync serverb:/remoteuser/&' | sudo tee /etc/auto.remoteuser`, then `sudo systemctl reload autofs`.
 
 ### Check CDN Registration and Enabled Repositories
 
@@ -1102,7 +1424,19 @@ sudo semanage port -l | grep http_port_t
 ### Create and Enable a Custom systemd Service
 
 ```bash
-sudo vi /etc/systemd/system/report.service
+sudo tee /etc/systemd/system/report.service <<'EOF'
+[Unit]
+Description=Simple custom report service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/report.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
 sudo systemctl daemon-reload
 sudo systemctl enable --now report.service
 systemctl status report.service
@@ -1113,17 +1447,48 @@ journalctl -u report.service -b
 
 ```bash
 sudoedit /etc/systemd/journald.conf
-# set Storage=persistent
+# set Storage=persistent under [Journal]
+sudo mkdir -p /var/log/journal
+sudo systemd-tmpfiles --create --prefix /var/log/journal
 sudo systemctl restart systemd-journald
+sudo journalctl --flush
 grep '^Storage=' /etc/systemd/journald.conf
 ls -ld /var/log/journal
 journalctl -b | tail
 ```
 
-### Run a Container Through systemd
+### Run a Container Through systemd (Bonus, optional)
+
+Preferred: Quadlet (rootful).
 
 ```bash
-sudo podman run -d --name web -p 8080:80 quay.io/httpd/httpd-24
+sudo mkdir -p /srv/webcontent
+sudo tee /etc/containers/systemd/web.container <<'EOF'
+[Unit]
+Description=HTTP container
+After=network-online.target
+
+[Container]
+Image=registry.access.redhat.com/ubi10/httpd-24
+PublishPort=8080:8080
+Volume=/srv/webcontent:/var/www/html:Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl start web.service        # not "enable": generated units cannot be enabled
+systemctl status web.service
+ss -tuln | grep :8080
+```
+
+Legacy (deprecated, see Pattern 2 above):
+
+```bash
+sudo podman run -d --name web -p 8080:8080 registry.access.redhat.com/ubi10/httpd-24
 sudo podman generate systemd --name web --files
 sudo mv container-web.service /etc/systemd/system/
 sudo systemctl daemon-reload
