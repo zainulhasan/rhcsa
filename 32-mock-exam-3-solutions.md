@@ -58,7 +58,7 @@ Mock 3 exists to train what [18 Mock Exam 1](18-mock-exam-1.md) and [20 Mock Exa
 | Manage SELinux port labels | not trained | not trained | Task 8 |
 | Use Boolean settings | not trained | not trained | Task 8 |
 
-Three objectives are still untrained by all three mocks: process scheduling and killing processes, and `umask`. Drill them with lesson [09](09-boot-targets-processes-logs-and-tuning.md), lesson [06](06-links-permissions-and-default-permissions.md) and the labs.
+Two objectives are still untrained by all three mocks: the process one (identify CPU and memory intensive processes, kill processes, process scheduling) and `umask`. Drill them with lesson [09](09-boot-targets-processes-logs-and-tuning.md), lesson [06](06-links-permissions-and-default-permissions.md) and the labs.
 
 ## Solution strategy
 
@@ -81,12 +81,12 @@ This is this course's own practice scheme: 100 points over 20 tasks. Your own ta
 |---|---|---|---|
 | 1 Local repo | 5 | `sudo dnf repolist`, `rpm -q tree`, `dnf info tree` | `localpractice` listed; `tree-...`; the installed package's repository is `localpractice` |
 | 2 Flatpak | 3 | `flatpak remotes`, `flatpak list --app` | `flathub` with `system`; only `org.gnome.gedit` listed |
-| 3 Aging and sudo | 6 | `sudo chage -l carol`, `stat -c '%U:%G %a' /etc/sudoers.d/webadmins`, `sudo visudo -c`, `sudo -l -U dana` | maximum 45, minimum 2, warning 7, `Dec 31, 2030`; `root:root 440`; `parsed OK`; `(root) NOPASSWD: /usr/bin/systemctl restart chronyd` |
+| 3 Aging and sudo | 6 | `sudo chage -l carol`, `stat -c '%U:%G %a' /etc/sudoers.d/webadmins`, `sudo visudo -c`, `sudo -l -U dana`, `sudo -u dana sudo -n systemctl restart chronyd; echo $?`, `sudo -u dana sudo -n systemctl restart sshd; echo $?` | maximum 45, minimum 2, warning 7, `Dec 31, 2030`; `root:root 440`; `parsed OK`; `(root) NOPASSWD: /usr/bin/systemctl restart chronyd`; `0`; refused (`a password is required`) and `1` |
 | 4 Permissions | 4 | `stat -c '%U:%G %a' /data/teamdocs`, `sudo -u bob touch /data/teamdocs/bob.txt`, `ls -l /data/teamdocs/bob.txt` | `root:labteam 2775`; no error; group `labteam` |
 | 5 Script | 6 | `dircount.sh /srv/countdemo /nope; echo $?`, `dircount.sh; echo $?` | `/srv/countdemo: 3 entries`, `/nope: not a directory`, `2`; usage line, `1` |
-| 6 Journal | 3 | `systemd-analyze cat-config systemd/journald.conf \| grep -E '^(Storage\|SystemMaxUse)'`, `ls /var/log/journal`, `journalctl --list-boots` | `Storage=persistent`, `SystemMaxUse=100M`; a machine-id directory; two or more boots after a reboot |
-| 7 Timer | 6 | `systemctl is-enabled dailyreport.timer`, `systemctl list-timers dailyreport.timer`, `journalctl -t dailyreport` | `enabled`; next run `03:30:00`; `daily report ran` |
-| 8 SELinux | 6 | `getsebool httpd_can_network_connect`, `sudo semanage port -l \| grep -w 8765`, `curl http://localhost:8765` | `on`; `http_port_t  tcp  8765, 80, ...`; `mock3 web` |
+| 6 Journal | 3 | `systemd-analyze cat-config systemd/journald.conf \| grep -E '^(Storage\|SystemMaxUse)'`, `ls /var/log/journal`, `journalctl --list-boots` | `Storage=persistent`, `SystemMaxUse=100M`; a machine-id directory; two or more boots after the first reboot of Task 18 |
+| 7 Timer | 6 | `systemctl is-enabled dailyreport.timer`, `systemctl is-enabled dailyreport.service`, `systemctl list-timers dailyreport.timer`, `journalctl -t dailyreport` | `enabled`; `static`; next run `03:30:00`; `daily report ran` |
+| 8 SELinux | 6 | `getsebool httpd_can_network_connect`, `sudo semanage boolean -l \| grep httpd_can_network_connect`, `sudo semanage port -l \| grep -w 8765`, `systemctl is-active httpd`, `systemctl is-enabled httpd`, `curl http://localhost:8765` | `on`; `on` in the current and default columns; `http_port_t  tcp  8765, 80, ...`; `active`; `enabled`; `mock3 web` |
 | 9 Firewall | 4 | `sudo firewall-cmd --permanent --list-services`, `sudo firewall-cmd --permanent --list-ports` | includes `https`; includes `8765/tcp` |
 | 10 Network | 5 | `ip -4 addr show dummy0`, `ip -6 addr show dummy0`, `nmcli connection show labnet` | `10.20.30.40/24`; `fd00:20::40/64`; both methods `manual`, autoconnect `yes` |
 | 11 Chrony | 4 | `chronyc sources`, `chronyc tracking`, `systemctl is-enabled chronyd` | `serverb.lab.example` with `^*` or `^+`; reference `192.168.122.11`; `enabled` |
@@ -95,7 +95,7 @@ This is this course's own practice scheme: 100 points over 20 tasks. Your own ta
 | 14 Swap and VFAT | 6 | `swapon --show`, `findmnt /mnt/usbdata`, `findmnt --verify` | `lvswap` 256M; `vfat`; no errors |
 | 15 autofs | 6 | `ls /remote/homes/alice`, `findmnt /remote/homes/alice`, `systemctl is-enabled autofs` | `welcome.txt`; `nfs4` from `serverb`; `enabled` |
 | 16 SSH | 5 | `sudo -iu bob ssh -o BatchMode=yes labb hostname` | `serverb.lab.example` |
-| 17 GRUB argument | 4 | `sudo grubby --info=DEFAULT`, `cat /proc/cmdline` (after boot) | `args=` contains `loglevel=5`; running command line contains it |
+| 17 GRUB argument | 4 | `sudo grubby --info=DEFAULT`, `cat /proc/cmdline` (after the first reboot of Task 18) | `args=` contains `loglevel=5`; running command line contains it |
 | 18 Targets | 5 | `systemctl get-default`, `cat /proc/cmdline` (in rescue and after) | `multi-user.target`; `systemd.unit=rescue.target` only in the one-off boot |
 | 19 rd.break | 6 | `su - alice`, `ls -Z /etc/shadow`, `ls /.autorelabel` | login works with `Recovered1`; `shadow_t`; `No such file or directory` |
 | 20 Reboot | 7 | the 14 checks of Task 20 (half a point each) | same outputs as before the reboot |
@@ -268,7 +268,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     journalctl --list-boots
     ```
     `systemd-analyze cat-config` prints the stock file followed by your drop-in, so `Storage=persistent` and `SystemMaxUse=100M` appear under `# /etc/systemd/journald.conf.d/persistent.conf`. <!-- VERIFY: systemd-analyze cat-config output layout for journald drop-ins on RHEL 10 -->
-    The first `ls` shows a directory named like the machine ID (illustrative: `4f2c...`). `--list-boots` shows several lines after the reboots in Tasks 17-19; with only one boot it lists a single line. With `Storage=persistent` journald creates `/var/log/journal` itself, but creating it first makes the intent explicit. A drop-in file is preferred over editing `/etc/systemd/journald.conf` because package updates leave it alone. <!-- VERIFY: RHEL 10 default Storage=auto and whether /var/log/journal exists on a fresh install -->
+    The first `ls` shows a directory named like the machine ID (illustrative: `4f2c...`). `--list-boots` shows several lines after the reboots in Tasks 18-19; before the first reboot it lists a single line (only boots after `Storage=persistent` took effect are kept). With `Storage=persistent` journald creates `/var/log/journal` itself, but creating it first makes the intent explicit. A drop-in file is preferred over editing `/etc/systemd/journald.conf` because package updates leave it alone. <!-- VERIFY: RHEL 10 default Storage=auto and whether /var/log/journal exists on a fresh install -->
 
 ### Task 7: systemd timer
 
@@ -381,7 +381,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     chronyc sources
     chronyc tracking
     ```
-    **Verify:** `chronyc sources` lists `serverb.lab.example` with `^*` (selected) or `^+` (combined) once it is reachable; `^?` right after the restart is normal, repeat after a few seconds. `chronyc tracking` shows `Reference ID : C0A87A0B (serverb.lab.example)` (`C0A87A0B` is `192.168.122.11` in hex). <!-- VERIFY: default pool/server lines in the stock RHEL 10 chrony.conf, and tracking output wording --> `chronyc sources -v` explains the symbols. Persistence: the configuration file and the enabled service survive a reboot.
+    **Verify:** `chronyc sources` lists `serverb.lab.example` with `^*` (selected) or `^+` (combined) once it is reachable; `^?` right after the restart is normal, repeat after a few seconds. `chronyc tracking` shows `Reference ID : C0A87A0B (serverb.lab.example)` (`C0A87A0B` is `192.168.122.11` in hex). <!-- VERIFY: default pool/server lines in the stock RHEL 10 chrony.conf, and tracking output wording --> `chronyc sources -v` explains the symbols. If the source stays `^?`: on `serverb` check `grep -E '^(allow|local)' /etc/chrony.conf` (Setup appends them to the main file, which `chronyd` always reads) and `sudo firewall-cmd --list-services` (it needs `ntp`). Persistence: the configuration file and the enabled service survive a reboot.
 
 ### Task 12: Tuned profile
 
@@ -422,7 +422,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     df -h /data/app
     cat /data/app/before.txt
     ```
-    Expected: two physical volumes, `lvapp  1300.00m`, a size of about 1.3G (it was under 500M before), and `before growth`. The numbers: the first PV gives 149 extents of 4 MiB, 125 of them are used by `lvapp`, so 24 are free; the second PV adds 255 extents, so 279 are free (1116 MiB), and +800 MiB takes 200 of them. `-r` runs the filesystem grow for you (`xfs_growfs` for XFS, which only works on a mounted filesystem). Without `-r`: `sudo lvextend -L +800M ...` then `sudo xfs_growfs /data/app`. An XFS filesystem can only grow, never shrink. The fstab line from Setup is unchanged, and the new PV is recorded in the LVM metadata, so this persists.
+    Expected: two physical volumes, `lvapp  1300.00m`, a size of about 1.3G (it was under 500M before), and `before growth`. The numbers: the first PV gives 149 extents of 4 MiB, 125 of them are used by `lvapp`, so 24 are free; the second PV adds 255 extents, so 279 are free (1116 MiB), and +800 MiB takes 200 of them. `-r` runs the filesystem grow for you (`xfs_growfs` for XFS, which only works on a mounted filesystem). Without `-r`: `sudo lvextend -L +800M ...` then `sudo xfs_growfs /data/app`. An XFS filesystem can only grow, never shrink. The fstab line from Setup is unchanged, and the new PV is recorded in the LVM metadata, so this persists. If `/dev/vdc1` does not appear after `partprobe`, run `sudo partx -a /dev/vdc` (same for `/dev/vdc2` in Task 14, because `/dev/vdc1` is already in use). <!-- VERIFY: partprobe on a disk whose first partition is an active PV on RHEL 10 -->
 
 ### Task 14: Swap on an LV and a VFAT mount by label
 
@@ -473,7 +473,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
 ??? success "Solution"
     ```bash
     sudo -iu bob ssh-keygen -t ed25519 -N '' -f /home/bob/.ssh/id_ed25519_labb
-    sudo -iu bob ssh-copy-id -o StrictHostKeyChecking=accept-new -i /home/bob/.ssh/id_ed25519_labb.pub bob@serverb
+    sudo -iu bob ssh-copy-id -o StrictHostKeyChecking=accept-new -i /home/bob/.ssh/id_ed25519_labb.pub bob@serverb.lab.example
     sudo -iu bob tee /home/bob/.ssh/config >/dev/null <<'EOF'
     Host labb
         HostName serverb.lab.example
@@ -488,7 +488,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     sudo -iu bob ssh labb 'stat -c "%a %n" ~/.ssh ~/.ssh/authorized_keys'
     sudo -iu bob stat -c '%a %n' /home/bob/.ssh/config
     ```
-    Expected: `serverb.lab.example`, then `700 ...` and `600 ...`, then `600 ...`. The client config is why `ssh labb` needs no options: it supplies the host name, the user and the key. If key login still asks for a password, check the permissions and SELinux labels of `~/.ssh` on `serverb` (`restorecon -Rv ~/.ssh`).
+    Expected: `serverb.lab.example`, then `700 ...` and `600 ...`, then `600 ...`. Connect to `serverb.lab.example` in `ssh-copy-id` because that is the name the `labb` alias uses: `known_hosts` stores the host key under the name you typed, and the graded `ssh -o BatchMode=yes labb` cannot answer a host-key prompt, so a key saved only under `serverb` fails with `Host key verification failed`. The client config is why `ssh labb` needs no options: it supplies the host name, the user and the key. If key login still asks for a password, check the permissions and SELinux labels of `~/.ssh` on `serverb` (`restorecon -Rv ~/.ssh`).
 
 ### Task 17: Kernel argument in the bootloader
 
@@ -498,11 +498,11 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     sudo grubby --info=DEFAULT
     sudo grubby --info=ALL | grep args
     ```
-    **Verify now:** the `args` line of each entry contains `loglevel=5`. **Verify after the next reboot (Task 18):**
+    **Verify now:** the `args` line of each entry contains `loglevel=5`. **Verify after the first reboot of Task 18** (this task does not reboot; `grubby` only stores the argument):
     ```bash
     cat /proc/cmdline
     ```
-    The running command line contains `loglevel=5`. `grubby` edits the boot loader specification entries in `/boot/loader/entries/`, which is why the change persists. To remove the argument: `sudo grubby --update-kernel=ALL --remove-args="loglevel=5"`. The second route is to edit `GRUB_CMDLINE_LINUX` in `/etc/default/grub` and rebuild with `sudo grub2-mkconfig -o /boot/grub2/grub.cfg`. On RHEL 9 and later `/boot/grub2/grub.cfg` is the right output path for both BIOS and UEFI systems; do not write to the old `/boot/efi/EFI/redhat/grub.cfg`, which is a small stub that points to it. That route mainly affects entries created later, so confirm it with `grubby --info=ALL` and use `grubby` for existing entries. <!-- VERIFY: on RHEL 10, whether grub2-mkconfig after editing /etc/default/grub updates existing BLS entries -->
+    The running command line contains `loglevel=5`. `grubby --update-kernel=ALL` changes the entries that exist now; a kernel installed later gets its arguments from the install tooling, so check it with `grubby --info=ALL` after a kernel update. <!-- VERIFY: which command line kernel-install gives a newly installed kernel on RHEL 10 (/etc/kernel/cmdline or the running /proc/cmdline) --> `grubby` edits the boot loader specification entries in `/boot/loader/entries/`, which is why the change persists. To remove the argument: `sudo grubby --update-kernel=ALL --remove-args="loglevel=5"`. The second route is to edit `GRUB_CMDLINE_LINUX` in `/etc/default/grub` and rebuild with `sudo grub2-mkconfig -o /boot/grub2/grub.cfg`. On RHEL 9 and later `/boot/grub2/grub.cfg` is the right output path for both BIOS and UEFI systems; do not write to the old `/boot/efi/EFI/redhat/grub.cfg`, which is a small stub that points to it. That route mainly affects entries created later, so confirm it with `grubby --info=ALL` and use `grubby` for existing entries. <!-- VERIFY: on RHEL 10, whether grub2-mkconfig after editing /etc/default/grub updates existing BLS entries -->
 
 ### Task 18: Boot a target once, set the default target
 
