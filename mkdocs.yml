@@ -4,6 +4,11 @@ site_url: https://zainulhasan.github.io/rhcsa/
 docs_dir: docs
 site_dir: site
 use_directory_urls: true
+exclude_docs: |
+  overrides/
+
+validation:
+  anchors: warn
 
 theme:
   name: material
@@ -23,18 +28,24 @@ theme:
     - search.highlight
     - content.code.copy
   palette:
-    - scheme: slate
-      primary: teal
-      accent: amber
+    - media: "(prefers-color-scheme)"
       toggle:
-        icon: material/weather-sunny
+        icon: material/brightness-auto
         name: Switch to light mode
-    - scheme: default
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
       primary: teal
       accent: amber
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to system preference
 
 markdown_extensions:
   - admonition
@@ -48,7 +59,8 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      check_paths: true
   - pymdownx.superfences:
       custom_fences:
         # Distinct class so Material's built-in (CDN) Mermaid stays off and our
@@ -58,6 +70,10 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.details
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.keys
 
 plugins:
   - search
@@ -80,6 +96,7 @@ extra:
 nav:
   - Home: index.md
   - How To Study: repository-guide.md
+  - Objectives Map: objectives-map.md
   - Foundations:
       - 00 Study Skills and Offline Help: 00-study-skills-and-offline-help.md
       - 01 Shell Basics and Command Syntax: 01-shell-basics-and-command-syntax.md
@@ -98,23 +115,26 @@ nav:
       - 13 Networking, Hostname Resolution, and firewalld: 13-networking-hostname-resolution-and-firewalld.md
       - 14 Users, Groups, Passwords, and Sudo: 14-users-groups-passwords-and-sudo.md
       - 15 SELinux, SSH Keys, and Security: 15-selinux-ssh-keys-and-security.md
-      - 15a Containers With Podman: 15a-containers-with-podman.md
       - 16 Persistence, Reboot Checks, and Troubleshooting: 16-persistence-reboot-checks-and-troubleshooting.md
-  - Review and Mock Exams:
-      - 17a RHCSA Command Reference Cheat Sheet: 17a-rhcsa-command-reference-cheat-sheet.md
-      - 17 Final Review and Cheat Sheets: 17-final-review-cheat-sheets.md
-      - 18 Mock Exam 1: 18-mock-exam-1.md
-      - 19 Mock Exam 1 Solutions: 19-mock-exam-1-solutions.md
-      - 20 Mock Exam 2: 20-mock-exam-2.md
-      - 21 Mock Exam 2 Solutions: 21-mock-exam-2-solutions.md
   - Labs Track:
       - 22 Labs Track and Skill Check Guide: 22-labs-track-and-skill-check-guide.md
       - 23 VM Lab Setup and Baseline Checks: 23-vm-lab-setup-and-baseline-checks.md
-      - 29 RHCSA and RHCE Local Lab Blueprint: 29-rhcsa-rhce-local-lab-blueprint.md
       - 24 Foundations Labs: 24-foundations-labs.md
       - 25 Administration Core Labs: 25-administration-core-labs.md
       - 26 Networking, Users, and Security Labs: 26-networking-users-and-security-labs.md
       - 28 RHCSA 10 Mixed Practice Bank: 28-rhcsa-10-mixed-practice-bank.md
+      - 29 RHCSA and RHCE Local Lab Blueprint (optional): 29-rhcsa-rhce-local-lab-blueprint.md
+  - Review and Mock Exams:
+      - 17 Final Week Plan: 17-final-review-cheat-sheets.md
+      - 17a RHCSA Command Reference Cheat Sheet: 17a-rhcsa-command-reference-cheat-sheet.md
+      - 18 Mock Exam 1: 18-mock-exam-1.md
+      - 19 Mock Exam 1 Solutions: 19-mock-exam-1-solutions.md
+      - 20 Mock Exam 2: 20-mock-exam-2.md
+      - 21 Mock Exam 2 Solutions: 21-mock-exam-2-solutions.md
+      - 31 Mock Exam 3: 31-mock-exam-3.md
+      - 32 Mock Exam 3 Solutions: 32-mock-exam-3-solutions.md
+  - Beyond the RHEL 10 Objectives:
+      - 15a Containers With Podman (optional): 15a-containers-with-podman.md
   - Optional Reference:
       - 27 Optional Topic Reinforcement Map: 27-optional-topic-video-map.md
       - 30 RHEL 9 Book Exercise Adaptation Bank: 30-rhel9-book-exercise-adaptation-bank.md

@@ -1,3 +1,7 @@
+---
+description: A self-contained, offline-friendly RHCSA 10 (EX200, RHEL 10) self-study course with lessons, hands-on labs, a command cheat sheet and two mock exams.
+---
+
 <div class="hero-panel" markdown>
 <p class="hero-eyebrow">RHEL 10 / EX200 • RHCSA 10-aligned • Beginner-first • Offline-friendly</p>
 
@@ -38,7 +42,7 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
 - __Follow The Full Path__
 
-  Work in order from foundations to administration core, then finish with [mock exams](18-mock-exam-1.md).
+  Work in order from foundations to administration core, then the labs and mixed practice, and finish with the [mock exams](18-mock-exam-1.md).
 
 - __Study Like The Exam__
 
@@ -48,15 +52,60 @@ Build Linux administration skill from zero to exam-ready using one self-containe
 
   If you already know some Linux, start with the [Labs Track Guide](22-labs-track-and-skill-check-guide.md) and use the question-first files to test real skill.
 
-- __Build A Real 3-VM Lab__
+- __Build Your Own Lab__
 
-  Use the [RHCSA and RHCE Local Lab Blueprint](29-rhcsa-rhce-local-lab-blueprint.md) to turn one cloud image into `servera`, `serverb`, and `serverc`.
+  Check your machines with [VM Lab Setup and Baseline Checks](23-vm-lab-setup-and-baseline-checks.md). The optional [Local Lab Blueprint](29-rhcsa-rhce-local-lab-blueprint.md) walks through building the VMs from scratch.
+
+- __Containers (Optional)__
+
+  [Containers With Podman](15a-containers-with-podman.md) is an optional chapter. Containers are not on the RHEL 10 EX200 objective list, so skip it if you are short of time.
 
 - __Use Optional Reinforcement__
 
   Use the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for extra mixed drills. Keep the [optional topic reinforcement map](27-optional-topic-video-map.md) for weak-topic review, and use the [RHEL 9 book exercise adaptation bank](30-rhel9-book-exercise-adaptation-bank.md) only as extra optional hands-on repetition after `28`.
 
 </div>
+
+## Start Here
+
+Choose one path and stay on it long enough to see where you are weak. Do not try to use every file at once. If a file feels too advanced, go back one step instead of collecting more outside material.
+
+### Your first 15 minutes
+
+!!! example "Do this before you read anything else"
+    1. Open a terminal on your lab machine (see [VM Lab Setup and Baseline Checks](23-vm-lab-setup-and-baseline-checks.md) if you do not have one yet).
+    2. Run these three safe commands. They only read information:
+
+        ```bash
+        cat /etc/os-release
+        ls --help | head -n 5
+        man ls
+        ```
+
+    3. In `man`, press `q` to quit. You just used local help without a browser, and that habit carries the whole course.
+    4. Continue with [Lesson 00: Study Skills and Offline Help](00-study-skills-and-offline-help.md), then [Lesson 01: Shell Basics](01-shell-basics-and-command-syntax.md).
+
+### The path
+
+**New to Linux (follow this exactly):**
+
+1. Work through lessons `00-16` in order. Lesson [15a Containers With Podman](15a-containers-with-podman.md) is optional.
+2. Revisit the [RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md) after each major section to build muscle memory.
+3. Do the labs: [Labs Track Guide](22-labs-track-and-skill-check-guide.md), [VM Lab Setup](23-vm-lab-setup-and-baseline-checks.md), then labs `24`, `25`, and `26`.
+4. Do the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for one more mixed-topic pressure pass.
+5. Read [Final Review and Cheat Sheets](17-final-review-cheat-sheets.md).
+6. Attempt [Mock Exam 1](18-mock-exam-1.md) and [Mock Exam 2](20-mock-exam-2.md) only after the full lesson track. Open the solutions only after you finish.
+
+**Some Linux experience (test first, then fill gaps):**
+
+1. Start with the [Labs Track and Skill Check Guide](22-labs-track-and-skill-check-guide.md) and build or verify your lab with [VM Lab Setup and Baseline Checks](23-vm-lab-setup-and-baseline-checks.md).
+2. Test shell, text, archive, SSH, and permissions skills in [Foundations Labs](24-foundations-labs.md).
+3. Test software, scripting, storage, filesystems, scheduling, and systemd in [Administration Core Labs](25-administration-core-labs.md).
+4. Test networking, users, firewalld, SSH keys, and SELinux in [Networking, Users, and Security Labs](26-networking-users-and-security-labs.md).
+5. Use the [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for one more pressure pass.
+6. Score your weak areas honestly and return to the matching lesson files only for explanation and repetition. Then finish with the cheat sheet, final review, and mock exams as above.
+
+Use optional reference material (the [27 topic reinforcement map](27-optional-topic-video-map.md) and the [30 book exercise bank](30-rhel9-book-exercise-adaptation-bank.md)) only after the path is complete and you know where your weak areas are.
 
 ## What This Site Covers
 
@@ -138,49 +187,6 @@ flowchart LR
 Use this map as a quick reminder of what the exam expects: command-line confidence, system administration execution, and proof that your changes still work after reboot.
 </div>
 
-## Best Study Routes
-
-Choose one route and stick to it long enough to see where you are weak.
-
-## Beginner Rule
-
-If you are new to Linux, keep the path simple:
-
-1. lessons `00-16`
-2. labs `22-26`
-3. [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md)
-4. [RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md) and [Final Review](17-final-review-cheat-sheets.md)
-5. mock exams
-
-Use optional reference material only after that path is complete.
-
-### Route 1: Total beginner
-
-Start with `00`, work through lessons `00-16` in order, then move into the labs, cheat sheet, final review, and mock exams.
-
-### Route 2: Some Linux experience
-
-Start with the labs track, score your weak areas honestly, then go back to the matching lesson files for explanation and repetition.
-
-## Fast Start
-
-1. Begin with [Study Skills and Offline Help](00-study-skills-and-offline-help.md).
-2. Work through the numbered lessons in order.
-3. Revisit the [RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md) after each major section.
-4. Use [Final Review and Cheat Sheets](17-final-review-cheat-sheets.md) after finishing lessons `00-16`.
-5. Use [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) if you want one more mixed-topic pressure pass before the mock exams.
-6. Attempt [Mock Exam 1](18-mock-exam-1.md) and [Mock Exam 2](20-mock-exam-2.md) only after the full lesson track.
-
-## Fast Lab Path For Experienced Learners
-
-1. Start with [Labs Track and Skill Check Guide](22-labs-track-and-skill-check-guide.md).
-2. Build or verify your lab with [VM Lab Setup and Baseline Checks](23-vm-lab-setup-and-baseline-checks.md).
-3. Test shell, text, archive, SSH, and permissions skills in [Foundations Labs](24-foundations-labs.md).
-4. Test software, scripting, storage, filesystems, scheduling, and systemd in [Administration Core Labs](25-administration-core-labs.md).
-5. Test networking, users, firewalld, SSH keys, and SELinux in [Networking, Users, and Security Labs](26-networking-users-and-security-labs.md).
-6. Use [RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md) for one more pressure pass.
-7. Return to the lesson files only where your lab results show weakness.
-
 ## Recommended Study Path
 
 Use the sections below as a practical training sequence, not just a reading list.
@@ -206,16 +212,8 @@ Use the sections below as a practical training sequence, not just a reading list
 - [13 Networking, Hostname Resolution, and firewalld](13-networking-hostname-resolution-and-firewalld.md)
 - [14 Users, Groups, Passwords, and Sudo](14-users-groups-passwords-and-sudo.md)
 - [15 SELinux, SSH Keys, and Security](15-selinux-ssh-keys-and-security.md)
+- [15a Containers With Podman](15a-containers-with-podman.md) (optional, not on the RHEL 10 list)
 - [16 Persistence, Reboot Checks, and Troubleshooting](16-persistence-reboot-checks-and-troubleshooting.md)
-
-### Review and Exams
-
-- [17a RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md)
-- [17 Final Review and Cheat Sheets](17-final-review-cheat-sheets.md)
-- [18 Mock Exam 1](18-mock-exam-1.md)
-- [19 Mock Exam 1 Solutions](19-mock-exam-1-solutions.md)
-- [20 Mock Exam 2](20-mock-exam-2.md)
-- [21 Mock Exam 2 Solutions](21-mock-exam-2-solutions.md)
 
 ### Labs Track
 
@@ -226,6 +224,15 @@ Use the sections below as a practical training sequence, not just a reading list
 - [25 Administration Core Labs](25-administration-core-labs.md)
 - [26 Networking, Users, and Security Labs](26-networking-users-and-security-labs.md)
 - [28 RHCSA 10 Mixed Practice Bank](28-rhcsa-10-mixed-practice-bank.md)
+
+### Review and Exams
+
+- [17a RHCSA Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sheet.md)
+- [17 Final Review and Cheat Sheets](17-final-review-cheat-sheets.md)
+- [18 Mock Exam 1](18-mock-exam-1.md)
+- [19 Mock Exam 1 Solutions](19-mock-exam-1-solutions.md)
+- [20 Mock Exam 2](20-mock-exam-2.md)
+- [21 Mock Exam 2 Solutions](21-mock-exam-2-solutions.md)
 
 ### Optional Reference
 
@@ -242,13 +249,3 @@ Use the sections below as a practical training sequence, not just a reading list
 ## Version Watch
 
 This site is organized around Red Hat's public `EX200` scope for `RHEL 10`. Some command output and defaults can vary slightly between builds and minor releases, but the core exam habits stay the same: complete the task, verify the result, and confirm it survives reboot when required.
-
-## Publishing Notes
-
-This repository includes:
-
-- `mkdocs.yml` for site structure
-- `.github/workflows/deploy-pages.yml` for GitHub Pages deployment
-- `requirements.txt` for the docs build dependencies
-
-When pushed to GitHub, the site can be published directly with GitHub Actions.
