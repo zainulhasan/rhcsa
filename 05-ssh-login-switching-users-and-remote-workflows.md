@@ -46,16 +46,14 @@ Two SSH ideas are worth knowing before you type anything:
 - **User authentication:** you prove who you are, either with a password or with a key pair. A key pair is a private key that stays with you and a public key that you place on the server.
 
 ```mermaid
-sequenceDiagram
-    participant C as servera client
-    participant S as serverb sshd
-    C->>S: connect to port 22
-    S-->>C: send host key
-    C->>C: check known_hosts
-    C->>S: prove user identity
-    S-->>C: shell opens
-    C->>S: run commands
-    S-->>C: output returns
+flowchart TD
+    A["servera client connects to serverb port 22"] --> B["sshd sends its host key"]
+    B --> C{"Key already in known_hosts?"}
+    C -- "yes, matches" --> E["Client proves your identity: key or password"]
+    C -- "first time" --> D["You confirm the fingerprint"] --> E
+    C -- "changed" --> X["SSH refuses: fix known_hosts first"]
+    E --> F["Shell opens on serverb"]
+    F --> G["Commands run, output returns"]
 ```
 
 ### Remote awareness
