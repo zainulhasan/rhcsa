@@ -447,7 +447,16 @@ Verification: `lvs`, `vgs`, and `pvs` should no longer show the removed lab obje
 
 ## Hands-on lab
 
-**Setup:** shared lab environment, `servera`, user `student`, spare disks `/dev/vdb` and `/dev/vdc` (2 GiB each, empty). If the disks were used before, run the shared **disk reset snippet** (from the contributor style guide) on `/dev/vdb`, repeat it with `vdc` for `/dev/vdc`, and remove old lines from `/etc/fstab`. Never practice on a disk that contains important data.
+**Setup:** shared lab environment, `servera`, user `student`, spare disks `/dev/vdb` and `/dev/vdc` (2 GiB each, empty). If the disks were used before, reset them first (below) and remove old lines from `/etc/fstab`. Never practice on a disk that contains important data.
+
+??? warning "Disk reset (destroys everything on the disk)"
+    Run once per spare disk, replacing `vdb` with `vdc` for the second disk. Remove any related `/etc/fstab` lines afterwards.
+    ```bash
+    sudo umount /dev/vdb* 2>/dev/null
+    sudo swapoff /dev/vdb* 2>/dev/null
+    sudo vgremove -ff -y vgdata vgexam 2>/dev/null
+    sudo wipefs -a /dev/vdb
+    ```
 
 **Task:**
 

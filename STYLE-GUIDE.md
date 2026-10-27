@@ -22,12 +22,12 @@ Every lesson, lab and mock uses the same machines so state never has to be guess
 | Spare disks | `/dev/vdb` and `/dev/vdc` on servera, 2 GiB each, empty |
 | OS | RHEL 10 (or a compatible clone) |
 
-Disk reset snippet (use before any storage drill; destroys data on `/dev/vdb`):
+Disk reset snippet (use before any storage drill; destroys data on `/dev/vdb`). Pages must inline it as a collapsed `??? warning "Disk reset"` block, because this guide is not published:
 
 ```bash
 sudo umount /dev/vdb* 2>/dev/null
 sudo swapoff /dev/vdb* 2>/dev/null
-sudo vgremove -ff -y $(sudo pvs --noheadings -o vg_name /dev/vdb* 2>/dev/null) 2>/dev/null
+sudo vgremove -ff -y vgdata vgexam 2>/dev/null
 sudo wipefs -a /dev/vdb
 ```
 
