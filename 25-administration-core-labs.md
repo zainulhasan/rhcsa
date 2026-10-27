@@ -201,6 +201,7 @@ Shared lab environment, `servera`, user `student`. Uses `/dev/vdb` (clean), moun
     sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     ```
 
@@ -358,6 +359,7 @@ These drills turn common admin task shapes into clean tasks with persistence che
     sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     ```
 
@@ -412,6 +414,7 @@ What to check before moving on:
     sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     ```
 
@@ -682,6 +685,7 @@ What to check before moving on:
     sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     ```
 
@@ -861,7 +865,8 @@ What to check before moving on:
     sudo dnf install -y nfs-utils autofs
     echo '/remote /etc/auto.remote' | sudo tee /etc/auto.master.d/remote.autofs
     echo 'carol -rw,sync servera.lab.example:/export/homes/carol' | sudo tee /etc/auto.remote
-    sudo systemctl enable --now autofs
+    sudo systemctl enable autofs
+    sudo systemctl restart autofs
     ls /remote/carol
     cat /remote/carol/welcome.txt
     findmnt /remote/carol
@@ -921,6 +926,7 @@ What to check before moving on:
     sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     ```
 
@@ -1188,6 +1194,7 @@ Fix:
     sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     ```
 

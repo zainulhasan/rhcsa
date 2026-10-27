@@ -60,6 +60,7 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
     sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer vgreview vgproj vgvdo 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp|reviewdata|srv/examdata|appdata|projects/data|vdo)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs|review|proj|vdo)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     ```
 
@@ -588,7 +589,8 @@ On `servera`: `sudo dnf install -y autofs nfs-utils`.
     ```bash
     echo '/shares /etc/auto.shares' | sudo tee /etc/auto.master.d/shares.autofs
     echo 'nfsdata -rw,sync serverb.lab.example:/srv/nfsshare' | sudo tee /etc/auto.shares
-    sudo systemctl enable --now autofs
+    sudo systemctl enable autofs
+    sudo systemctl restart autofs
     findmnt /shares/nfsdata || echo "not mounted yet (correct)"
     ls /shares/nfsdata
     findmnt /shares/nfsdata

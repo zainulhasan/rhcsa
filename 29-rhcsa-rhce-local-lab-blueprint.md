@@ -152,7 +152,7 @@ Log in as `student` on the `servera` console (`virsh console servera` or the vir
 
 ```bash
 sudo hostnamectl set-hostname servera.lab.example
-CON=$(nmcli -g NAME connection show --active | head -1)
+CON=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}')
 sudo nmcli connection modify "$CON" ipv4.method manual \
   ipv4.addresses 192.168.122.10/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.1
 sudo nmcli connection up "$CON"
@@ -196,7 +196,7 @@ Boot **only `serverb`** first (keep `servera` shut down so the two do not share 
 
 ```bash
 sudo hostnamectl set-hostname serverb.lab.example
-CON=$(nmcli -g NAME connection show --active | head -1)
+CON=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}')
 sudo nmcli connection modify "$CON" ipv4.addresses 192.168.122.11/24
 sudo nmcli connection up "$CON"
 ```
@@ -361,7 +361,7 @@ Verification:
 
     # in each guest (use .11 and serverb on serverb)
     sudo hostnamectl set-hostname servera.lab.example
-    CON=$(nmcli -g NAME connection show --active | head -1)
+    CON=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}')
     sudo nmcli connection modify "$CON" ipv4.method manual \
       ipv4.addresses 192.168.122.10/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.1
     sudo nmcli connection up "$CON"

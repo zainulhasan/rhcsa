@@ -163,15 +163,17 @@ Run these on `servera` and compare with the expected result. Every row must pass
 Storage drills in the labs and mocks assume `/dev/vdb` and `/dev/vdc` are empty. Run this block before any storage drill, and again whenever a previous drill left partitions, volume groups or swap behind. It destroys all data on the disk.
 
 ??? warning "Disk reset (destroys everything on the disk)"
-    Run once per spare disk, replacing `vdb` with `vdc` for the second disk. Remove any related `/etc/fstab` lines afterwards.
+    Run once per spare disk, replacing `vdb` with `vdc` for the second disk. It also removes the fstab lines (including swap) that the course's drills create, so a half-finished drill cannot send the next reboot into emergency mode.
     ```bash
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam 2>/dev/null
-    sudo wipefs -a /dev/vdb
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
-After the reset, remove leftover lines for the disk from `/etc/fstab`, then prove the disk is blank:
+After the reset, prove the disk is blank:
 
 ```bash
 sudo vi /etc/fstab        # delete lines that mention vdb, a UUID you created, or an old VG/LV
@@ -303,7 +305,7 @@ sudo systemctl enable --now sshd
 
     ```bash
     sudo hostnamectl set-hostname servera.lab.example
-    CON=$(nmcli -g NAME connection show --active | head -1)
+    CON=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}')
     sudo nmcli connection modify "$CON" ipv4.method manual \
       ipv4.addresses 192.168.122.10/24 ipv4.gateway 192.168.122.1 ipv4.dns 192.168.122.1
     sudo nmcli connection up "$CON"

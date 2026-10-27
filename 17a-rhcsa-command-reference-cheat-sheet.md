@@ -1338,6 +1338,7 @@ sudo tar -tzvf /var/tmp/backup.tar.gz
     sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     ```
 
@@ -1394,7 +1395,8 @@ findmnt /mnt/share
 ```bash
 echo '/remoteuser /etc/auto.remoteuser' | sudo tee -a /etc/auto.master
 echo 'user20 -rw serverb:/remoteuser/user20' | sudo tee /etc/auto.remoteuser
-sudo systemctl enable --now autofs
+sudo systemctl enable autofs
+sudo systemctl restart autofs
 ls /remoteuser/user20
 mount | grep remoteuser
 ```

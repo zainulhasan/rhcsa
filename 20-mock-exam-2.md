@@ -85,7 +85,7 @@ The last two lines give `webadmin` on `serverb` the password `webpass`, which `s
     sudo firewall-cmd --permanent --remove-service=http
     sudo firewall-cmd --reload
     CON=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}')
-    sudo nmcli connection modify "$CON" ipv6.method auto -ipv4.addresses 192.168.122.50/24 -ipv4.dns 192.168.122.1 -ipv6.addresses 2001:db8:0:1::50/64
+    sudo nmcli connection modify "$CON" ipv6.method auto -ipv4.addresses 192.168.122.50/24 -ipv6.addresses 2001:db8:0:1::50/64
     sudo nmcli connection up "$CON"
     sudo semanage fcontext -d "/srv/webcontent(/.*)?" 2>/dev/null
     sudo rm -rf /opt/webdata /srv/webcontent /var/tmp/webdata.tar.gz /var/tmp/sshd-boot.log /usr/local/bin/filecheck.sh
@@ -97,6 +97,7 @@ The last two lines give `webadmin` on `serverb` the password `webpass`, which `s
     sudo vgremove -ff -y vgweb vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     ```
 

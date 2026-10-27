@@ -48,6 +48,7 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
     sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
     sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
     sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp|appdata)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    for s in $(awk '$1~/^(UUID|LABEL)=/{print $1}' /etc/fstab); do sudo blkid -t "$s" >/dev/null || sudo sed -i "\#^$s[[:space:]]#d" /etc/fstab; done
     sudo systemctl daemon-reload; sudo swapon -a
     ```
 
@@ -282,8 +283,9 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
     ```bash
     groupadd opsadmin
     usermod -aG opsadmin operator2
-    echo '%opsadmin ALL=(ALL) ALL' > /etc/sudoers.d/opsadmin
-    chmod 440 /etc/sudoers.d/opsadmin
+    echo '%opsadmin ALL=(ALL) ALL' > /root/opsadmin.sudo
+    visudo -cf /root/opsadmin.sudo && install -m 0440 /root/opsadmin.sudo /etc/sudoers.d/opsadmin
+    rm -f /root/opsadmin.sudo
     mkdir -p /srv/opsdata
     chown operator2:opsadmin /srv/opsdata
     id operator2
@@ -526,7 +528,8 @@ Client side (`servera`):
     # on servera
     echo '/- /etc/auto.direct' > /etc/auto.master.d/direct.autofs
     echo '/mnt/nfsshare -rw,sync serverb.lab.example:/srv/nfsshare' > /etc/auto.direct
-    systemctl enable --now autofs
+    systemctl enable autofs
+    systemctl restart autofs
     ls /mnt/nfsshare
     findmnt /mnt/nfsshare
     ```
