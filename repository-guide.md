@@ -109,6 +109,12 @@ If the problem is still unclear:
 - Reboot after major configuration changes to confirm persistence.
 - Keep a text file of failed commands and corrected commands.
 - Do not rely on copy-paste during serious review.
+- Read lessons in order unless you are reviewing a weak topic.
+- Keep a terminal open while reading.
+- Treat every command as something to test, not just something to read.
+- Mark commands you repeatedly forget.
+- Keep a handwritten or plain-text mistake log.
+- Revisit lessons where verification failed or took too long.
 
 ## How To Repeat Weak Topics
 
