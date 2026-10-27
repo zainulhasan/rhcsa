@@ -54,13 +54,13 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
 ```
 
 ??? warning "Disk reset (destroys everything on the disk)"
-    Every storage task in this bank starts from a clean disk. Run this before each storage task that names `/dev/vdb`; for the swap task that names `/dev/vdc`, replace `vdb` with `vdc` wherever it appears. Afterwards remove any related lines from `/etc/fstab` (mount points `/reviewdata`, `/srv/examdata`, `/appdata`, `/projects/data`, and old swap lines for the disk) with `sudo vi /etc/fstab`, then run `sudo systemctl daemon-reload`.
+    Every storage task in this bank starts from a clean disk. Run this before each storage task that names `/dev/vdb`; for the swap task that names `/dev/vdc`, replace `vdb` with `vdc` wherever it appears. It also removes the mounts, volume groups and `/etc/fstab` lines this bank's tasks create, so a half-finished task cannot send the next reboot into emergency mode.
     ```bash
-    sudo umount /reviewdata /srv/examdata /appdata /projects/data 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgreview vgapp vgproj 2>/dev/null
-    sudo wipefs -a /dev/vdb[0-9]* /dev/vdb 2>/dev/null
-    sudo partprobe /dev/vdb
+    sudo umount /data /par1 /record /datasource /mnt/lvapp /reviewdata /srv/examdata /appdata /projects/data /vdo 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer vgreview vgproj vgvdo 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp|reviewdata|srv/examdata|appdata|projects/data|vdo)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs|review|proj|vdo)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 ## Index: task to objective
@@ -283,7 +283,7 @@ Expected result: the archive exists and can be listed, user and group are correc
     ```
     **Verify:**
     ```bash
-    tar -tzvf /root/reviewbundle.tgz | head
+    sudo tar -tzvf /root/reviewbundle.tgz | head
     id review1
     sudo chage -l review1
     ls -ld /srv/review-share
@@ -623,7 +623,7 @@ sudo chmod 770 /srv/acl-demo
     sudo -u alice touch /srv/acl-demo/a.txt
     getfacl /srv/acl-demo/a.txt
     ```
-    **Verify:** `getfacl /srv/acl-demo/a.txt` shows `user:bob:rw-`. (The `+` at the end of `ls -l` mode strings means an ACL exists.)
+    **Verify:** `getfacl /srv/acl-demo/a.txt` shows `user:bob:rwx   #effective:rw-`, because the file's group mask is `rw-`. (The `+` at the end of `ls -l` mode strings means an ACL exists.)
 
 #### P20 Extend a logical volume and its filesystem
 
@@ -735,7 +735,7 @@ sudo systemctl daemon-reload && sudo mount -a
 
 #### P4 User and group with exact attributes
 
-**Setup:** none. If `alice` already exists from another task, run `sudo userdel -r alice` first.
+**Setup:** remove leftovers from earlier tasks: `id alice &>/dev/null && sudo userdel -r alice; getent group labteam >/dev/null && sudo groupdel labteam`
 
 **Task:** create group `labteam` with GID `3000`. Create user `alice` with home `/srv/alice`, shell `/bin/bash`, comment `Alice Lab`, and supplementary group `labteam`. Verify with commands, not assumptions.
 
@@ -756,7 +756,7 @@ sudo systemctl daemon-reload && sudo mount -a
 
 #### P11 User with a specific UID
 
-**Setup:** none.
+**Setup:** `id carol &>/dev/null && sudo userdel -r carol` (an earlier task may have created `carol` with a different UID).
 
 **Task:** create user `carol` with UID `2501`, comment `Carol Lab`, and default shell and home.
 
@@ -827,7 +827,7 @@ sudo usermod -aG webadmins carol
 
 **Setup:** `sudo dnf install -y httpd`; run the hosts line (see "How to use this bank") on `serverb` for `servera` if you test from there.
 
-**Task:** make `httpd` serve `/srv/webcontent/index.html` (text `p3 ok`) on port `80`. Change `DocumentRoot` to `/srv/webcontent` and its `<Directory>` block, give the directory a persistent SELinux label, open the firewall for HTTP permanently, and enable the service at boot. Test from `serverb`.
+**Task:** make `httpd` serve `/srv/webcontent/index.html` (text `p3 ok`) on port `80`. Point `DocumentRoot` at `/srv/webcontent` and allow access to that directory (use a drop-in under `/etc/httpd/conf.d/` so the stock `httpd.conf` stays untouched), give the directory a persistent SELinux label, open the firewall for HTTP permanently, and enable the service at boot. Test from `serverb`.
 
 - [ ] `curl http://servera.lab.example/` returns `p3 ok` from `serverb`
 - [ ] `ls -Zd /srv/webcontent` shows `httpd_sys_content_t`
@@ -840,7 +840,13 @@ sudo usermod -aG webadmins carol
     ```bash
     sudo mkdir -p /srv/webcontent
     echo 'p3 ok' | sudo tee /srv/webcontent/index.html
-    sudo sed -i 's|^DocumentRoot "/var/www/html"|DocumentRoot "/srv/webcontent"|; s|<Directory "/var/www/html">|<Directory "/srv/webcontent">|' /etc/httpd/conf/httpd.conf
+    sudo tee /etc/httpd/conf.d/p3.conf <<'EOF'
+    DocumentRoot "/srv/webcontent"
+    <Directory "/srv/webcontent">
+        AllowOverride None
+        Require all granted
+    </Directory>
+    EOF
     sudo httpd -t
     sudo dnf install -y policycoreutils-python-utils
     sudo semanage fcontext -a -t httpd_sys_content_t '/srv/webcontent(/.*)?'
@@ -851,7 +857,9 @@ sudo usermod -aG webadmins carol
     ls -Zd /srv/webcontent /srv/webcontent/index.html
     curl http://localhost/
     ```
-    From `serverb`: `curl http://servera.lab.example/`. **Verify:** reboot `servera` and run the `curl` again; also `systemctl is-enabled httpd`.
+    From `serverb`: `curl http://servera.lab.example/`. **Verify:** reboot `servera` and run the `curl` again; also `systemctl is-enabled httpd`. <!-- VERIFY: a DocumentRoot in a conf.d drop-in (read after httpd.conf) overrides the stock one on RHEL 10 httpd -->
+
+    Cleanup, so later drills see the stock page again: `sudo rm /etc/httpd/conf.d/p3.conf; sudo systemctl restart httpd`.
 
 #### P13 Custom `umask`
 
@@ -895,7 +903,7 @@ These tasks are not on the RHEL 10 list. Skip them if your lab image has no VDO 
     sudo mount /dev/vgvdo/lvvdo /vdo
     findmnt /vdo
     ```
-    Make it persistent like any other mount (UUID line in `/etc/fstab`). Clean up with the Disk reset block plus `vgvdo` added to the `vgremove` line.
+    Make it persistent like any other mount (UUID line in `/etc/fstab`). Clean up with the Disk reset block (it already removes `vgvdo` and the `/vdo` mount).
 
 #### O2 Container task (Bonus)
 
@@ -974,6 +982,8 @@ Short tasks. Aim for a few minutes each. Same scoring.
 ### Group: Manage users and groups
 
 #### S5 User with a custom home
+
+**Setup:** `id analyst1 &>/dev/null && sudo userdel -r analyst1`
 
 **Task:** create user `analyst1` with custom home `/projects/analyst1` and shell `/bin/bash`.
 
@@ -1103,7 +1113,7 @@ Short tasks. Aim for a few minutes each. Same scoring.
 
 #### S12 TCP port 85: firewall plus SELinux label
 
-**Setup:** `sudo dnf install -y httpd policycoreutils-python-utils`
+**Setup:** `sudo dnf install -y httpd policycoreutils-python-utils; sudo rm -f /etc/httpd/conf.d/p3.conf` (P3 may have moved `DocumentRoot`; this restores the stock `/var/www/html`).
 
 **Task:** make `httpd` serve on TCP port `85`: add the `Listen` line, open the port permanently in `firewalld`, add the SELinux port label `http_port_t`, start the service and prove it answers.
 
@@ -1176,7 +1186,7 @@ Short tasks. Aim for a few minutes each. Same scoring.
     After login:
     ```bash
     findmnt --verify
-    findmnt /appdata /reviewdata /projects/data /srv/examdata
+    for m in /appdata /reviewdata /projects/data /srv/examdata; do findmnt "$m"; done
     swapon --show
     systemctl is-active httpd chronyd crond
     systemctl is-enabled httpd chronyd crond
@@ -1222,7 +1232,7 @@ Two tasks that cross groups. Same scoring.
 
 ### M2 Web service on TCP port 85 end to end
 
-**Setup:** `sudo dnf install -y httpd policycoreutils-python-utils`
+**Setup:** `sudo dnf install -y httpd policycoreutils-python-utils; sudo rm -f /etc/httpd/conf.d/p3.conf` (restores the stock `DocumentRoot` if P3 moved it).
 
 **Task:** make `httpd` serve the text `m2 ok` on TCP port `85`, allow that port in `firewalld`, label it in SELinux, enable the service at boot, and prove access locally.
 
