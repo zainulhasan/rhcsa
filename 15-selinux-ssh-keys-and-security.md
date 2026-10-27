@@ -158,7 +158,7 @@ SELINUXTYPE=targeted
 
 - Verify the configured value with `sestatus`: both lines should match the mode the task asks for.
 - You can force permissive for one boot from GRUB by appending `enforcing=0` to the kernel line. That is useful for recovery.
-- Switching enforcing and permissive needs no relabel. If a system was ever `disabled`, its files may be unlabeled: after you set `enforcing`, create the flag file `sudo touch /.autorelabel` and reboot, and the system relabels everything on that boot (slow on big disks). The relabel is **not** automatic. <!-- VERIFY: SELINUX=disabled handling on RHEL 10 (recent kernels no longer allow runtime disable; selinux=0 on the kernel command line is the supported way to truly disable). Exam tasks only need enforcing/permissive. -->
+- Switching enforcing and permissive needs no relabel. If a system was ever `disabled`, files created in that time may be unlabeled, and going straight to `enforcing` can leave services denied or the boot stuck. Re-enable in two steps: set `SELINUX=permissive` in `/etc/selinux/config`, run `sudo touch /.autorelabel`, and reboot (the whole disk is relabeled on that boot, which is slow on big disks). Once the system is up and `sestatus` shows `permissive`, set `SELINUX=enforcing`, run `sudo setenforce 1`, and check `getenforce`. The relabel is **not** automatic: without the flag file nothing is relabeled. <!-- VERIFY: Red Hat's documented order for re-enabling SELinux from disabled on RHEL 10 (permissive + /.autorelabel, reboot, then enforcing); recent kernels no longer allow runtime disable, and selinux=0 on the kernel command line is the supported way to truly disable. Exam tasks only need enforcing/permissive. -->
 
 ### 2. Inspect contexts
 
@@ -431,13 +431,24 @@ The server settings live in `/etc/ssh/sshd_config` (and drop-in files in `/etc/s
 | `PasswordAuthentication yes\|no` | Allow or forbid password login. Set `no` only after key login works |
 | `PermitRootLogin no\|prohibit-password\|yes` | Whether root may log in over SSH, and how |
 
+!!! warning "Drop-ins in `/etc/ssh/sshd_config.d/` are read first, and the first value wins"
+    The main file includes `/etc/ssh/sshd_config.d/*.conf` **before** its own settings. For each setting, sshd keeps the **first** value it reads. So a line in `sshd_config` is silently ignored if a drop-in already set the same option (for example `50-cloud-init.conf` setting `PasswordAuthentication yes`, or an installer's `01-permitrootlogin.conf`). Do not trust the file you edited; ask sshd what it actually uses:
+
+    ```bash
+    ls /etc/ssh/sshd_config.d/
+    sudo sshd -T | grep -iE 'permitrootlogin|passwordauthentication'
+    ```
+
+    Change the value in the drop-in that sets it, or create an earlier-sorting drop-in of your own (for example `/etc/ssh/sshd_config.d/00-lab.conf`), then re-run the `sshd -T` check. <!-- VERIFY: which drop-ins a RHEL 10 image ships (installer 01-permitrootlogin.conf, cloud-init 50-cloud-init.conf) and that sshd_config includes sshd_config.d/*.conf before its own settings -->
+
 ```bash
-sudo vi /etc/ssh/sshd_config
+sudo vi /etc/ssh/sshd_config.d/00-lab.conf     # for example: PasswordAuthentication no
 sudo sshd -t
+sudo sshd -T | grep -iE 'permitrootlogin|passwordauthentication'
 sudo systemctl reload sshd
 ```
 
-`sshd -t` checks the syntax and prints nothing when it is fine. Reload only after it passes, and keep your current session open while you test a second login, so a mistake cannot lock you out. <!-- VERIFY: RHEL 10 ships drop-ins in /etc/ssh/sshd_config.d/ that are read before the main file (first value wins); check them if your change seems ignored -->
+`sshd -t` checks the syntax and prints nothing when it is fine. Run it before every restart or reload, and reload only after it passes. Keep your current session open while you test a second login, so a mistake cannot lock you out.
 
 ## Common mistakes
 
@@ -473,6 +484,12 @@ sudo systemctl reload sshd
 
 ```bash
 sudo dnf install -y httpd policycoreutils-python-utils curl
+# clear anything an earlier run left behind, so a rerun starts from the same state
+sudo systemctl stop httpd 2>/dev/null
+sudo semanage port -d -t http_port_t -p tcp 8888 2>/dev/null
+sudo semanage fcontext -d "/web(/.*)?" 2>/dev/null
+sudo setsebool -P httpd_can_network_connect off
+sudo rm -rf /web /etc/httpd/conf.d/lab.conf
 sudo mkdir -p /web
 echo 'hello from /web' | sudo tee /web/index.html
 sudo tee /etc/httpd/conf.d/lab.conf >/dev/null <<'EOF'
