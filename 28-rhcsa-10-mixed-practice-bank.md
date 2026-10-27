@@ -810,11 +810,11 @@ sudo usermod -aG webadmins carol
     ```bash
     sudo visudo -f /etc/sudoers.d/webadmins
     ```
-    In the editor, type `%webadmins ALL=(ALL) ALL`, save and quit. Or without an editor:
+    In the editor, type `%webadmins ALL=(ALL) ALL`, save and quit. Or without an editor, validate a temporary file first, then install it:
     ```bash
-    echo '%webadmins ALL=(ALL) ALL' | sudo tee /etc/sudoers.d/webadmins
-    sudo chmod 440 /etc/sudoers.d/webadmins
-    sudo visudo -cf /etc/sudoers.d/webadmins
+    echo '%webadmins ALL=(ALL) ALL' > /tmp/webadmins.sudo
+    sudo visudo -cf /tmp/webadmins.sudo && sudo install -m 0440 /tmp/webadmins.sudo /etc/sudoers.d/webadmins
+    rm -f /tmp/webadmins.sudo
     sudo visudo -c
     sudo -l -U carol
     ls -l /etc/sudoers.d/webadmins
@@ -851,7 +851,8 @@ sudo usermod -aG webadmins carol
     sudo dnf install -y policycoreutils-python-utils
     sudo semanage fcontext -a -t httpd_sys_content_t '/srv/webcontent(/.*)?'
     sudo restorecon -Rv /srv/webcontent
-    sudo systemctl enable --now httpd
+    sudo systemctl enable httpd
+    sudo systemctl restart httpd
     sudo firewall-cmd --add-service=http --permanent
     sudo firewall-cmd --reload
     ls -Zd /srv/webcontent /srv/webcontent/index.html
