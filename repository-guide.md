@@ -10,6 +10,9 @@ This page explains how to use the course as a training system instead of a pile 
 
 Red Hat's public [EX200 exam page](https://www.redhat.com/en/services/training/ex200-red-hat-certified-system-administrator-rhcsa-exam) is the final reference for scope. It states that the exam is based on `RHEL 10`. This course follows that objective list; where a topic is outside the list (containers with Podman, lesson `15a`), the page says so and marks it optional.
 
+!!! info "What the official page does and does not say"
+    The EX200 page describes the exam as performance-based ("a hands-on, practical exam that requires you to undertake real-world tasks") and based on RHEL 10. It does not state the exam duration, the passing score, the number of tasks or how the exam is delivered, and this course does not state them either. Check Red Hat's current certification pages and your exam booking confirmation for those details before exam day. The mock exams here use the course's own points scheme, so a mock score is practice feedback, not a prediction of a real score.
+
 Use this course with one rule:
 
 - official exam scope decides what matters
