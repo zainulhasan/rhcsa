@@ -516,6 +516,15 @@
   }
 }
 
+/* On wide screens tables may extend to the right of the reading column (the
+   free space sits between it and the contents panel) so 4-column tables stay
+   legible. The left side is the navigation, so it is never overlapped. */
+@media screen and (min-width: 90em) {
+  .md-typeset .md-typeset__scrollwrap {
+    margin-right: -7rem;
+  }
+}
+
 .md-typeset {
   font-feature-settings: "cv11", "ss03";
 }
