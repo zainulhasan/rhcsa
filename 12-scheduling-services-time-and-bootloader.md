@@ -98,7 +98,7 @@ Safe bootloader habits:
 
 ```bash
 systemctl is-active atd
-echo "hostname > /tmp/at-host.txt" | at now + 2 minutes
+echo "hostname > /var/tmp/at-host.txt" | at now + 2 minutes
 atq
 ```
 
@@ -117,7 +117,7 @@ job 4 at Tue Oct 27 10:02:00 2026
 | `at -c 4` | Print job 4 in full (environment plus the command at the end) |
 | `atrm 4` (or `at -r 4`) | Remove queued job 4 |
 
-After the time passes, `/tmp/at-host.txt` should exist. The job is gone from `atq` once it has run. If the job never ran, check `atd`, the time you gave, and the command syntax.
+After the time passes, `/var/tmp/at-host.txt` should exist. The job is gone from `atq` once it has run. If the job never ran, check `atd`, the time you gave, and the command syntax.
 
 ### 2. Repeating jobs with cron
 
@@ -150,8 +150,8 @@ Special characters: `*` every value, `,` a list (`1,15`), `-` a range (`1-5`), `
 
 | Line | Meaning |
 |---|---|
-| `*/10 * * * * /usr/bin/echo hello >> /tmp/cron-hello.txt` | every 10 minutes |
-| `0 2 * * * /usr/bin/date >> /tmp/nightly.txt` | every day at `02:00` (minute 0, hour 2, any day, any month, any weekday) |
+| `*/10 * * * * /usr/bin/echo hello >> /var/tmp/cron-hello.txt` | every 10 minutes |
+| `0 2 * * * /usr/bin/date >> /var/tmp/nightly.txt` | every day at `02:00` (minute 0, hour 2, any day, any month, any weekday) |
 | `30 8 * * 1-5 /usr/local/bin/report.sh` | 08:30 Monday to Friday |
 | `0 0 1,15 * * /usr/local/bin/twice-monthly.sh` | midnight on the 1st and 15th |
 | `@reboot /bin/bash /usr/local/bin/startup-check.sh` | once each time the system boots |
@@ -164,7 +164,7 @@ Use `@reboot` when the question clearly asks for a cron-managed job that runs at
 **The `%` trap.** In a crontab, an unescaped `%` means "newline", so `date +%F` is cut in half and the job fails. Escape it with a backslash:
 
 ```text
-*/2 * * * * /usr/bin/date +\%F-\%T >> /tmp/repeat.txt
+*/2 * * * * /usr/bin/date +\%F-\%T >> /var/tmp/repeat.txt
 ```
 
 **System-wide cron files.** Besides per-user tables, cron reads `/etc/crontab` and every file in `/etc/cron.d/`. These have a **sixth field, the user to run as**, between the schedule and the command:
@@ -181,7 +181,7 @@ sudo journalctl -u crond --since "10 minutes ago" --no-pager
 ```
 
 ```text title="Example output"
-Oct 27 10:04:01 servera.lab.example CROND[2331]: (student) CMD (/usr/bin/date +%F-%T >> /tmp/repeat.txt)
+Oct 27 10:04:01 servera.lab.example CROND[2331]: (student) CMD (/usr/bin/date +%F-%T >> /var/tmp/repeat.txt)
 Oct 27 10:10:01 servera.lab.example CROND[2402]: (root) CMD (/usr/bin/logger -t labcron heartbeat)
 ```
 <!-- VERIFY: cron log lines in the journal on RHEL 10; /var/log/cron exists only if rsyslog is installed -->
@@ -193,11 +193,11 @@ Two files in `/etc/systemd/system/`, one `.service` and one `.timer` with the sa
 ```bash
 sudo tee /etc/systemd/system/lab-note.service <<'EOF'
 [Unit]
-Description=Append a timestamp to /tmp/lab-timer.txt
+Description=Append a timestamp to /var/tmp/lab-timer.txt
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/bash -c '/usr/bin/date >> /tmp/lab-timer.txt'
+ExecStart=/usr/bin/bash -c '/usr/bin/date >> /var/tmp/lab-timer.txt'
 EOF
 ```
 
@@ -259,7 +259,7 @@ Tue 2026-10-27 10:06:00 UTC 1min 12s  -    -      lab-note.timer  lab-note.servi
 
 Use `systemd-analyze calendar` to test any `OnCalendar=` value. In unit files a literal `%` must be written `%%`, because `%` starts a specifier. After editing a unit file, run `systemctl daemon-reload` again.
 
-Once it has fired, `cat /tmp/lab-timer.txt` shows a timestamp per run, and `sudo journalctl -u lab-note.service --no-pager` shows each run in the log. Remove it with `sudo systemctl disable --now lab-note.timer`, then delete both unit files and run `daemon-reload`.
+Once it has fired, `cat /var/tmp/lab-timer.txt` shows a timestamp per run, and `sudo journalctl -u lab-note.service --no-pager` shows each run in the log. Remove it with `sudo systemctl disable --now lab-note.timer`, then delete both unit files and run `daemon-reload`.
 
 ### 4. Services: start, stop and enable at boot
 
@@ -366,7 +366,7 @@ server 192.168.122.1 iburst
 | Step the clock now | `sudo chronyc makestep` |
 | Per-source statistics | `chronyc sourcestats` |
 
-The exam normally names the time server. Add exactly that `server` line, restart `chronyd`, and confirm it is listed in `chronyc sources`. Config edits only take effect after the restart, and the `*` can take a few seconds to appear.
+Expect the task to name the time server. Add exactly that `server` line, restart `chronyd`, and confirm it is listed in `chronyc sources`. Config edits only take effect after the restart, and the `*` can take a few seconds to appear.
 
 ### 7. Modify the bootloader
 
@@ -430,10 +430,11 @@ Adding boot menu entry for UEFI Firmware Settings ...
 done
 ```
 <!-- VERIFY: output of grub2-mkconfig on RHEL 10 -->
-<!-- VERIFY: on RHEL 10, is /boot/grub2/grub.cfg the target for BOTH BIOS and UEFI? On RHEL 8 UEFI used /boot/efi/EFI/redhat/grub.cfg; RHEL 9 changed this and RHEL 10 is expected to match RHEL 9 -->
 <!-- VERIFY: whether editing GRUB_CMDLINE_LINUX plus grub2-mkconfig updates existing BLS entries or only entries for newly installed kernels; grubby is the safe method for existing kernels -->
 
 Use `grubby` for the kernel command line of existing kernels. Use `/etc/default/grub` plus `grub2-mkconfig` for menu behaviour such as the timeout. Never edit `grub.cfg` by hand: it is regenerated.
+
+On RHEL 9 and later the target is `/boot/grub2/grub.cfg` for both BIOS and UEFI machines. Do not overwrite `/boot/efi/EFI/redhat/grub.cfg` (the UEFI path used on RHEL 8): on UEFI it is only a small stub that points at the real file.
 
 ## Common mistakes
 
@@ -465,20 +466,20 @@ Use `grubby` for the kernel command line of existing kernels. Use `/etc/default/
 
 ```bash
 sudo useradd alice
-systemctl get-default > /tmp/default-target.orig
-sudo grubby --info=DEFAULT > /tmp/grubby.orig
+systemctl get-default > /var/tmp/default-target.orig
+sudo grubby --info=DEFAULT > /var/tmp/grubby.orig
 ```
 
-If `atd` is not installed, run `sudo dnf install -y at` first (needs a repository) and `sudo systemctl enable --now atd`. Use `/tmp` for proof files; nothing here touches the spare disks.
+If `atd` is not installed, run `sudo dnf install -y at` first (needs a repository) and `sudo systemctl enable --now atd`. Proof files go in `/var/tmp`, which (unlike `/tmp`) is meant to survive a reboot; nothing here touches the spare disks.
 
 **Task:**
 
-- [ ] As `student`, queue an `at` job in 2 minutes that writes the hostname to `/tmp/once.txt`. Then queue a second job for 1 hour from now and remove it with `atrm`.
-- [ ] As `student`, add a cron job that appends the date as `YYYY-MM-DD-HH:MM:SS` to `/tmp/repeat.txt` every 2 minutes.
+- [ ] As `student`, queue an `at` job in 2 minutes that writes the hostname to `/var/tmp/once.txt`. Then queue a second job for 1 hour from now and remove it with `atrm`.
+- [ ] As `student`, add a cron job that appends the date as `YYYY-MM-DD-HH:MM:SS` to `/var/tmp/repeat.txt` every 2 minutes.
 - [ ] As root, create `/etc/cron.d/lab-heartbeat` that runs `logger -t labcron heartbeat` as root every 10 minutes.
-- [ ] Give user `alice` a cron job that runs `/usr/bin/id >> /tmp/alice-cron.txt` at 02:00 Monday to Friday.
-- [ ] Add one `@reboot` cron entry for `student` that writes `boot at $(date)` to `/tmp/boot-marker.txt`.
-- [ ] Create `lab-note.service` and `lab-note.timer` so a timestamp is appended to `/tmp/lab-timer.txt` every 2 minutes. Enable and start the timer.
+- [ ] Give user `alice` a cron job that runs `/usr/bin/id >> /var/tmp/alice-cron.txt` at 02:00 Monday to Friday.
+- [ ] Add one `@reboot` cron entry for `student` that writes `boot at $(date)` to `/var/tmp/boot-marker.txt`.
+- [ ] Create `lab-note.service` and `lab-note.timer` so a timestamp is appended to `/var/tmp/lab-timer.txt` every 2 minutes. Enable and start the timer.
 - [ ] Check that `crond` and `atd` are active, and that `chronyd` is active and enabled.
 - [ ] In `/etc/chrony.conf`, replace the `pool` line with `server 192.168.122.1 iburst`, restart `chronyd`, and read `chronyc sources -v`. The task is to configure the client; if the source shows `?` because your lab host does not serve time, the configuration is still correct.
 - [ ] Set the default target to `multi-user.target`, then verify it.
@@ -494,8 +495,8 @@ If `atd` is not installed, run `sudo dnf install -y at` first (needs a repositor
 ??? success "Solution"
     ```bash
     # at
-    echo "hostname > /tmp/once.txt" | at now + 2 minutes
-    echo "date > /tmp/cancel-me.txt" | at now + 1 hour
+    echo "hostname > /var/tmp/once.txt" | at now + 2 minutes
+    echo "date > /var/tmp/cancel-me.txt" | at now + 1 hour
     atq
     atrm 2          # use the job number of the 1-hour job from atq
 
@@ -504,25 +505,25 @@ If `atd` is not installed, run `sudo dnf install -y at` first (needs a repositor
     ```
     Add these two lines in the editor, then save:
     ```text
-    */2 * * * * /usr/bin/date +\%F-\%T >> /tmp/repeat.txt
-    @reboot /usr/bin/bash -c '/usr/bin/echo "boot at $(/usr/bin/date)" >> /tmp/boot-marker.txt'
+    */2 * * * * /usr/bin/date +\%F-\%T >> /var/tmp/repeat.txt
+    @reboot /usr/bin/bash -c '/usr/bin/echo "boot at $(/usr/bin/date)" >> /var/tmp/boot-marker.txt'
     ```
     ```bash
     crontab -l
 
     # system cron file and alice's table
     echo '*/10 * * * * root /usr/bin/logger -t labcron heartbeat' | sudo tee /etc/cron.d/lab-heartbeat
-    echo '0 2 * * 1-5 /usr/bin/id >> /tmp/alice-cron.txt' | sudo crontab -u alice -
+    echo '0 2 * * 1-5 /usr/bin/id >> /var/tmp/alice-cron.txt' | sudo crontab -u alice -
     sudo crontab -l -u alice
 
     # systemd timer
     sudo tee /etc/systemd/system/lab-note.service <<'EOF'
     [Unit]
-    Description=Append a timestamp to /tmp/lab-timer.txt
+    Description=Append a timestamp to /var/tmp/lab-timer.txt
 
     [Service]
     Type=oneshot
-    ExecStart=/usr/bin/bash -c '/usr/bin/date >> /tmp/lab-timer.txt'
+    ExecStart=/usr/bin/bash -c '/usr/bin/date >> /var/tmp/lab-timer.txt'
     EOF
     sudo tee /etc/systemd/system/lab-note.timer <<'EOF'
     [Unit]
@@ -561,7 +562,7 @@ If `atd` is not installed, run `sudo dnf install -y at` first (needs a repositor
 
     sudo reboot
     ```
-    **Verify:** after the wait, `cat /tmp/once.txt` shows `servera.lab.example`, `cat /tmp/repeat.txt` and `cat /tmp/lab-timer.txt` grow every 2 minutes, `atq` no longer lists the 1-hour job, and `sudo journalctl -u crond | grep labcron` shows the heartbeat. After the reboot: `systemctl list-timers lab-note.timer`, `crontab -l`, `cat /tmp/boot-marker.txt`, `grep loglevel /proc/cmdline`, `systemctl get-default` (`multi-user.target`) and `systemctl is-enabled chronyd` all succeed. Compare with `/tmp/default-target.orig` and `/tmp/grubby.orig`.
+    **Verify:** after the wait, `cat /var/tmp/once.txt` shows `servera.lab.example`, `cat /var/tmp/repeat.txt` and `cat /var/tmp/lab-timer.txt` grow every 2 minutes, `atq` no longer lists the 1-hour job, and `sudo journalctl -u crond | grep labcron` shows the heartbeat. After the reboot: `systemctl list-timers lab-note.timer`, `crontab -l`, `cat /var/tmp/boot-marker.txt`, `grep loglevel /proc/cmdline`, `systemctl get-default` (`multi-user.target`) and `systemctl is-enabled chronyd` all succeed. Compare with `/var/tmp/default-target.orig` and `/var/tmp/grubby.orig`.
     <!-- VERIFY: sed line for GRUB_TIMEOUT works if the line already exists in /etc/default/grub on RHEL 10; if absent, append GRUB_TIMEOUT=10 -->
 
 ??? warning "Cleanup (restore the machine)"
@@ -572,7 +573,7 @@ If `atd` is not installed, run `sudo dnf install -y at` first (needs a repositor
     crontab -r
     sudo userdel -r alice
     sudo cp -a /root/chrony.conf.orig /etc/chrony.conf && sudo systemctl restart chronyd
-    sudo systemctl set-default "$(cat /tmp/default-target.orig)"
+    sudo systemctl set-default "$(cat /var/tmp/default-target.orig)"
     sudo grubby --update-kernel=ALL --remove-args="loglevel=5"
     sudo sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/' /etc/default/grub
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg
@@ -594,7 +595,7 @@ If `atd` is not installed, run `sudo dnf install -y at` first (needs a repositor
 
 ### Exam-style task 1
 
-Schedule a one-time job that creates `/tmp/once.txt`, and configure a recurring job that appends the date to `/tmp/repeat.txt`.
+Schedule a one-time job that creates `/var/tmp/once.txt`, and configure a recurring job that appends the date to `/var/tmp/repeat.txt`.
 
 **Grader mindset checklist:**
 
@@ -604,15 +605,15 @@ Schedule a one-time job that creates `/tmp/once.txt`, and configure a recurring 
 
 ??? success "Solution"
     ```bash
-    echo "date > /tmp/once.txt" | at now + 1 minute
+    echo "date > /var/tmp/once.txt" | at now + 1 minute
     crontab -e
     crontab -l
     ```
     Example cron line:
     ```text
-    */5 * * * * /usr/bin/date >> /tmp/repeat.txt
+    */5 * * * * /usr/bin/date >> /var/tmp/repeat.txt
     ```
-    **Verify:** `atq`, then after the minute `cat /tmp/once.txt`; `crontab -l`; wait for the next 5-minute mark and `cat /tmp/repeat.txt`.
+    **Verify:** `atq`, then after the minute `cat /var/tmp/once.txt`; `crontab -l`; wait for the next 5-minute mark and `cat /var/tmp/repeat.txt`.
 
 ### Exam-style task 2
 
@@ -712,7 +713,8 @@ Make the system boot into `multi-user.target` and add the kernel argument `audit
     9. A `.service` (what to run) and a `.timer` (when). Enable the `.timer`.
     10. `systemd-analyze calendar "EXPRESSION"`
     11. `sudo systemctl set-default multi-user.target`
-    12. `sudo grub2-mkconfig -o /boot/grub2/grub.cfg` (path: see the VERIFY note in step 7).
+    12. `sudo grub2-mkconfig -o /boot/grub2/grub.cfg` (the same path on BIOS and UEFI machines, RHEL 9 and later; never write to `/boot/efi/EFI/redhat/grub.cfg`, which is only a stub).
+    <!-- VERIFY: RHEL 10 keeps /boot/grub2/grub.cfg for both BIOS and UEFI, as RHEL 9 does -->
 
 ## Summary
 
