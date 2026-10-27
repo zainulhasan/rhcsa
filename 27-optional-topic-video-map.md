@@ -12,7 +12,7 @@ It is not a second course, and it is not a list of random playlists. Its job is 
 
 ## Source Of Truth
 
-Use Red Hat's public [EX200 exam page](https://www.redhat.com/en/services/training/ex200-red-hat-certified-system-administrator-rhcsa-exam) as the final scope check. I reviewed this page on March 28, 2026, and the public exam page states that `EX200` is based on `RHEL 10`.
+Use Red Hat's public [EX200 exam page](https://www.redhat.com/en/services/training/ex200-red-hat-certified-system-administrator-rhcsa-exam) as the final scope check. At the time this course was revised, the public exam page stated that `EX200` is based on `RHEL 10`. Check it again before you book.
 
 Use external material in this order:
 

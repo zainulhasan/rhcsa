@@ -103,6 +103,13 @@ If the problem is still unclear:
 3. redo one worked example
 4. retry the lab without looking at the solution
 
+## Recommended Habits
+
+- Practice as a regular user first, then use `sudo` or `su -` only when needed.
+- Reboot after major configuration changes to confirm persistence.
+- Keep a text file of failed commands and corrected commands.
+- Do not rely on copy-paste during serious review.
+
 ## How To Repeat Weak Topics
 
 If a topic feels weak:
