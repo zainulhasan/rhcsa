@@ -54,31 +54,33 @@ Use this only after you have completed:
 - `serverb.lab.example` (`192.168.122.11`) is running, has the user `student` with password `student`, and `sshd` is active. Only Task 10 needs it.
 - `/dev/vdb` (2 GiB) is the spare disk on `servera` and must be empty. `/dev/vdc` is not used in this mock.
 - This mock installs `at`, `tree` and `httpd` itself; they do not have to be present at the start.
+- Name resolution: Task 10 uses `serverb.lab.example`. If it does not resolve on your VMs, add it once: `grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.example serverb' | sudo tee -a /etc/hosts`.
 
 ??? warning "Reset servera before a re-run (destroys the mock's data and /dev/vdb)"
-    Run on `servera` as `student` before starting, or before a second attempt. Safe on a fresh machine: every line ignores "not found" errors.
+    Run on `servera` as `student` before starting, or before a second attempt. Safe on a fresh machine: every line ignores "not found" errors. The first line saves the swap UUID, because the swap line in `/etc/fstab` uses `UUID=` and would otherwise survive the wipe.
     ```bash
-    sudo umount /data 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgmock 2>/dev/null
-    sudo wipefs -a /dev/vdb1 /dev/vdb2 2>/dev/null
-    sudo wipefs -a /dev/vdb
-    sudo sed -i '\# /data #d' /etc/fstab        # remove the /data line
-    grep swap /etc/fstab                        # then delete any swap line for the old vdb2 by hand: sudoedit /etc/fstab
+    U=$(sudo blkid -s UUID -o value /dev/vdb2 2>/dev/null); [ -n "$U" ] && sudo sed -i "/$U/d" /etc/fstab
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgmock vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     sudo userdel -r analyst1 2>/dev/null
     sudo groupdel reporting 2>/dev/null
-    sudo rm -rf /srv/reports /data /tmp/weekly.txt.* /tmp/bash-users.* /tmp/at-proof.txt /tmp/cron-proof.txt /tmp/index.html /usr/local/bin/userreport.sh
+    sudo rm -rf /srv/reports /data /var/tmp/weekly.txt.* /var/tmp/bash-users.* /var/tmp/at-proof.txt /var/tmp/cron-proof.txt /tmp/index.html /usr/local/bin/userreport.sh
     crontab -r 2>/dev/null
     sudo dnf remove -y tree at httpd
     sudo rm -f /var/www/html/index.html
     sudo firewall-cmd --permanent --remove-service=http && sudo firewall-cmd --reload
-    sudo sed -i 's/^Storage=.*/#Storage=auto/' /etc/systemd/journald.conf
+    sudo rm -f /etc/systemd/journald.conf.d/persistent.conf
     sudo rm -rf /var/log/journal && sudo systemctl restart systemd-journald
     rm -f ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.pub
     ```
-    On `serverb` as `student`, also run `rm -f ~/.ssh/authorized_keys` so Task 10 starts clean. Then run `sudo systemctl daemon-reload` on `servera`.
+    On `serverb` as `student`, also run `rm -f ~/.ssh/authorized_keys` so Task 10 starts clean.
 
 ## Tasks
+
+Do the tasks in order. Later tasks depend on earlier ones: Task 3 needs the directory from Task 2, Task 6 is tested with the user from Task 1, Task 12 needs the logical volume from Task 11, Task 13 needs partition 1 from Task 11 (it adds partition 2 right after it), and Task 18 re-checks the results of Tasks 9, 10, 12, 13, 14, 15 and 17.
 
 ### Task 1: User, group and password aging (6 points)
 
@@ -97,18 +99,18 @@ Create the directory `/srv/reports` owned by user `root` and group `reporting`. 
 
 ### Task 3: File and links (5 points)
 
-Create `/srv/reports/weekly.txt` with exactly three lines: `line1`, `line2`, `line3`. Create a **hard link** `/tmp/weekly.txt.hard` and a **symbolic link** `/tmp/weekly.txt.soft` that both point to it.
+Create `/srv/reports/weekly.txt` with exactly three lines: `line1`, `line2`, `line3`. Create a **hard link** `/var/tmp/weekly.txt.hard` and a **symbolic link** `/var/tmp/weekly.txt.soft` that both point to it.
 
 - [ ] `weekly.txt` has three lines
-- [ ] `/tmp/weekly.txt.hard` has the same inode as `weekly.txt` (link count 2)
-- [ ] `/tmp/weekly.txt.soft` is a symlink to `/srv/reports/weekly.txt`
+- [ ] `/var/tmp/weekly.txt.hard` has the same inode as `weekly.txt` (link count 2)
+- [ ] `/var/tmp/weekly.txt.soft` is a symlink to `/srv/reports/weekly.txt`
 
 ### Task 4: Search and redirect (4 points)
 
-Save every line of `/etc/passwd` that ends in `bash` to `/tmp/bash-users.txt`. Save the **number** of those lines (just the number) to `/tmp/bash-users.count`.
+Save every line of `/etc/passwd` that ends in `bash` to `/var/tmp/bash-users.txt`. Save the **number** of those lines (just the number) to `/var/tmp/bash-users.count`.
 
-- [ ] `/tmp/bash-users.txt` contains only lines ending in `bash`
-- [ ] `/tmp/bash-users.count` contains only the matching-line count
+- [ ] `/var/tmp/bash-users.txt` contains only lines ending in `bash`
+- [ ] `/var/tmp/bash-users.count` contains only the matching-line count
 
 ### Task 5: Package (3 points)
 
@@ -127,18 +129,18 @@ Create the executable script `/usr/local/bin/userreport.sh`. It takes one userna
 
 ### Task 7: One-time job (4 points)
 
-Make sure the `at` command and its daemon are available (install and enable `atd` if needed). Schedule a one-time job to run 2 minutes from now that writes the output of `hostname` to `/tmp/at-proof.txt`.
+Make sure the `at` command and its daemon are available (install and enable `atd` if needed). Schedule a one-time job to run 2 minutes from now that writes the output of `hostname` to `/var/tmp/at-proof.txt`.
 
 - [ ] `atd` is active and enabled
 - [ ] `atq` shows the pending job right after you schedule it
-- [ ] After 2 minutes `/tmp/at-proof.txt` contains one line, the hostname
+- [ ] After 2 minutes `/var/tmp/at-proof.txt` contains one line, the hostname
 
 ### Task 8: Recurring job (4 points)
 
-As the user `student` (not root), schedule a cron job that appends the output of `date` to `/tmp/cron-proof.txt` every 5 minutes.
+As the user `student` (not root), schedule a cron job that appends the output of `date` to `/var/tmp/cron-proof.txt` every 5 minutes.
 
 - [ ] `crontab -l` (as `student`) shows the `*/5` entry
-- [ ] After the next 5-minute mark `/tmp/cron-proof.txt` has a date line
+- [ ] After the next 5-minute mark `/var/tmp/cron-proof.txt` has a date line
 
 ### Task 9: SSH service (3 points)
 
@@ -203,7 +205,7 @@ Confirm SELinux is in `Enforcing` mode (set it, and make it persistent, if it is
 Configure the system journal to be stored persistently on disk.
 
 - [ ] `/var/log/journal` exists
-- [ ] `Storage=persistent` is set in `/etc/systemd/journald.conf`
+- [ ] `Storage=persistent` is active in the journald configuration (`systemd-analyze cat-config systemd/journald.conf` shows it)
 
 ### Task 18: Reboot and re-verify (19 points)
 
@@ -237,7 +239,7 @@ Before checking the solution file, create your own proof log with commands such 
 ```bash
 id analyst1
 ls -ld /srv/reports
-ls -li /srv/reports/weekly.txt /tmp/weekly.txt.hard /tmp/weekly.txt.soft
+ls -li /srv/reports/weekly.txt /var/tmp/weekly.txt.hard /var/tmp/weekly.txt.soft
 rpm -q tree
 systemctl is-enabled sshd
 findmnt /data

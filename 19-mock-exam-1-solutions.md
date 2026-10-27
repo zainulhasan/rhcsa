@@ -27,12 +27,12 @@ This is the course's own practice scheme. A task earns its full points only if t
 |---|---|---|---|---|
 | 1 | 6 | `id analyst1; sudo chage -l analyst1` | groups include `reporting`; Maximum 60, Minimum 7, Warning 10 | yes |
 | 2 | 5 | `stat -c '%U:%G %a' /srv/reports` | `root:reporting 2775` | yes |
-| 3 | 5 | `ls -li /srv/reports/weekly.txt /tmp/weekly.txt.*; wc -l < /srv/reports/weekly.txt` | hard link has the same inode and link count 2; soft link shows `->`; `3` | yes |
-| 4 | 4 | `grep -c 'bash$' /tmp/bash-users.txt; cat /tmp/bash-users.count` | the two numbers are equal | yes |
+| 3 | 5 | `ls -li /srv/reports/weekly.txt /var/tmp/weekly.txt.*; wc -l < /srv/reports/weekly.txt` | hard link has the same inode and link count 2; soft link shows `->`; `3` | yes |
+| 4 | 4 | `grep -c 'bash$' /var/tmp/bash-users.txt; cat /var/tmp/bash-users.count` | the two numbers are equal | yes |
 | 5 | 3 | `rpm -q tree; command -v tree` | `tree-<version>`; `/usr/bin/tree` | yes |
 | 6 | 6 | `userreport.sh analyst1; userreport.sh nosuchuser9; head -1 /usr/local/bin/userreport.sh` | `exists`; `missing`; `#!/bin/bash` | yes |
-| 7 | 4 | `systemctl is-enabled atd; cat /tmp/at-proof.txt` | `enabled`; one hostname line | yes (atd) |
-| 8 | 4 | `crontab -l; tail -n 2 /tmp/cron-proof.txt` | `*/5 * * * * date >> /tmp/cron-proof.txt`; date lines | yes |
+| 7 | 4 | `systemctl is-enabled atd; cat /var/tmp/at-proof.txt` | `enabled`; one hostname line | yes (atd) |
+| 8 | 4 | `crontab -l; tail -n 2 /var/tmp/cron-proof.txt` | `*/5 * * * * date >> /var/tmp/cron-proof.txt`; date lines | yes |
 | 9 | 3 | `systemctl is-active sshd; systemctl is-enabled sshd` | `active`; `enabled` | yes |
 | 10 | 6 | `ssh -o BatchMode=yes student@serverb.lab.example hostname` | `serverb.lab.example`, no prompt | yes |
 | 11 | 7 | `lsblk -o NAME,SIZE /dev/vdb; sudo lvs -o lv_name,vg_name,lv_size vgmock; sudo parted /dev/vdb print` | `vdb1` 600M; `lvdata vgmock 512.00m`; flag `lvm` | yes |
@@ -41,7 +41,7 @@ This is the course's own practice scheme. A task earns its full points only if t
 | 14 | 3 | `hostnamectl --static` | `servera.lab.example` | yes |
 | 15 | 4 | `sudo firewall-cmd --list-services; sudo firewall-cmd --permanent --list-services` | both include `http` | yes |
 | 16 | 5 | `getenforce; ls -Z /var/www/html/index.html; cat /var/www/html/index.html` | `Enforcing`; `httpd_sys_content_t`; `mock1` | yes |
-| 17 | 4 | `grep '^Storage' /etc/systemd/journald.conf; ls -d /var/log/journal` | `Storage=persistent`; the directory exists | yes |
+| 17 | 4 | `systemd-analyze cat-config systemd/journald.conf \| grep '^Storage'; ls -d /var/log/journal` | `Storage=persistent`; the directory exists | yes |
 | 18 | 19 | the reboot checklist in Task 18 below | every line matches | n/a |
 
 | Score sheet | |
@@ -98,34 +98,34 @@ This is the course's own practice scheme. A task earns its full points only if t
 ??? success "Solution"
     ```bash
     printf "line1\nline2\nline3\n" | sudo tee /srv/reports/weekly.txt
-    sudo ln /srv/reports/weekly.txt /tmp/weekly.txt.hard
-    sudo ln -s /srv/reports/weekly.txt /tmp/weekly.txt.soft
+    sudo ln /srv/reports/weekly.txt /var/tmp/weekly.txt.hard
+    sudo ln -s /srv/reports/weekly.txt /var/tmp/weekly.txt.soft
     ```
     **Verify:**
     ```bash
-    ls -li /srv/reports/weekly.txt /tmp/weekly.txt.hard /tmp/weekly.txt.soft
+    ls -li /srv/reports/weekly.txt /var/tmp/weekly.txt.hard /var/tmp/weekly.txt.soft
     wc -l < /srv/reports/weekly.txt
     ```
     ```text title="Example output"
     655361 -rw-r--r--. 2 root reporting 18 Jan  5 10:01 /srv/reports/weekly.txt
-    655361 -rw-r--r--. 2 root reporting 18 Jan  5 10:01 /tmp/weekly.txt.hard
-    655370 lrwxrwxrwx. 1 root root      23 Jan  5 10:01 /tmp/weekly.txt.soft -> /srv/reports/weekly.txt
+    655361 -rw-r--r--. 2 root reporting 18 Jan  5 10:01 /var/tmp/weekly.txt.hard
+    655370 lrwxrwxrwx. 1 root root      23 Jan  5 10:01 /var/tmp/weekly.txt.soft -> /srv/reports/weekly.txt
     3
     ```
-    If `ln` says `Invalid cross-device link`, `/srv` and `/tmp` are on different filesystems (check `df /srv /tmp`); a hard link cannot cross filesystems. **Persistence:** none needed on a normal install. Files in `/tmp` are cleaned by `systemd-tmpfiles` after about 10 days and are not guaranteed to survive a long run.
+    If `ln` says `Invalid cross-device link`, `/srv` and `/var/tmp` are on different filesystems (check `df /srv /var/tmp`); a hard link cannot cross filesystems. The links go in `/var/tmp` rather than `/tmp` because `/tmp` may be a RAM-backed tmpfs that is emptied at every reboot (and a hard link from `/srv` into a tmpfs always fails). **Persistence:** none needed; `/var/tmp` survives reboots and is cleaned only after a long time. <!-- VERIFY: /tmp is a tmpfs on RHEL 10 by default (check with findmnt /tmp) -->
 
 ### Task 4
 
 ??? success "Solution"
     ```bash
-    grep 'bash$' /etc/passwd > /tmp/bash-users.txt
-    grep -c 'bash$' /etc/passwd > /tmp/bash-users.count
+    grep 'bash$' /etc/passwd > /var/tmp/bash-users.txt
+    grep -c 'bash$' /etc/passwd > /var/tmp/bash-users.count
     ```
     **Verify:**
     ```bash
-    cat /tmp/bash-users.txt
-    cat /tmp/bash-users.count
-    [ "$(cat /tmp/bash-users.count)" = "$(wc -l < /tmp/bash-users.txt)" ] && echo OK
+    cat /var/tmp/bash-users.txt
+    cat /var/tmp/bash-users.count
+    [ "$(cat /var/tmp/bash-users.count)" = "$(wc -l < /var/tmp/bash-users.txt)" ] && echo OK
     ```
     The `$` anchors the match to the end of the line, so `/bin/bash` matches but `/bin/bash2` would not. `grep -c` prints only the number, which is what the task asks for.
 
@@ -171,7 +171,7 @@ This is the course's own practice scheme. A task earns its full points only if t
     ```bash
     sudo dnf install -y at
     sudo systemctl enable --now atd
-    echo 'hostname > /tmp/at-proof.txt' | at now + 2 minutes
+    echo 'hostname > /var/tmp/at-proof.txt' | at now + 2 minutes
     atq
     ```
     <!-- VERIFY: whether the at package is installed by default on RHEL 10 -->
@@ -179,7 +179,7 @@ This is the course's own practice scheme. A task earns its full points only if t
     ```bash
     systemctl is-active atd
     atq
-    sleep 130; cat /tmp/at-proof.txt
+    sleep 130; cat /var/tmp/at-proof.txt
     ```
     ```text title="Example output"
     1	Mon Jan  5 10:05:00 2026 a student
@@ -196,19 +196,19 @@ This is the course's own practice scheme. A task earns its full points only if t
     Add this line, save and exit:
 
     ```text
-    */5 * * * * date >> /tmp/cron-proof.txt
+    */5 * * * * date >> /var/tmp/cron-proof.txt
     ```
 
     Non-interactive alternative:
 
     ```bash
-    (crontab -l 2>/dev/null; echo '*/5 * * * * date >> /tmp/cron-proof.txt') | crontab -
+    (crontab -l 2>/dev/null; echo '*/5 * * * * date >> /var/tmp/cron-proof.txt') | crontab -
     ```
     **Verify:**
     ```bash
     crontab -l
     systemctl is-active crond
-    sleep 300; tail -n 2 /tmp/cron-proof.txt
+    sleep 300; tail -n 2 /var/tmp/cron-proof.txt
     ```
     Run it as `student`, not with `sudo`, so it lands in `student`'s crontab. Crontabs are stored on disk, so they survive a reboot as long as `crond` is enabled (it is by default).
 
@@ -398,25 +398,25 @@ This is the course's own practice scheme. A task earns its full points only if t
 
 ??? success "Solution"
     ```bash
-    sudo mkdir -p /var/log/journal
-    sudo sed -i 's/^#\?Storage=.*/Storage=persistent/' /etc/systemd/journald.conf
+    sudo mkdir -p /etc/systemd/journald.conf.d && printf '[Journal]\nStorage=persistent\n' | sudo tee /etc/systemd/journald.conf.d/persistent.conf
     sudo systemctl restart systemd-journald
     sudo journalctl --flush
     ```
     **Verify:**
     ```bash
-    grep '^Storage' /etc/systemd/journald.conf
+    systemd-analyze cat-config systemd/journald.conf | grep -A1 '^\[Journal\]'
     ls -ld /var/log/journal
     ls /var/log/journal
     journalctl --disk-usage
     ```
     ```text title="Example output"
+    [Journal]
     Storage=persistent
     drwxr-sr-x+ 3 root systemd-journal 46 Jan  5 10:30 /var/log/journal
     4f3a9c1e2b7d4e5f8a6b0c9d1e2f3a4b
     Archived and active journals take up 24.0M in the file system.
     ```
-    The long directory name is the machine-id and appears once the journal starts writing to disk. **Persistence:** both the config line and the directory survive a reboot.
+    The long directory name is the machine-id and appears once the journal starts writing to disk. A drop-in is used instead of `sed` on `/etc/systemd/journald.conf` because that file may not contain a `Storage=` line at all, and then `sed` changes nothing. After the reboot in Task 18, `journalctl --list-boots` should list more than one boot. **Persistence:** both the drop-in and the directory survive a reboot. <!-- VERIFY: systemd-analyze cat-config output layout for journald drop-ins on RHEL 10 -->
 
 ### Task 18
 
