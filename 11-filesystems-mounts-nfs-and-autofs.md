@@ -103,12 +103,16 @@ sudo mkfs.vfat -n FATDATA /dev/vdb3
 ```text title="Example output"
 meta-data=/dev/vdb1              isize=512    agcount=4, agsize=32768 blks
          =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=1
+         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
 data     =                       bsize=4096   blocks=131072, imaxpct=25
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
 log      =internal log           bsize=4096   blocks=16384, version=2
 realtime =none                   extsz=4096   blocks=0, rtextents=0
 ```
-<!-- VERIFY: mkfs.xfs figures depend on partition size; mkfs.vfat is in the dosfstools package, confirm it is installed by default on RHEL 10 -->
+<!-- VERIFY: mkfs.vfat is in the dosfstools package, confirm it is installed by default on RHEL 10 -->
+
+The figures depend on the partition size, and the output continues with a few more lines. The internal log is 64 MiB (`blocks=16384` at 4096 bytes), which is why a fresh XFS filesystem shows less space in `df` than the device holds.
 
 | Option | Meaning |
 |---|---|
@@ -123,11 +127,11 @@ Existing filesystems can be relabelled later with `xfs_admin -L` (XFS, unmounted
 sudo blkid /dev/vdb1 /dev/vdb2 /dev/vdb3
 ```
 ```text title="Example output"
-/dev/vdb1: LABEL="xfsdata" UUID="9d3b6a1e-52c4-4f0e-8a1b-0c7d5e4f3a21" TYPE="xfs" PARTLABEL="xfsdata" PARTUUID="..."
-/dev/vdb2: LABEL="extdata" UUID="4a7e2c90-1b3d-4e6f-9c58-7d2a1f0b8e34" TYPE="ext4" PARTLABEL="extdata" PARTUUID="..."
-/dev/vdb3: LABEL="FATDATA" UUID="3C2A-9F1B" TYPE="vfat" PARTLABEL="fatdata" PARTUUID="..."
+/dev/vdb1: LABEL="xfsdata" UUID="9d3b6a1e-52c4-4f0e-8a1b-0c7d5e4f3a21" BLOCK_SIZE="512" TYPE="xfs" PARTLABEL="xfsdata" PARTUUID="..."
+/dev/vdb2: LABEL="extdata" UUID="4a7e2c90-1b3d-4e6f-9c58-7d2a1f0b8e34" BLOCK_SIZE="1024" TYPE="ext4" PARTLABEL="extdata" PARTUUID="..."
+/dev/vdb3: SEC_TYPE="msdos" LABEL_FATBOOT="FATDATA" LABEL="FATDATA" UUID="3C2A-9F1B" BLOCK_SIZE="512" TYPE="vfat" PARTLABEL="fatdata" PARTUUID="..."
 ```
-<!-- VERIFY: blkid field order on RHEL 10; all UUIDs above are illustrative -->
+<!-- VERIFY: the PARTLABEL and PARTUUID fields on real partitions (the rest was observed on filesystem images); all UUIDs above are illustrative -->
 
 Note the VFAT "UUID" is a short serial like `3C2A-9F1B`. XFS and ext4 UUIDs are 36 characters. A short ID such as `1234-abcd` is only valid for a VFAT filesystem, so **never copy an example UUID**: look the real one up with `blkid`.
 
@@ -145,9 +149,11 @@ TARGET        SOURCE    FSTYPE OPTIONS
 /mnt/xfsdata  /dev/vdb1 xfs    rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=32k,noquota
 
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/vdb1       460M   28M  433M   6% /mnt/xfsdata
+/dev/vdb1       448M   27M  422M   6% /mnt/xfsdata
 ```
-<!-- VERIFY: sizes are approximate for a 512 MiB XFS -->
+<!-- VERIFY: sizes are approximate for a 512 MiB XFS (observed: a fresh 400 MiB XFS shows 336M, the 64 MiB log is not counted) -->
+
+A 512 MiB partition shows about 448M, not 512M: the 64 MiB internal log takes its share before you store anything.
 
 | Command or option | Meaning |
 |---|---|
@@ -200,11 +206,10 @@ findmnt --verify
 findmnt /mnt/xfsdata
 ```
 ```text title="Example output"
-   Success, no errors or warnings detected
+Success, no errors or warnings detected
 ```
-<!-- VERIFY: exact findmnt --verify wording on RHEL 10 -->
 
-`findmnt --verify` checks the syntax and targets of every fstab line without mounting.
+`findmnt --verify` checks the syntax and targets of every fstab line without mounting. A bad line is reported instead, for example `[E] unreachable on boot required source: LABEL=extdata` for a label that does not exist, followed by a summary such as `0 parse errors, 1 error, 0 warnings`. If you edited `/etc/fstab` without `daemon-reload`, it also warns `your fstab has been modified, but systemd still uses the old version`.
 
 ### 4. Extend an existing logical volume
 
@@ -217,14 +222,16 @@ df -h /mnt/lvapp
 ```
 ```text title="Example output"
   Size of logical volume vgfs/lvapp changed from 400.00 MiB (100 extents) to 600.00 MiB (150 extents).
-  Logical volume vgfs/lvapp successfully resized.
 meta-data=/dev/mapper/vgfs-lvapp isize=512    agcount=4, agsize=25600 blks
 ...
 data blocks changed from 102400 to 153600
+xfs_growfs done
+  Extended file system xfs on vgfs/lvapp.
+  Logical volume vgfs/lvapp successfully resized.
 Filesystem               Size  Used Avail Use% Mounted on
-/dev/mapper/vgfs-lvapp   560M   26M  535M   5% /mnt/lvapp
+/dev/mapper/vgfs-lvapp   536M   27M  509M   5% /mnt/lvapp
 ```
-<!-- VERIFY: exact lvextend -r output wording on RHEL 10 -->
+<!-- VERIFY: first lines of lvextend -r output and the df figures after growing 400M to 600M (the last four result lines were observed) -->
 
 Without `-r` you grow the filesystem yourself, and the tool depends on the type:
 
@@ -374,8 +381,8 @@ f: /mnt/xfsdata/note.txt
 dr-xr-xr-x root    root    /
 drwxr-xr-x root    root    mnt
 drwxr-xr-x root    root    xfsdata
+                           note.txt - No such file or directory
 ```
-<!-- VERIFY: namei -l output layout; the last path element is missing because the file does not exist yet -->
 
 `student` is not the owner and "others" have only `r-x`, so writing is denied. Correct it on the directory, not by weakening everything:
 
@@ -537,8 +544,8 @@ sudo firewall-cmd --reload
     ```
     The wildcard export `/export/team` is read-only on purpose, so `-rw` still mounts but writing fails with a read-only error. That is correct.
 
-    **Verify:** `for m in /mnt/xfsdata /mnt/extdata /mnt/fatdata /mnt/lvapp /mnt/nfsdata; do findmnt "$m"; done` lists all five. `df -h /mnt/lvapp` shows about 560M. `ls -l /mnt/xfsdata` shows `note.txt` owned by `student`. `findmnt -t autofs,nfs4` shows the autofs mounts and their NFS children after you accessed each path. `sudo mount -a` and `findmnt --verify` are clean. Reboot and repeat; the fstab mounts are back, and the autofs paths mount again on first access.
-    <!-- VERIFY: lvapp size after XFS overhead; findmnt -t autofs,nfs4 layout -->
+    **Verify:** `for m in /mnt/xfsdata /mnt/extdata /mnt/fatdata /mnt/lvapp /mnt/nfsdata; do findmnt "$m"; done` lists all five. `df -h /mnt/lvapp` shows about 536M (the 64 MiB XFS log is not counted). `ls -l /mnt/xfsdata` shows `note.txt` owned by `student`. `findmnt -t autofs,nfs4` shows the autofs mounts and their NFS children after you accessed each path. `sudo mount -a` and `findmnt --verify` are clean. Reboot and repeat; the fstab mounts are back, and the autofs paths mount again on first access.
+    <!-- VERIFY: lvapp size after growing 400M to 600M (observed: a fresh 400M XFS shows 336M); findmnt -t autofs,nfs4 layout -->
 
 ## Exam tips
 

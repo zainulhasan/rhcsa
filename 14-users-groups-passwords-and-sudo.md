@@ -17,7 +17,7 @@ description: Create, modify and delete local users and groups, set passwords and
     student:x:1000:1000:student:/home/student:/bin/bash
     %wheel	ALL=(ALL)	ALL
     ```
-    <!-- VERIFY: group list of the student user and exact sudoers wheel line on the RHEL 10 lab image -->
+    <!-- VERIFY: group list of the student user on the RHEL 10 lab image -->
     Notice three things. `id` shows your user ID, your primary group and your extra groups. `getent passwd` shows one account as seven colon-separated fields. And the `%wheel` line says "everyone in the group `wheel` may run any command as any user". That is why `student` can use `sudo`. By the end of this lesson you will know how to build all three yourself.
 
 ## Why it matters
@@ -132,20 +132,22 @@ grep -E '^(UID_MIN|UID_MAX|PASS_MAX_DAYS|PASS_MIN_DAYS|PASS_WARN_AGE|CREATE_HOME
 
 ```text title="Example output"
 GROUP=100
+GROUPS=
 HOME=/home
 INACTIVE=-1
 EXPIRE=
 SHELL=/bin/bash
 SKEL=/etc/skel
+USRSKEL=/usr/etc/skel
 CREATE_MAIL_SPOOL=yes
+LOG_INIT=yes
+PASS_MAX_DAYS	99999
+PASS_MIN_DAYS	0
+PASS_WARN_AGE	7
 UID_MIN                  1000
 UID_MAX                 60000
-PASS_MAX_DAYS           99999
-PASS_MIN_DAYS               0
-PASS_WARN_AGE               7
-CREATE_HOME     yes
+CREATE_HOME	yes
 ```
-<!-- VERIFY: exact useradd -D and login.defs values on RHEL 10 -->
 
 Changing `PASS_MAX_DAYS` in `/etc/login.defs` affects **new** accounts only. Existing users keep what is already in `/etc/shadow`; change those with `chage`.
 
@@ -225,7 +227,7 @@ sudo passwd alice
 ```text title="Example output"
 New password:
 Retype new password:
-passwd: all authentication tokens updated successfully.
+passwd: password updated successfully
 ```
 
 Exam tasks usually say "set the password to X", so you need a **non-interactive** way. Both of these take the password from standard input:
@@ -235,13 +237,9 @@ echo 'Lab-Pass-2026' | sudo passwd --stdin alice
 echo 'alice:Lab-Pass-2026' | sudo chpasswd
 ```
 
-```text title="Example output"
-Changing password for user alice.
-passwd: all authentication tokens updated successfully.
-```
-<!-- VERIFY: passwd --stdin is still present on RHEL 10 (RHEL-specific option); chpasswd is the portable fallback -->
+Both print nothing when they succeed (check the exit status with `echo $?`, or log in). Use single quotes around the password so the shell does not interpret `!` or `$`. `chpasswd` reads `user:password` lines, so one command can set many accounts.
 
-Use single quotes around the password so the shell does not interpret `!` or `$`. `chpasswd` reads `user:password` lines, so one command can set many accounts.
+As root, a weak password is **warned about, not refused**: `echo 'Passw0rd1' | sudo passwd --stdin alice` prints `BAD PASSWORD: The password fails the dictionary check - it is based on a dictionary word` and still sets it. Treat that line as a warning, and use the exact password the task gives.
 
 Other `passwd` options you may need:
 
@@ -259,11 +257,10 @@ sudo passwd -S alice
 ```
 
 ```text title="Example output"
-alice PS 2026-10-27 0 99999 7 -1
+alice P 2026-10-27 0 99999 7 -1
 ```
-<!-- VERIFY: passwd -S output format (status, last change, min, max, warn, inactive) on RHEL 10 -->
 
-The second field is the state: `PS` usable password, `LK` locked, `NP` no password. The numbers are last change, minimum, maximum, warning and inactive.
+The second field is the state: `P` usable password, `L` locked, `NP` no password. A brand-new account from `useradd` shows `L` until you set a password. The numbers are last change, minimum, maximum, warning and inactive.
 
 ### 5. Password aging with `chage`
 
@@ -281,7 +278,6 @@ Minimum number of days between password change		: 7
 Maximum number of days between password change		: 90
 Number of days of warning before password expires	: 14
 ```
-<!-- VERIFY: chage -l spacing and wording on RHEL 10 -->
 
 More forms you will need:
 
@@ -330,9 +326,10 @@ Type this one line in the editor (vi keys, see [02 Files, Directories, and Text 
 %ops ALL=(ALL) ALL
 ```
 
-If the syntax is wrong, `visudo` offers to re-edit instead of saving a broken file. Then check everything:
+If the syntax is wrong, `visudo` offers to re-edit instead of saving a broken file. `visudo -f` creates a new file with mode `0640`, and `visudo -c` then reports `/etc/sudoers.d/ops: bad permissions, should be mode 0440`. Set the mode, then check everything:
 
 ```bash
+sudo chmod 0440 /etc/sudoers.d/ops
 sudo visudo -c
 sudo ls -l /etc/sudoers.d/ops
 sudo -l -U anna
@@ -345,7 +342,8 @@ sudo -l -U anna
 User anna may run the following commands on servera:
     (ALL) ALL
 ```
-<!-- VERIFY: visudo -c wording and the file mode that visudo -f creates on RHEL 10 (expected 0440) -->
+
+If `anna` is in the group `ops`, the `sudo -l -U` output starts with a long `Matching Defaults entries for anna` block; the `User anna may run...` part below it is what you read. A user with no rights gets `User anna is not allowed to run sudo on servera.`
 
 How to read the rule `%ops ALL=(ALL) ALL`:
 
@@ -363,7 +361,7 @@ bob ALL=(ALL) /usr/bin/systemctl restart sshd
 %developers ALL=(ALL) NOPASSWD: /usr/bin/systemctl status *
 ```
 
-`NOPASSWD:` skips the password prompt for those commands only. Use full command paths, as `which systemctl` reports them. Drop-in file names must not contain a `.` or end in `~`, or sudo ignores the file, and the file mode should be `0440`.
+`NOPASSWD:` skips the password prompt for those commands only. Use full command paths, as `which systemctl` reports them. Drop-in file names must not contain a `.` or end in `~`, or sudo ignores the file, and the file mode should be `0440` (`sudo chmod 0440 FILE`, because `visudo -f` creates it as `0640`).
 
 !!! warning "Never write a sudoers file with `echo ... | tee`"
     `echo '%ops ALL=(ALL) ALL' | sudo tee /etc/sudoers.d/ops` writes the line **before** anything checks it. A typo then breaks `sudo` for everyone, and you may have no way back in except the root password. Use `sudo visudo -f FILE`. If you must script it, write to a temporary file, run `sudo visudo -cf /tmp/ops.tmp`, and only then copy it with `sudo install -m 0440 /tmp/ops.tmp /etc/sudoers.d/ops`.
@@ -406,6 +404,7 @@ Verification: `chage -l temp1` shows "Account expires" 30 days from today, and `
 
 ```bash
 sudo visudo -f /etc/sudoers.d/developers      # type: %developers ALL=(ALL) ALL
+sudo chmod 0440 /etc/sudoers.d/developers
 sudo visudo -c
 sudo -l -U alice
 ```
@@ -483,16 +482,17 @@ Verification: the syntax check reports `parsed OK` and `sudo -l -U alice` lists 
     sudo chage -d 0 ben
 
     sudo visudo -f /etc/sudoers.d/ops      # type: %ops ALL=(ALL) ALL
+    sudo chmod 0440 /etc/sudoers.d/ops
     sudo visudo -c
 
     sudo -l -U anna          # (ALL) ALL
     sudo -l -U ben           # (ALL) ALL, through ops
     sudo gpasswd -d ben ops
-    sudo -l -U ben           # "may not run sudo"
+    sudo -l -U ben           # "User ben is not allowed to run sudo on servera."
 
     sudo useradd -m -e "$(date -d '+30 days' +%F)" temp1
     sudo usermod -L temp1
-    sudo passwd -S temp1     # LK
+    sudo passwd -S temp1     # L
     sudo userdel -r temp1
     ```
     **Verify:**
@@ -507,7 +507,6 @@ Verification: the syntax check reports `parsed OK` and `sudo -l -U alice` lists 
     sudo visudo -c
     ```
     `id anna` shows `uid=2001(anna) gid=3000(ops) groups=3000(ops),3001(developers)` (the `developers` GID may differ). `chage -l ben` shows "Last password change : password must be changed". `getent group ops` ends with an empty member list: `anna` is not listed because `ops` is her primary group, and `ben` was removed. `id ben` shows only his own group. `getent passwd temp1` prints nothing and `/home/temp1` does not exist. After a reboot the same commands give the same answers.
-    <!-- VERIFY: exact wording "password must be changed" in chage -l, and that sudo -l -U prints "is not allowed to run sudo" wording for ben -->
 
 ## More practice
 
@@ -555,6 +554,7 @@ Give all members of `appadmins` full sudo rights using a drop-in file named `app
 ??? success "Solution"
     ```bash
     sudo visudo -f /etc/sudoers.d/appadmins     # type: %appadmins ALL=(ALL) ALL
+    sudo chmod 0440 /etc/sudoers.d/appadmins
     sudo visudo -c
     sudo -l -U dev1
     ```
@@ -562,7 +562,7 @@ Give all members of `appadmins` full sudo rights using a drop-in file named `app
 ## Exam tips
 
 !!! tip "What the exam expects"
-    Exact names, UIDs, GIDs, shell, group membership and aging values from the task exist; the password works; the sudo rule is in a valid drop-in (or the user is in `wheel`); and all of it is still true after a reboot. Read whether the task says primary or supplementary group, and whether to keep or remove a home directory.
+    Exact names, UIDs, GIDs, shell, group membership and aging values from the task exist; the password works; the sudo rule is in a valid drop-in with mode `0440` (or the user is in `wheel`); and all of it is still true after a reboot. Read whether the task says primary or supplementary group, and whether to keep or remove a home directory.
 
 !!! warning "Must survive reboot"
     | Change | Persistent? | Make it persist with |
@@ -577,7 +577,7 @@ Give all members of `appadmins` full sudo rights using a drop-in file named `app
 
 1. `id user` and `getent passwd user` show the right UID, GID, groups, home and shell.
 2. `getent group groupname` shows the right GID and members.
-3. `sudo passwd -S user` shows `PS` (password set), not `NP` or `LK`.
+3. `sudo passwd -S user` shows `P` (password set), not `NP` or `L`.
 4. `sudo chage -l user` shows the requested aging values and expiry.
 5. `sudo visudo -c` reports every file as parsed OK, and `sudo -l -U user` shows the expected rights.
 6. Test a real login: `sudo -iu user id` (see [01 Shell Basics and Command Syntax](01-shell-basics-and-command-syntax.md) for user switching).
@@ -638,6 +638,6 @@ Give all members of `appadmins` full sudo rights using a drop-in file named `app
 | Aging | `chage -M 90 -m 7 -W 14 user`, `chage -d 0 user`, `chage -l user` |
 | Status | `passwd -S user`, `id user`, `groups user` |
 | Sudo via wheel | `usermod -aG wheel user` |
-| Sudo drop-in | `visudo -f /etc/sudoers.d/name`, `visudo -c`, `sudo -l -U user` |
+| Sudo drop-in | `visudo -f /etc/sudoers.d/name`, `chmod 0440 /etc/sudoers.d/name`, `visudo -c`, `sudo -l -U user` |
 
 **Previous:** [13 Networking, Hostname Resolution, and firewalld](13-networking-hostname-resolution-and-firewalld.md) · **Next:** [15 SELinux, SSH Keys, and Security](15-selinux-ssh-keys-and-security.md): with accounts in place, you protect them with SELinux contexts and key-based SSH logins.
