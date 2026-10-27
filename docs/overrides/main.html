@@ -2,6 +2,7 @@
 
 {% block extrahead %}
   {{ super() }}
+  {% set page_desc = (page.meta.description if page and page.meta and page.meta.description else config.site_description) %}
   {% set social_title = config.site_name if (page.canonical_url or config.site_url) == config.site_url else page.title ~ " - " ~ config.site_name %}
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="author" content="Zainul Hasan">
@@ -9,12 +10,11 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="{{ config.site_name }}">
   <meta property="og:title" content="{{ social_title }}">
-  <meta name="description" content="{{ page.meta.description or config.site_description }}">
-  <meta property="og:description" content="{{ page.meta.description or config.site_description }}">
+  <meta property="og:description" content="{{ page_desc }}">
   <meta property="og:url" content="{{ page.canonical_url or config.site_url }}">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="{{ social_title }}">
-  <meta name="twitter:description" content="{{ page.meta.description or config.site_description }}">
+  <meta name="twitter:description" content="{{ page_desc }}">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
