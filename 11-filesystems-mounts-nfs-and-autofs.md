@@ -39,7 +39,7 @@ A partition or logical volume is useless until it has a filesystem and a mount p
 **Offline help for this topic:** `man mount`, `man umount`, `man fstab`, `man mkfs.xfs`, `man mkfs.ext4`, `man nfs`, `man 5 autofs`, `man 5 auto.master`
 
 !!! note "Supporting skill (not a listed RHEL 10 objective)"
-    Setting up an NFS **server** (`/etc/exports`, `exportfs`) is not an EX200 objective. On the exam a server already exports a directory and you are the **client**. This lesson shows the few server commands only in the lab **Setup**, so you have something to mount. Do not spend study time on server tuning.
+    Setting up an NFS **server** (`/etc/exports`, `exportfs`) is not an RHCSA objective (the objectives name the NFS **client** side). Expect a server that already exports a directory, and be ready to mount it as the client. This lesson shows the few server commands only in the lab **Setup**, so you have something to mount. Do not spend study time on server tuning.
 
 ## How it works
 
@@ -166,7 +166,7 @@ Useful mount options (also valid in the fstab options field):
 | `noexec` | Programs on this filesystem cannot be run |
 | `nosuid` | Ignore set-UID/set-GID bits |
 | `nofail` | A failed mount does not stop the boot (useful for removable or network disks) |
-| `_netdev` | Marks a device that needs the network. systemd already treats `nfs` as a network filesystem, so it is not required for NFS; it is harmless and matters for things like iSCSI. <!-- VERIFY: _netdev behaviour for nfs on RHEL 10 --> |
+| `_netdev` | Marks a device that needs the network. systemd already treats `nfs` as a network filesystem, so it is not required for NFS; it is harmless and matters for things like iSCSI. |
 
 If `umount` says `target is busy`, something is using it, often your own shell sitting inside the directory:
 
@@ -281,7 +281,11 @@ flowchart LR
     D --> E["Idle timeout unmounts it"]
 ```
 
-Install and enable the service, then add a master drop-in (a file ending in `.autofs` under `/etc/auto.master.d/`).
+Install autofs first (the `/etc/auto.master.d/` directory comes with it), then write the master drop-in (a file ending in `.autofs`) and the map file, and only then enable and restart the service. `enable --now` on its own does not make an already-running autofs re-read changed maps, so use `enable` and `restart`.
+
+```bash
+sudo dnf install -y autofs
+```
 
 **Indirect map** (most common): autofs owns a base directory and creates a subdirectory per key.
 
@@ -298,8 +302,8 @@ data   -rw   serverb.lab.example:/export/data
 ```
 
 ```bash
-sudo dnf install -y autofs
-sudo systemctl enable --now autofs
+sudo systemctl enable autofs
+sudo systemctl restart autofs
 ls /mnt/auto
 ls /mnt/auto/data
 findmnt /mnt/auto/data
@@ -417,18 +421,18 @@ Two special cases on this lesson's filesystems:
 
 ## Hands-on lab
 
-**Setup:** shared lab environment. Work on `servera` as `student`. `serverb.lab.example` plays the NFS server. On the exam the server is already prepared; here you prepare it yourself first.
+**Setup:** shared lab environment. Work on `servera` as `student`. `serverb.lab.example` plays the NFS server. Expect the server to be prepared for you in an exam; here you prepare it yourself first.
 
-**1. Disks on servera.** If `/dev/vdb` or `/dev/vdc` were used before, reset them first and remove old lines from `/etc/fstab`.
+**1. Disks on servera.** If `/dev/vdb` or `/dev/vdc` were used before, reset them first (the reset also cleans `/etc/fstab`).
 
-??? warning "Disk reset (destroys everything on the disk)"
-    Run on `servera`. Repeat the last line for `/dev/vdc`. Remove related `/etc/fstab` lines afterwards.
+??? warning "Disk reset"
+    Destroys everything on the disk. Run it on `servera` once for `/dev/vdb`, then again with `vdb` replaced by `vdc`. It also removes the `/etc/fstab` lines this course's drills create, so a half-finished drill cannot send the next reboot into emergency mode. This lesson mounts at `/mnt/xfsdata`, `/mnt/extdata`, `/mnt/fatdata` and `/data` as well, so those paths are added to the list.
     ```bash
-    sudo umount /dev/vdb* /dev/mapper/vgfs-* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgfs 2>/dev/null
-    sudo wipefs -a /dev/vdb
-    sudo wipefs -a /dev/vdc
+    sudo umount /mnt/xfsdata /mnt/extdata /mnt/fatdata /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb; sudo udevadm settle
+    sudo sed -i -E '\#[[:space:]]/(mnt/xfsdata|mnt/extdata|mnt/fatdata|data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 **2. Name resolution on servera.** Make sure `serverb` resolves (lesson 13 explains `/etc/hosts`):
@@ -452,7 +456,6 @@ sudo exportfs -rav
 sudo firewall-cmd --permanent --add-service=nfs --add-service=mountd --add-service=rpc-bind
 sudo firewall-cmd --reload
 ```
-<!-- VERIFY: service names nfs, mountd, rpc-bind in firewalld on RHEL 10; SELinux default booleans nfs_export_all_ro/rw allow serving /export -->
 
 **Task** (back on `servera` unless stated):
 
@@ -527,13 +530,13 @@ sudo firewall-cmd --reload
     echo '*   -rw   serverb.lab.example:/export/team/&' | sudo tee /etc/auto.team
     echo '/-   /etc/auto.direct' | sudo tee /etc/auto.master.d/direct.autofs
     echo '/mnt/direct/shared   -rw   serverb.lab.example:/export/data' | sudo tee /etc/auto.direct
-    sudo systemctl enable --now autofs
+    sudo systemctl enable autofs
     sudo systemctl restart autofs
     ls /mnt/auto/data /mnt/team/a /mnt/team/b /mnt/direct/shared
     ```
     The wildcard export `/export/team` is read-only on purpose, so `-rw` still mounts but writing fails with a read-only error. That is correct.
 
-    **Verify:** `findmnt /mnt/xfsdata /mnt/extdata /mnt/fatdata /mnt/lvapp /mnt/nfsdata` lists all five. `df -h /mnt/lvapp` shows about 560M. `ls -l /mnt/xfsdata` shows `note.txt` owned by `student`. `findmnt -t autofs,nfs4` shows the autofs mounts and their NFS children after you accessed each path. `sudo mount -a` and `findmnt --verify` are clean. Reboot and repeat; the fstab mounts are back, and the autofs paths mount again on first access.
+    **Verify:** `for m in /mnt/xfsdata /mnt/extdata /mnt/fatdata /mnt/lvapp /mnt/nfsdata; do findmnt "$m"; done` lists all five. `df -h /mnt/lvapp` shows about 560M. `ls -l /mnt/xfsdata` shows `note.txt` owned by `student`. `findmnt -t autofs,nfs4` shows the autofs mounts and their NFS children after you accessed each path. `sudo mount -a` and `findmnt --verify` are clean. Reboot and repeat; the fstab mounts are back, and the autofs paths mount again on first access.
     <!-- VERIFY: lvapp size after XFS overhead; findmnt -t autofs,nfs4 layout -->
 
 ## Exam tips
@@ -548,7 +551,7 @@ sudo firewall-cmd --reload
     | `mount DEV DIR` | No | an fstab line (UUID or label), then `mount -a` |
     | `mount -t nfs SERVER:/path DIR` | No | an fstab line with type `nfs`, then `mount -a` |
     | `lvextend -r` | Yes | Nothing, the new size is on disk |
-    | autofs map files | Yes | `systemctl enable --now autofs` |
+    | autofs map files | Yes | `systemctl enable autofs`, then `systemctl restart autofs` after any map change |
     | `chown` / `chmod` on the mounted directory | Yes | Nothing, ownership is stored in the filesystem (VFAT excepted: use mount options) |
 
 **Verify like a grader:**
@@ -574,6 +577,9 @@ Create a filesystem on the specified device or LV, mount it at `/data`, and conf
 ??? success "Solution"
     Example with the LV `/dev/vgfs/lvapp` from the lab (use the device the task names):
     ```bash
+    sudo umount /mnt/lvapp
+    sudo sed -i '\#[[:space:]]/mnt/lvapp[[:space:]]#d' /etc/fstab
+    sudo systemctl daemon-reload
     sudo mkfs.xfs -f /dev/vgfs/lvapp
     sudo mkdir -p /data
     sudo mount /dev/vgfs/lvapp /data
@@ -583,7 +589,7 @@ Create a filesystem on the specified device or LV, mount it at `/data`, and conf
     findmnt /data
     sudo reboot
     ```
-    After the reboot, `findmnt /data` still shows the filesystem. (This reuses the lab LV, so remove its `/mnt/lvapp` fstab line first.)
+    After the reboot, `findmnt /data` still shows the filesystem. This example reuses the lab LV, which is still mounted at `/mnt/lvapp`, so the first three commands unmount it, delete its fstab line and reload systemd (`mkfs.xfs` refuses a mounted device, and the old line would point at a UUID that `mkfs` is about to replace). On a fresh device skip them, and drop `-f`.
 
 ### Exam-style task 2: NFS client and autofs
 
@@ -601,14 +607,15 @@ The server `serverb.lab.example` exports `/export/data`. As the client, mount it
     sudo dnf install -y nfs-utils autofs
     showmount -e serverb.lab.example
     sudo mkdir -p /mnt/nfsdata
-    echo "serverb.lab.example:/export/data  /mnt/nfsdata  nfs  defaults  0 0" | sudo tee -a /etc/fstab
+    grep -q ' /mnt/nfsdata ' /etc/fstab || echo "serverb.lab.example:/export/data  /mnt/nfsdata  nfs  defaults  0 0" | sudo tee -a /etc/fstab
     sudo systemctl daemon-reload
     sudo mount -a
     findmnt /mnt/nfsdata
 
     echo '/mnt/auto   /etc/auto.nfsdata' | sudo tee /etc/auto.master.d/nfsdata.autofs
     echo 'data   -rw   serverb.lab.example:/export/data' | sudo tee /etc/auto.nfsdata
-    sudo systemctl enable --now autofs
+    sudo systemctl enable autofs
+    sudo systemctl restart autofs
     ls /mnt/auto/data
     findmnt /mnt/auto/data
     ```
@@ -650,7 +657,7 @@ The server `serverb.lab.example` exports `/export/data`. As the client, mount it
 - take UUIDs from `blkid`, never from an example
 - grow storage in two layers: `lvextend` then grow FS (or `lvextend -r`)
 - reboot to verify
-- RHCSA is the NFS client; autofs mounts on demand via `/etc/auto.master.d/`
+- the RHCSA objective is the NFS client; autofs mounts on demand via `/etc/auto.master.d/`
 
 | Task | Command |
 |---|---|
@@ -663,7 +670,7 @@ The server `serverb.lab.example` exports `/export/data`. As the client, mount it
 | Grow filesystem by hand | `xfs_growfs MOUNTPOINT`, `resize2fs DEVICE` |
 | List NFS exports | `showmount -e server` |
 | Mount NFS | `mount -t nfs server:/export /mnt/point` |
-| autofs | `/etc/auto.master.d/x.autofs`, map file, `systemctl enable --now autofs` |
+| autofs | `/etc/auto.master.d/x.autofs`, map file, `systemctl enable autofs`, `systemctl restart autofs` |
 | Permission problem | `id`, `namei -l PATH`, `chown`/`chmod` |
 
 **Previous:** [10 Storage, Partitions, LVM, and Swap](10-storage-partitions-lvm-and-swap.md) · **Next:** [12 Scheduling, Services, Time, and Bootloader](12-scheduling-services-time-and-bootloader.md): with storage mounted, you learn to automate work with cron, at and timers, and to manage services, time and the bootloader.
