@@ -8,6 +8,8 @@
   "use strict";
 
   // The deliberate, sequential lesson path (00-16 plus 15a) = 18 lessons.
+  // 15a is optional (not on the RHEL 10 objective list), so it is tracked but
+  // not counted towards the "complete" total.
   var LESSONS = [
     "00-study-skills-and-offline-help",
     "01-shell-basics-and-command-syntax",
@@ -28,6 +30,9 @@
     "15a-containers-with-podman",
     "16-persistence-reboot-checks-and-troubleshooting"
   ];
+
+  var OPTIONAL = ["15a-containers-with-podman"];
+  var REQUIRED = LESSONS.filter(function (s) { return OPTIONAL.indexOf(s) === -1; });
 
   var KEY = "rhcsa-progress-v1";
 
@@ -52,8 +57,9 @@
     return parts.length ? parts[parts.length - 1] : "";
   }
 
-  function lessonLabel(done) {
-    return done ? "✓ Completed — click to undo" : "Mark this lesson complete";
+  function lessonLabel(done, slug) {
+    var noun = OPTIONAL.indexOf(slug) === -1 ? "lesson" : "optional chapter";
+    return done ? "✓ Completed — click to undo" : "Mark this " + noun + " complete";
   }
 
   function renderLessonButton() {
@@ -74,7 +80,8 @@
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "rhcsa-complete-btn" + (done ? " is-done" : "");
-    btn.textContent = lessonLabel(done);
+    btn.textContent = lessonLabel(done, slug);
+    btn.setAttribute("aria-pressed", done ? "true" : "false");
 
     btn.addEventListener("click", function () {
       var state = load();
@@ -86,7 +93,9 @@
       save(state);
       var nowDone = !!state[slug];
       btn.classList.toggle("is-done", nowDone);
-      btn.textContent = lessonLabel(nowDone);
+      btn.textContent = lessonLabel(nowDone, slug);
+      btn.setAttribute("aria-pressed", nowDone ? "true" : "false");
+      renderHomeProgress();
     });
 
     wrap.appendChild(btn);
@@ -98,28 +107,27 @@
     if (!hero || !hero.parentNode) {
       return; // only the home page has the hero panel
     }
-    if (document.querySelector(".rhcsa-progress")) {
-      return; // already injected
-    }
 
     var state = load();
-    var done = LESSONS.filter(function (s) { return state[s]; }).length;
-    var total = LESSONS.length;
+    var done = REQUIRED.filter(function (s) { return state[s]; }).length;
+    var total = REQUIRED.length;
     var pct = total ? Math.round((done / total) * 100) : 0;
 
-    var box = document.createElement("div");
-    box.className = "rhcsa-progress";
-    box.setAttribute("role", "status");
+    var box = document.querySelector(".rhcsa-progress");
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "rhcsa-progress";
+      hero.parentNode.insertBefore(box, hero.nextSibling);
+    }
     box.innerHTML =
       '<div class="rhcsa-progress-head">' +
       '<span class="rhcsa-progress-label">Your progress</span>' +
       '<span class="rhcsa-progress-count">' + done + " / " + total + " lessons complete</span>" +
       "</div>" +
-      '<div class="rhcsa-progress-track">' +
+      '<div class="rhcsa-progress-track" role="progressbar" aria-label="Lessons complete"' +
+      ' aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + done + '">' +
       '<div class="rhcsa-progress-fill" style="width:' + pct + '%"></div>' +
       "</div>";
-
-    hero.parentNode.insertBefore(box, hero.nextSibling);
   }
 
   function render() {
@@ -128,10 +136,18 @@
   }
 
   function boot() {
-    render();
-    // Re-render after Material's instant navigation swaps page content.
-    var observer = new MutationObserver(function () { render(); });
-    observer.observe(document.body, { childList: true, subtree: true });
+    // document$ fires on first load and after every Material instant-nav swap.
+    if (window.document$ && typeof window.document$.subscribe === "function") {
+      window.document$.subscribe(render);
+    } else {
+      render();
+    }
+    // Keep a second open tab in sync.
+    window.addEventListener("storage", function (e) {
+      if (e.key === KEY) {
+        renderHomeProgress();
+      }
+    });
   }
 
   if (document.readyState === "loading") {

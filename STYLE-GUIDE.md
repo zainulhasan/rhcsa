@@ -18,7 +18,7 @@ Every lesson, lab and mock uses the same machines so state never has to be guess
 |---|---|
 | Hosts | `servera.lab.example` (main), `serverb.lab.example` (client/remote) |
 | Network | `192.168.122.0/24`, servera `192.168.122.10`, serverb `192.168.122.11` |
-| Login | user `student` (sudo), root password `redhat` (lab only) |
+| Login | user `student` (sudo, password `student`), root password `redhat` (lab only) |
 | Spare disks | `/dev/vdb` and `/dev/vdc` on servera, 2 GiB each, empty |
 | OS | RHEL 10 (or a compatible clone) |
 
@@ -151,7 +151,7 @@ Rules for the template:
 - Merge the older "Common Beginner Mistakes" and "Common Mistakes And Recovery" into the one **Common mistakes** section, keeping every item.
 - Move answer keys and solutions into `???` blocks right after the task; do not remove them.
 - Target about 2,000-3,500 words of teaching per lesson.
-- At least one Mermaid diagram where it helps (fenced as `mermaid`). Use `flowchart`/`sequenceDiagram`; keep node labels short and avoid `$` in labels.
+- At least one Mermaid diagram where it helps (fenced as `mermaid`). Use `flowchart` only (the vendored offline Mermaid build supports flowcharts, not sequence/state/gantt diagrams); keep node labels short and avoid `$` in labels.
 - Lessons whose topic is not on the RHEL 10 list (for example the Podman chapter) keep a banner saying so and carry the supporting-skill callout.
 
 ## Commits
