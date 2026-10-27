@@ -917,7 +917,7 @@ What to check before moving on:
     ```
     **Verify:** `ip -6 addr show dummy0` lists `inet6 fd00:122::50/64 scope global`; the ping answers.
 
-    **Persistence:** the profile is saved in `/etc/NetworkManager/system-connections/v6lab.nmconnection`. After a reboot, `nmcli connection show --active` should list `v6lab`. <!-- VERIFY: dummy connection type is available and autoconnects on the RHEL 10 lab image -->
+    **Persistence:** the profile is saved in `/etc/NetworkManager/system-connections/v6lab.nmconnection`. After a reboot, `nmcli connection show --active` should list `v6lab`. <!-- VERIFY: the dummy0 profile comes back active after a reboot -->
 
     **Cleanup:** `sudo nmcli connection delete v6lab`
 
@@ -977,7 +977,7 @@ What to check before moving on:
     ```
     **Verify:** `firewall-cmd --list-all` shows `services:` including `https`, no `8081/tcp`, and the rich rule if you did the stretch. For the stretch, `curl http://192.168.122.10` from `serverb` returns the page; the same request from a machine with any other address fails. <!-- VERIFY: the exact failure text (No route to host versus a timeout) for a blocked client in zone public on RHEL 10 -->
 
-    **Persistence:** only `--permanent` changes (or `--runtime-to-permanent`) survive `--reload` and reboot. After a reboot, `sudo firewall-cmd --list-all` must match the permanent configuration. Remove the stretch rule with `--permanent --remove-rich-rule=...` and `--reload` when done. <!-- VERIFY: rich-rule support and syntax with the nftables backend on RHEL 10 -->
+    **Persistence:** only `--permanent` changes (or `--runtime-to-permanent`) survive `--reload` and reboot. After a reboot, `sudo firewall-cmd --list-all` must match the permanent configuration. Remove the stretch rule with `--permanent --remove-rich-rule=...` and `--reload` when done.
 
 ### Drill 13: Key-based SSH login to serverb
 
@@ -1022,7 +1022,9 @@ What to check before moving on:
     ```bash
     chmod 700 ~/.ssh; chmod 600 ~/.ssh/authorized_keys; restorecon -Rv ~/.ssh
     ```
-    **Persistence:** the key lives in files on disk, so it survives reboot. Reboot serverb, then repeat the login test. <!-- VERIFY: default PasswordAuthentication setting in sshd on RHEL 10 (ssh-copy-id needs it enabled for the first copy) -->
+    **Persistence:** the key lives in files on disk, so it survives reboot. Reboot serverb, then repeat the login test.
+
+    The stock `sshd` allows password logins (`sudo sshd -T | grep passwordauthentication` prints `passwordauthentication yes`), which is what lets `ssh-copy-id` authenticate for the first copy.
 
 ## Verification Steps
 
