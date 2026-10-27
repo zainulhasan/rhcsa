@@ -533,7 +533,7 @@ Client side (`servera`):
     ls /mnt/nfsshare
     findmnt /mnt/nfsshare
     ```
-    **Verify:** `findmnt /mnt/nfsshare` shows the NFS source after the `ls`; reboot `servera` and repeat. Optional: `showmount -e serverb.lab.example` lists the export. <!-- VERIFY: showmount -e works against an NFSv4-only server on RHEL 10; it needs rpcbind and mountd -->
+    **Verify:** `findmnt /mnt/nfsshare` shows the NFS source after the `ls`; reboot `servera` and repeat. Optional: `showmount -e serverb.lab.example` lists the export. <!-- VERIFY: showmount -e localhost works on a server running nfs-server (observed); from a remote client with only the firewalld nfs service open it needs mountd and rpc-bind too (untested) -->
 
 ### Task 15: Verify chrony client health
 
