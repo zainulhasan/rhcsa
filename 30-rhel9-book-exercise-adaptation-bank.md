@@ -245,7 +245,7 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
 - [ ] you can explain the difference between locking an account and password-aging policy
 
 ??? question "Hint 1"
-    `passwd -S USER` shows the lock state (`LK` locked, `PS` usable password).
+    `passwd -S USER` shows the lock state as its second field (`L` locked, `P` usable password).
 
 ??? success "Solution"
     ```bash
@@ -257,7 +257,7 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
     chage -l analyst2
     passwd -S guest2
     ```
-    **Verify:** `chage -l analyst2` lists a maximum of `60` days, minimum `7`, warning `10`. `guest2` needs a real password first: unlocking an account that has no password is refused, because it would leave a passwordless account. <!-- VERIFY: passwd -u on an account with an empty password field is refused on RHEL 10 -->
+    **Verify:** `chage -l analyst2` lists a maximum of `60` days, minimum `7`, warning `10`. `passwd -S guest2` shows `L` while locked and `P` once unlocked. `guest2` needs a real password first: unlocking an account that has no password is refused (`passwd: unlocking the password would result in a passwordless account.`).
 
 ### Task 7: Configure group membership, sudo access, and ownership
 
@@ -403,7 +403,7 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
 **Task:**
 
 1. Configure `journald` to store logs persistently.
-2. Restart the journal service.
+2. Restart the journal service and flush the journal to disk.
 3. Verify both configuration and resulting storage behavior.
 
 **Grader checklist:**
@@ -413,7 +413,7 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
 - [ ] `journalctl -b` shows current boot logs
 
 ??? question "Hint 1"
-    With the default `Storage=auto`, journald only writes to disk if `/var/log/journal` already exists. Put `Storage=persistent` in a drop-in under `/etc/systemd/journald.conf.d/` (the file need not exist beforehand, unlike a `sed` on `journald.conf`); journald then creates the directory itself on restart.
+    With the default `Storage=auto`, journald only writes to disk if `/var/log/journal` already exists. Put `Storage=persistent` in a drop-in under `/etc/systemd/journald.conf.d/` (there is no `/etc/systemd/journald.conf` by default, so a `sed` on it changes nothing). A restart alone does not create `/var/log/journal`; `journalctl --flush` does.
 
 ??? success "Solution"
     ```bash
@@ -427,7 +427,7 @@ grep -q serverb.lab.example /etc/hosts || echo '192.168.122.11 serverb.lab.examp
     journalctl --disk-usage
     journalctl -b | tail
     ```
-    **Verify:** `ls /var/log/journal` prints a long machine-ID directory name; after a reboot `journalctl --list-boots` lists more than one boot. `systemd-analyze cat-config systemd/journald.conf` shows the drop-in with `Storage=persistent`. <!-- VERIFY: journald.conf.d drop-in is honoured and /var/log/journal is created on restart on RHEL 10 -->
+    **Verify:** `ls /var/log/journal` prints a long machine-ID directory name; after a reboot `journalctl --list-boots` lists more than one boot. `systemd-analyze cat-config systemd/journald.conf` shows the drop-in with `Storage=persistent`.
 
 ## Networking and Security Carryover
 
