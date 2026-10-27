@@ -19,7 +19,7 @@ description: Prove every change survives a reboot, use the persistence matrix fo
 
 ## Why it matters
 
-Red Hat's exam page says configurations must persist after reboot without intervention. Many students can make things work once. Fewer can prove the system still works after restart. The exam grader reboots your machine (or reads your configuration as it would look after a reboot), so a fix that lives only in memory scores nothing. In real life, administrators are trusted because their fixes remain stable. Temporary success without persistence is unreliable operations.
+Red Hat's exam page says configurations must persist after reboot without intervention. Many students can make things work once. Fewer can prove the system still works after restart. Expect the result to be judged as the machine looks after a reboot, so be ready for a fix that lives only in memory to score nothing. In real life, administrators are trusted because their fixes remain stable. Temporary success without persistence is unreliable operations.
 
 **Objectives covered:** this lesson ties together objectives from every other lesson. The ones it practises directly are:
 
@@ -130,7 +130,7 @@ This is the central table of the course. "Persists" means **survives a reboot wi
 | [08](08-shell-scripting-basics.md) | Script file and its `chmod +x` | Yes | Nothing; variables set in a shell are lost |
 | [09](09-boot-targets-processes-logs-and-tuning.md) | `systemctl set-default TARGET` | Yes | Nothing; `systemctl isolate` and GRUB `e` edits last for one boot only |
 | [09](09-boot-targets-processes-logs-and-tuning.md) | `kill`, `renice`, `top` actions | No | Nothing to save; a restarted process starts fresh |
-| [09](09-boot-targets-processes-logs-and-tuning.md) | Persistent journal | Yes once configured | `Storage=persistent` in `/etc/systemd/journald.conf`, restart `systemd-journald`; check with `journalctl --list-boots` |
+| [09](09-boot-targets-processes-logs-and-tuning.md) | Persistent journal | Yes once configured | Drop-in `/etc/systemd/journald.conf.d/persistent.conf` with `[Journal]` and `Storage=persistent`, then `systemctl restart systemd-journald`; check with `systemd-analyze cat-config systemd/journald.conf` and, after a reboot, `journalctl --list-boots` <!-- VERIFY: journald drop-in directory and Storage=persistent creating /var/log/journal on RHEL 10 --> |
 | [09](09-boot-targets-processes-logs-and-tuning.md) | `tuned-adm profile NAME` | Yes | Nothing; confirm with `tuned-adm active` <!-- VERIFY: tuned stores the active profile across reboot (/etc/tuned/active_profile) --> |
 | [09](09-boot-targets-processes-logs-and-tuning.md) | Root password reset with `rd.break` | Yes | Also run `touch /.autorelabel` before reboot |
 | [10](10-storage-partitions-lvm-and-swap.md) | Partitions, PV, VG, LV, `mkfs`, `mkswap`, `lvextend` | Yes | Nothing; the metadata is on disk |
@@ -512,10 +512,11 @@ Careful on the console: if you are connected over SSH on that interface, the ses
 
 ??? warning "Disk reset (destroys everything on the disk)"
     ```bash
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam 2>/dev/null
-    sudo wipefs -a /dev/vdb
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 **Part 1: build it (and make it persist):**
@@ -569,7 +570,7 @@ Careful on the console: if you are connected over SSH on that interface, the ses
     sudo mount -a
     findmnt --verify
 
-    sudo useradd webadmin
+    id webadmin &>/dev/null || sudo useradd webadmin
     echo 'webadmin:Redhat123' | sudo chpasswd
     sudo visudo -f /etc/sudoers.d/webadmin
     ```
@@ -656,7 +657,7 @@ Break one thing in the lab (use Part 3), and write down: symptom, likely cause, 
 ## Exam tips
 
 !!! tip "What the exam expects"
-    Every task is checked as the machine looks after a reboot, so the end state must come from files and enabled units, not from commands left in memory. Evidence comes from commands, not from memory: for each task have one command that proves it, and run it again after the reboot.
+    Red Hat's page says configurations must persist after reboot without intervention, so expect the end state to be judged as the machine looks after a reboot: it must come from files and enabled units, not from commands left in memory. Evidence comes from commands, not from memory: for each task have one command that proves it, and run it again after the reboot.
 
 !!! warning "Must survive reboot"
     | Change | Persistent? | Make it persist with |
