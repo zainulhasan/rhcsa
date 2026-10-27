@@ -50,7 +50,10 @@ On `servera`:
 
 ```bash
 sudo dnf install -y httpd policycoreutils-python-utils nfs-utils autofs
+grep -q 'serverb.lab.example' /etc/hosts || echo '192.168.122.11 serverb.lab.example serverb' | sudo tee -a /etc/hosts
 ```
+
+The second line gives `servera` a local name for `serverb`, because Tasks 16 and 17 and the proof commands use the short name `serverb`.
 
 On `serverb` (the NFS server for Task 16 and the SSH target for Task 17):
 
@@ -59,7 +62,8 @@ sudo dnf install -y nfs-utils
 sudo mkdir -p /export/data
 echo 'mock exam nfs file' | sudo tee /export/data/hello.txt
 echo '/export/data 192.168.122.0/24(rw,sync)' | sudo tee /etc/exports.d/mock2.exports
-sudo systemctl enable --now nfs-server
+sudo systemctl enable nfs-server
+sudo systemctl restart nfs-server
 sudo firewall-cmd --permanent --add-service={nfs,mountd,rpc-bind}
 sudo firewall-cmd --reload
 sudo exportfs -rav
@@ -70,29 +74,30 @@ echo 'webadmin:webpass' | sudo chpasswd
 The last two lines give `webadmin` on `serverb` the password `webpass`, which `ssh-copy-id` needs in Task 17.
 
 ??? warning "Reset servera (destroys the Mock 2 work and everything on /dev/vdb)"
-    Run this to start over after a previous attempt. It also restores the hostname. Replace `"System eth0"` with your own profile name from `nmcli connection show --active`.
+    Run this to start over after a previous attempt. It also restores the hostname, the network profile and the disk. It keeps the `serverb` hosts line from Setup.
     ```bash
-    sudo umount /webcontent /mnt/nfsdata 2>/dev/null
+    sudo umount /webcontent /mnt/nfsdata /mnt/auto/data 2>/dev/null
     sudo systemctl disable --now autofs 2>/dev/null
-    sudo sed -i '\#/webcontent#d;\#/mnt/nfsdata#d' /etc/fstab
+    sudo sed -i '\#[[:space:]]/webcontent[[:space:]]#d;\#[[:space:]]/mnt/nfsdata[[:space:]]#d' /etc/fstab
     sudo rm -f /etc/auto.master.d/nfsdata.autofs /etc/auto.nfsdata /etc/sudoers.d/webops
     sudo sed -i '/web1.lab.example/d' /etc/hosts
     sudo hostnamectl set-hostname servera.lab.example
     sudo firewall-cmd --permanent --remove-service=http
     sudo firewall-cmd --reload
-    sudo nmcli connection modify "System eth0" -ipv4.addresses 192.168.122.50/24 -ipv6.addresses 2001:db8:0:1::50/64
-    sudo nmcli connection up "System eth0"
+    CON=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}')
+    sudo nmcli connection modify "$CON" ipv6.method auto -ipv4.addresses 192.168.122.50/24 -ipv4.dns 192.168.122.1 -ipv6.addresses 2001:db8:0:1::50/64
+    sudo nmcli connection up "$CON"
     sudo semanage fcontext -d "/srv/webcontent(/.*)?" 2>/dev/null
-    sudo rm -rf /opt/webdata /srv/webcontent /tmp/webdata.tar.gz /tmp/sshd-boot.log /usr/local/bin/filecheck.sh
+    sudo rm -rf /opt/webdata /srv/webcontent /var/tmp/webdata.tar.gz /var/tmp/sshd-boot.log /usr/local/bin/filecheck.sh
     sudo loginctl disable-linger webadmin 2>/dev/null
     sudo pkill -u webadmin 2>/dev/null
     sudo userdel -r webadmin 2>/dev/null
     sudo groupdel webops 2>/dev/null
-    sudo umount /dev/vdb* 2>/dev/null
-    sudo swapoff /dev/vdb* 2>/dev/null
-    sudo vgremove -ff -y vgdata vgexam vgweb 2>/dev/null
-    sudo pvremove -ff -y /dev/vdb1 2>/dev/null
-    sudo wipefs -a /dev/vdb
+    sudo umount /data /par1 /record /datasource /mnt/lvapp 2>/dev/null; sudo swapoff -a
+    sudo vgremove -ff -y vgweb vgdata vgexam vgapp vgfs datacontainer 2>/dev/null
+    sudo wipefs -a /dev/vdb[0-9]* 2>/dev/null; sudo wipefs -a /dev/vdb; sudo partprobe /dev/vdb
+    sudo sed -i -E '\#[[:space:]]/(data|par1|record|datasource|mnt/lvapp)[[:space:]]#d; /\/dev\/vdb|vg(data|app|fs)-/d' /etc/fstab
+    sudo systemctl daemon-reload; sudo swapon -a
     ```
 
 ## Tasks
@@ -131,9 +136,9 @@ Create `/opt/webdata/index.html` containing exactly one line: `<h1>Mock 2 test p
 
 ### Task 5 (4 points): Archive
 
-Archive `/opt/webdata` into the gzip-compressed tar file `/tmp/webdata.tar.gz`.
+Archive `/opt/webdata` into the gzip-compressed tar file `/var/tmp/webdata.tar.gz`.
 
-- [ ] `tar -tzf /tmp/webdata.tar.gz` lists `opt/webdata/index.html`
+- [ ] `tar -tzf /var/tmp/webdata.tar.gz` lists `opt/webdata/index.html`
 - [ ] The file is readable by `student`
 
 ### Task 6 (8 points): Script
@@ -156,10 +161,10 @@ Make `chronyd` active now and enabled at boot.
 
 ### Task 8 (4 points): Log extract
 
-Save the last 20 lines of the `sshd` journal messages from the current boot to `/tmp/sshd-boot.log`.
+Save the last 20 lines of the `sshd` journal messages from the current boot to `/var/tmp/sshd-boot.log`.
 
 - [ ] The file exists and holds at most 20 lines (exactly 20 if `sshd` has logged that many since boot)
-- [ ] Every line comes from `sshd` and from the current boot
+- [ ] Every line comes from the SSH daemon (a message from `sshd[` or `sshd-session[`, or a `systemd[1]` line about the unit) and from the current boot
 
 ### Task 9 (6 points): Network profile
 
@@ -210,6 +215,7 @@ Put an ext4 filesystem with the label `webcontent` on `/dev/vgweb/lvcontent`. Mo
 
 - [ ] `findmnt /webcontent` shows ext4 on `/dev/mapper/vgweb-lvcontent`
 - [ ] The `/etc/fstab` line starts with `UUID=`
+- [ ] `sudo blkid -s LABEL -o value /dev/vgweb/lvcontent` prints `webcontent`
 - [ ] `sudo mount -a` and `findmnt --verify` report no errors
 
 ### Task 15 (4 points): Grow online
@@ -288,10 +294,10 @@ Reboot `servera` and, without changing anything, prove that these survived:
 id webadmin
 sudo visudo -c
 stat -c '%U:%G %a' /opt/webdata
-tar -tzf /tmp/webdata.tar.gz
+tar -tzf /var/tmp/webdata.tar.gz
 /usr/local/bin/filecheck.sh /etc/hosts /nope
 systemctl is-enabled chronyd
-cat /tmp/sshd-boot.log
+cat /var/tmp/sshd-boot.log
 ip -4 addr show
 hostnamectl
 getent hosts web1.lab.example

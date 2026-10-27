@@ -31,16 +31,16 @@ This is this course's own practice scheme: 100 points for Tasks 1-18 and 20, Tas
 | 2 Sudo | 6 | `stat -c '%U:%G %a' /etc/sudoers.d/webops`, `sudo visudo -c`, `sudo -l -U webadmin` | `root:root 440`; `parsed OK` for every file; `(ALL) ALL` |
 | 3 Directory | 5 | `stat -c '%U:%G %a' /opt/webdata` | `root:webops 2775` |
 | 4 Test page | 3 | `cat /opt/webdata/index.html` | `<h1>Mock 2 test page</h1>` |
-| 5 Archive | 4 | `tar -tzf /tmp/webdata.tar.gz` | `opt/webdata/` and `opt/webdata/index.html` |
+| 5 Archive | 4 | `tar -tzf /var/tmp/webdata.tar.gz` | `opt/webdata/` and `opt/webdata/index.html` |
 | 6 Script | 8 | `filecheck.sh /etc/hosts /nope /etc`; `filecheck.sh; echo $?` | three lines ending `regular file`, `not a regular file`, `not a regular file`; usage line then `1` |
 | 7 chronyd | 4 | `systemctl is-active chronyd`, `systemctl is-enabled chronyd` | `active`, `enabled` |
-| 8 Log | 4 | `wc -l /tmp/sshd-boot.log`, `cat /tmp/sshd-boot.log` | up to 20 lines, each containing `sshd[` |
-| 9 Network | 6 | `ip -4 addr show`, `ip -6 addr show` | `192.168.122.10/24` and `192.168.122.50/24`; `2001:db8:0:1::50/64` |
+| 8 Log | 4 | `wc -l /var/tmp/sshd-boot.log`, `cat /var/tmp/sshd-boot.log` | up to 20 lines, each from `sshd[`, `sshd-session[` or a `systemd[1]` line about the unit |
+| 9 Network | 6 | `ip -4 addr show`, `ip -6 addr show`, `nmcli -g ipv4.dns,connection.autoconnect connection show "$CON"` (with `CON` set as in the solution) | `192.168.122.10/24` and `192.168.122.50/24`; `2001:db8:0:1::50/64`; DNS contains `192.168.122.1`, autoconnect `yes` |
 | 10 Hostname | 3 | `hostnamectl --static` | `web1.lab.example` |
 | 11 Resolution | 4 | `getent hosts web1.lab.example` | `192.168.122.10  web1.lab.example web1` |
 | 12 Firewall | 5 | `firewall-cmd --list-services`, `firewall-cmd --permanent --list-services` | both include `ssh` and `http` |
 | 13 LVM | 6 | `sudo lvs --units m -o lv_name,lv_size vgweb` | `lvcontent  700.00m` (before Task 15) |
-| 14 Filesystem | 6 | `findmnt /webcontent`, `findmnt --verify` | `/webcontent /dev/mapper/vgweb-lvcontent ext4`; no errors |
+| 14 Filesystem | 6 | `findmnt /webcontent`, `findmnt --verify`, `sudo blkid -s LABEL -o value /dev/vgweb/lvcontent`, `grep ' /webcontent ' /etc/fstab` | `/webcontent /dev/mapper/vgweb-lvcontent ext4`; no errors; `webcontent`; line starts `UUID=` |
 | 15 Grow | 4 | `sudo lvs --units m -o lv_name,lv_size vgweb`, `df -h /webcontent` | `lvcontent  800.00m`; size just under 800M |
 | 16 NFS + autofs | 8 | `findmnt /mnt/nfsdata`, `ls /mnt/auto/data`, `systemctl is-enabled autofs` | `nfs4` mount; `hello.txt`; `enabled` |
 | 17 SSH keys | 6 | `sudo -iu webadmin ssh -o PasswordAuthentication=no webadmin@serverb hostname` | `serverb.lab.example` |
@@ -84,11 +84,12 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     sudo visudo -c
     sudo -l -U webadmin
     ```
-    Non-interactive alternative for the file content:
+    Non-interactive alternative: write a temporary file, syntax-check it, then install it with the right mode. Never write straight into `/etc/sudoers.d/`, because a typo there can lock you out of `sudo`:
     ```bash
-    echo '%webops ALL=(ALL) ALL' | sudo tee /etc/sudoers.d/webops
-    sudo chmod 440 /etc/sudoers.d/webops
-    sudo visudo -cf /etc/sudoers.d/webops
+    echo '%webops ALL=(ALL) ALL' > /var/tmp/webops.sudoers
+    sudo visudo -cf /var/tmp/webops.sudoers
+    sudo install -m 0440 /var/tmp/webops.sudoers /etc/sudoers.d/webops
+    rm -f /var/tmp/webops.sudoers
     ```
     **Verify:** `stat -c '%U:%G %a' /etc/sudoers.d/webops` prints `root:root 440`, and `visudo -c` ends with `parsed OK` for the file.
 
@@ -115,9 +116,9 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
 
 ??? success "Solution"
     ```bash
-    sudo tar -czvf /tmp/webdata.tar.gz /opt/webdata
-    tar -tzf /tmp/webdata.tar.gz
-    ls -l /tmp/webdata.tar.gz
+    sudo tar -czvf /var/tmp/webdata.tar.gz /opt/webdata
+    tar -tzf /var/tmp/webdata.tar.gz
+    ls -l /var/tmp/webdata.tar.gz
     ```
     `tar` removes the leading `/` and warns about it; that is normal. The archive is created by `root` with the default umask, so it is readable by `student`.
 
@@ -171,18 +172,19 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
 
 ??? success "Solution"
     ```bash
-    sudo journalctl -u sshd -b --no-pager | tail -n 20 > /tmp/sshd-boot.log
-    wc -l /tmp/sshd-boot.log
-    cat /tmp/sshd-boot.log
+    sudo journalctl -u sshd -b --no-pager | tail -n 20 > /var/tmp/sshd-boot.log
+    wc -l /var/tmp/sshd-boot.log
+    cat /var/tmp/sshd-boot.log
     ```
-    `-u sshd` selects the unit and `-b` the current boot. The redirect happens in your own shell, which is fine because `/tmp` is writable.
+    `-u sshd` selects the unit and `-b` the current boot. The redirect happens in your own shell, which is fine because `/var/tmp` is writable for every user. On RHEL 10 the SSH daemon can log as `sshd-session[` as well as `sshd[` (OpenSSH 9.8 and later), so a few lines may come from `sshd-session` or from `systemd[1]`; all are acceptable. <!-- VERIFY: whether `journalctl -u sshd` on RHEL 10 shows sshd-session lines under the sshd unit -->
 
 ### Task 9: Network profile
 
 ??? success "Solution"
     ```bash
-    nmcli connection show --active           # note the profile NAME, for example "System eth0"
-    CON="System eth0"                        # replace with your profile name
+    nmcli connection show --active           # note the profile NAME
+    CON=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1;exit}')
+    echo "$CON"                              # check that it is the profile of the 192.168.122.10 address
     sudo nmcli connection modify "$CON" +ipv4.addresses 192.168.122.50/24
     sudo nmcli connection modify "$CON" +ipv4.dns 192.168.122.1
     sudo nmcli connection modify "$CON" ipv6.addresses 2001:db8:0:1::50/64 ipv6.method manual
@@ -279,7 +281,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
 ### Task 16: NFS client and autofs
 
 ??? success "Solution"
-    RHCSA is the **NFS client**: mount the export that `serverb` provides (setting up an NFS server is RHCE, so it was done in Setup).
+    RHCSA is the **NFS client**: mount the export that `serverb` provides (setting up an NFS server is not an RHCSA objective, so it was done in Setup).
     ```bash
     sudo dnf install -y nfs-utils autofs
     showmount -e serverb
@@ -296,7 +298,8 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     ```bash
     echo '/mnt/auto  /etc/auto.nfsdata' | sudo tee /etc/auto.master.d/nfsdata.autofs
     echo 'data  -rw  serverb:/export/data' | sudo tee /etc/auto.nfsdata
-    sudo systemctl enable --now autofs
+    sudo systemctl enable autofs
+    sudo systemctl restart autofs
     ls /mnt/auto/data
     findmnt /mnt/auto/data
     ```
