@@ -15,10 +15,10 @@ description: Pull images, run and manage containers with Podman, persist data wi
     podman images
     ```
     ```text title="Example output"
-    podman version 5.4.0
+    podman version 5.8.2
     REPOSITORY  TAG         IMAGE ID    CREATED     SIZE
     ```
-    <!-- VERIFY: Podman version shipped with RHEL 10; the empty image list assumes a fresh student account -->
+    <!-- VERIFY: the version number depends on the RHEL 10 minor release (5.8.2 is what the AlmaLinux 10.2 repository offers); the empty image list assumes a fresh student account -->
     Notice that no daemon is running and you did not need `sudo`. Podman runs as a normal user. By the end of this lesson you will know why that matters and what it changes.
 
 ## Why it matters
@@ -116,7 +116,6 @@ $ podman images
 REPOSITORY                             TAG         IMAGE ID      CREATED      SIZE
 registry.access.redhat.com/ubi10/ubi   latest      9a8b7c6d5e4f  2 weeks ago  222 MB
 ```
-<!-- VERIFY: the ubi10/ubi image path and tag exist on registry.access.redhat.com; IDs, sizes and dates above are illustrative -->
 
 | Command | What it does |
 |---|---|
@@ -156,7 +155,6 @@ $ podman ps
 CONTAINER ID  IMAGE                                          COMMAND               CREATED         STATUS         PORTS                   NAMES
 3d9c1f2a7b4e  registry.access.redhat.com/ubi10/httpd-24:latest  /usr/bin/run-http...  5 seconds ago   Up 5 seconds   0.0.0.0:8080->8080/tcp  web
 ```
-<!-- VERIFY: ubi10/httpd-24 exists on registry.access.redhat.com, pulls without login, and LISTENS ON 8080 inside the container. Fallback image if it does not: quay.io/sclorg/httpd-24-c10s (check the same two things). If the real listening port differs, change both numbers in -p and in the Quadlet PublishPort -->
 
 | Option | Meaning |
 |---|---|
