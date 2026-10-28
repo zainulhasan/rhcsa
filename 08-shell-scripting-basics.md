@@ -450,7 +450,7 @@ Verification: the output shows `sum=10` and the `grep` match for `root`.
 - **Mistake:** mixing shell syntax with plain English (`if file exists`). **Recovery:** `if [ -f file ]; then`. Shell keywords are exact.
 - **Mistake:** forgetting `then` or `fi` in an `if` block (or `do` or `done` in a loop). **Recovery:** read the structure line by line, and run `bash -n script.sh` to find the line.
 - **Mistake:** writing a large script before testing pieces. **Recovery:** test each command in the shell first, then build up.
-- **Mistake:** not quoting variables. **Recovery:** write `"$1"`. With an empty `$1`, `[ -f $1 ]` becomes `[ -f ]`, which is true, so the wrong branch runs. With `has space.txt` it fails with `[: too many arguments`.
+- **Mistake:** not quoting variables. **Recovery:** write `"$1"`. With an empty `$1`, `[ -f $1 ]` becomes `[ -f ]`, which is true, so the wrong branch runs. With `has space.txt` it fails with `[: has: binary operator expected` (or `[: too many arguments` when the name has more spaces).
 - **Mistake:** assuming script input always exists. **Recovery:** check `$#` or test `[ -z "$1" ]` first, print a usage line and `exit 2`.
 - **Mistake:** not redirecting command output in tests. **Recovery:** use `>/dev/null 2>&1` when you only care about success or failure (or `grep -q`).
 - **Mistake:** spaces around `=` in an assignment (`name = value`). **Recovery:** `name=value`. Otherwise Bash reports `name: command not found`.
@@ -465,7 +465,7 @@ Verification: the output shows `sum=10` and the `grep` match for `root`.
 | `command not found` when you type the script name | Current directory is not in `PATH` | Run `./script.sh` or install it in `/usr/local/bin` |
 | `[-f: command not found` | No space after `[` | `[ -f file ]` |
 | ``[: missing `]'`` | Closing bracket missing or not separated by a space | Add ` ]` |
-| `[: too many arguments` | Unquoted variable holds spaces | Quote it: `"$1"` |
+| `[: has: binary operator expected` or `[: too many arguments` | Unquoted variable holds spaces | Quote it: `"$1"` |
 | `syntax error: unexpected end of file` | Missing `fi` or `done` | `bash -n script.sh`, then match every opener with its closer |
 | `bad interpreter: No such file or directory` | Wrong path after `#!` | Use `#!/bin/bash` |
 | Variable appears empty | No argument passed or name misspelled | `echo "[$var]"` and check the inputs |

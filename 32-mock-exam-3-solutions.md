@@ -92,7 +92,7 @@ This is this course's own practice scheme: 100 points over 20 tasks. Your own ta
 | 11 Chrony | 4 | `chronyc sources`, `chronyc tracking`, `systemctl is-enabled chronyd` | `serverb.lab.example` with `^*` or `^+`; reference `192.168.122.11`; `enabled` |
 | 12 Tuned | 3 | `tuned-adm active`, `systemctl is-enabled tuned` | `Current active profile: throughput-performance`; `enabled` |
 | 13 vgextend | 6 | `sudo vgs -o vg_name,pv_count vgapp`, `sudo lvs --units m -o lv_name,lv_size vgapp`, `df -h /data/app` | `vgapp  2`; `lvapp  1300.00m`; about `1.3G` |
-| 14 Swap and VFAT | 6 | `swapon --show`, `findmnt /mnt/usbdata`, `findmnt --verify` | `lvswap` 256M; `vfat`; no errors |
+| 14 Swap and VFAT | 6 | `swapon --show`, `findmnt /mnt/usbdata`, `findmnt --verify` | `lvswap` 256M; `vfat`; `Success, no errors or warnings detected` |
 | 15 autofs | 6 | `ls /remote/homes/alice`, `findmnt /remote/homes/alice`, `systemctl is-enabled autofs` | `welcome.txt`; `nfs4` from `serverb`; `enabled` |
 | 16 SSH | 5 | `sudo -iu bob ssh -o BatchMode=yes labb hostname` | `serverb.lab.example` |
 | 17 GRUB argument | 4 | `sudo grubby --info=DEFAULT`, `cat /proc/cmdline` (after the first reboot of Task 18) | `args=` contains `loglevel=5`; running command line contains it |
@@ -125,7 +125,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     rpm -q tree
     dnf info tree
     ```
-    `dnf repolist` must show `localpractice`; `dnf info tree` names the repository the package came from. <!-- VERIFY: dnf info on RHEL 10 shows "From repo : localpractice" for an installed package; otherwise use dnf list --installed tree and look for @localpractice -->
+    `dnf repolist` must show `localpractice`; `dnf info tree` names the repository the package came from (`From repo    : localpractice`).
 
     Persistence: the `.repo` file stays under `/etc/yum.repos.d/`, and installed packages stay installed. `gpgcheck=0` is acceptable here because the copies in `/srv/localrepo` were downloaded on the same machine; a real repository should keep `gpgcheck=1` and a `gpgkey=` line. If `repolist` shows a metadata error, the directory `/srv/localrepo/repodata` is missing: rebuild it with `sudo createrepo_c /srv/localrepo`.
 
@@ -141,7 +141,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     sudo flatpak uninstall -y org.gnome.Calculator
     flatpak list --app
     ```
-    **Verify:** `flatpak remotes` shows `flathub` with the option `system`; `flatpak list --app` shows `org.gnome.gedit` and no longer `org.gnome.Calculator`. <!-- VERIFY: application IDs org.gnome.gedit and org.gnome.Calculator still exist on Flathub, and the flatpak list --app column layout on RHEL 10 -->
+    **Verify:** `flatpak remotes` shows `flathub` with the option `system`; `flatpak list --app` shows `org.gnome.gedit` and no longer `org.gnome.Calculator`. <!-- VERIFY: the flatpak list --app column layout on RHEL 10 -->
 
     Offline alternative (remote `labremote`, see the task):
     ```bash
@@ -173,7 +173,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     sudo -u dana sudo -n systemctl restart chronyd; echo $?
     sudo -u dana sudo -n systemctl restart sshd; echo $?
     ```
-    **Verify:** `chage -l carol` shows `Maximum number of days between password change : 45`, `Minimum ... : 2`, `Number of days of warning before password expires : 7` and `Account expires : Dec 31, 2030`. The first `sudo -n` prints `0`; the second is refused (`sudo: a password is required`) and prints `1`. Always give the full path of the command in a sudoers rule, and use `chronyd` as the unit name exactly as the rule says: sudoers matches the whole argument list.
+    **Verify:** `chage -l carol` shows `Maximum number of days between password change : 45`, `Minimum ... : 2`, `Number of days of warning before password expires : 7` and `Account expires : Dec 31, 2030`. `chage` stores the date as a day count, so in a time zone east of UTC the display can be one day earlier (`Dec 30, 2030`); the stored value is still `2030-12-31` (day `22279` in `sudo getent shadow carol`). The first `sudo -n` prints `0`; the second is refused (`sudo: a password is required`) and prints `1`. Always give the full path of the command in a sudoers rule, and use `chronyd` as the unit name exactly as the rule says: sudoers matches the whole argument list.
 
     Persistence: aging data lives in `/etc/shadow` and the drop-in is a file, so both survive a reboot.
 
@@ -267,8 +267,8 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     ls /var/log/journal/*/system.journal
     journalctl --list-boots
     ```
-    `systemd-analyze cat-config` prints the stock file followed by your drop-in, so `Storage=persistent` and `SystemMaxUse=100M` appear under `# /etc/systemd/journald.conf.d/persistent.conf`. <!-- VERIFY: systemd-analyze cat-config output layout for journald drop-ins on RHEL 10 -->
-    The first `ls` shows a directory named like the machine ID (illustrative: `4f2c...`). `--list-boots` shows several lines after the reboots in Tasks 18-19; before the first reboot it lists a single line (only boots after `Storage=persistent` took effect are kept). With `Storage=persistent` journald creates `/var/log/journal` itself, but creating it first makes the intent explicit. A drop-in file is preferred over editing `/etc/systemd/journald.conf` because package updates leave it alone. <!-- VERIFY: RHEL 10 default Storage=auto and whether /var/log/journal exists on a fresh install -->
+    `systemd-analyze cat-config` prints the stock file followed by your drop-in, so `Storage=persistent` and `SystemMaxUse=100M` appear under `# /etc/systemd/journald.conf.d/persistent.conf`.
+    The first `ls` shows a directory named like the machine ID (illustrative: `4f2c...`). `--list-boots` shows several lines after the reboots in Tasks 18-19; before the first reboot it lists a single line (only boots after `Storage=persistent` took effect are kept). A restart of `systemd-journald` alone does not create `/var/log/journal`: creating the directory first (or running `sudo journalctl --flush`, which moves the runtime journal to disk) is what does. A drop-in file is used because `/etc/systemd/journald.conf` does not exist by default (the stock file is `/usr/lib/systemd/journald.conf`, which package updates replace), so a `sed` on it would change nothing. <!-- VERIFY: RHEL 10 default Storage=auto and whether /var/log/journal exists on a fresh install -->
 
 ### Task 7: systemd timer
 
@@ -381,7 +381,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     chronyc sources
     chronyc tracking
     ```
-    **Verify:** `chronyc sources` lists `serverb.lab.example` with `^*` (selected) or `^+` (combined) once it is reachable; `^?` right after the restart is normal, repeat after a few seconds. `chronyc tracking` shows `Reference ID : C0A87A0B (serverb.lab.example)` (`C0A87A0B` is `192.168.122.11` in hex). <!-- VERIFY: default pool/server lines in the stock RHEL 10 chrony.conf, and tracking output wording --> `chronyc sources -v` explains the symbols. If the source stays `^?`: on `serverb` check `grep -E '^(allow|local)' /etc/chrony.conf` (Setup appends them to the main file, which `chronyd` always reads) and `sudo firewall-cmd --list-services` (it needs `ntp`). Persistence: the configuration file and the enabled service survive a reboot.
+    **Verify:** `chronyc sources` lists `serverb.lab.example` with `^*` (selected) or `^+` (combined) once it is reachable; `^?` right after the restart is normal, repeat after a few seconds. `chronyc tracking` shows `Reference ID : C0A87A0B (serverb.lab.example)` (`C0A87A0B` is `192.168.122.11` in hex). <!-- VERIFY: chronyc tracking output wording on RHEL 10 --> `chronyc sources -v` explains the symbols. If the source stays `^?`: on `serverb` check `grep -E '^(allow|local)' /etc/chrony.conf` (Setup appends them to the main file, which `chronyd` always reads) and `sudo firewall-cmd --list-services` (it needs `ntp`). Persistence: the configuration file and the enabled service survive a reboot.
 
 ### Task 12: Tuned profile
 
@@ -449,7 +449,7 @@ Your score: ____ / 100. Below 70: redo the weakest topic group using the lab fil
     findmnt /mnt/usbdata
     findmnt --verify
     ```
-    **Verify:** `swapon --show` lists the swap LV (it can appear as `/dev/dm-N`) with `256M`; `tail -n 2 /etc/fstab` shows a line starting `UUID=` for swap and a line starting `LABEL=USBDATA`; `findmnt /mnt/usbdata` shows `vfat`; `findmnt --verify` reports no errors. The UUID must be read **after** `mkswap`, otherwise the fstab line contains a blank or old UUID. Use `sudo` with `blkid`, or the UUID can come back empty. A bad fstab line can drop the next boot into emergency mode, so always run `mount -a` and `findmnt --verify` before rebooting.
+    **Verify:** `swapon --show` lists the swap LV (it can appear as `/dev/dm-N`) with `256M`; `tail -n 2 /etc/fstab` shows a line starting `UUID=` for swap and a line starting `LABEL=USBDATA`; `findmnt /mnt/usbdata` shows `vfat`; `findmnt --verify` prints `Success, no errors or warnings detected`. The UUID must be read **after** `mkswap`, otherwise the fstab line contains a blank or old UUID. Use `sudo` with `blkid`, or the UUID can come back empty. A bad fstab line can drop the next boot into emergency mode, so always run `mount -a` and `findmnt --verify` before rebooting.
 
 ### Task 15: autofs wildcard map for NFS home directories
 

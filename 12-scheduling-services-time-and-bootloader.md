@@ -227,10 +227,10 @@ systemd-analyze calendar "*:0/2"
   Original form: *:0/2
 Normalized form: *-*-* *:00/2:00
     Next elapse: Tue 2026-10-27 10:06:00 UTC
-       (in UTC): Tue 2026-10-27 10:06:00 UTC
        From now: 1min 38s left
 ```
-<!-- VERIFY: exact systemd-analyze calendar output on RHEL 10 -->
+
+On a machine whose time zone is not UTC, an extra `(in UTC):` line appears under `Next elapse`.
 
 Now load, enable **the timer** (not the service) and start it in one go:
 
@@ -241,13 +241,12 @@ systemctl list-timers lab-note.timer --no-pager
 ```
 
 ```text title="Example output"
-Created symlink '/etc/systemd/system/timers.target.wants/lab-note.timer' -> '/etc/systemd/system/lab-note.timer'.
+Created symlink '/etc/systemd/system/timers.target.wants/lab-note.timer' → '/etc/systemd/system/lab-note.timer'.
 NEXT                        LEFT      LAST PASSED UNIT            ACTIVATES
 Tue 2026-10-27 10:06:00 UTC 1min 12s  -    -      lab-note.timer  lab-note.service
 
 1 timers listed.
 ```
-<!-- VERIFY: enable output wording and quote style on RHEL 10's systemd -->
 
 | Setting | Meaning |
 |---|---|
@@ -278,7 +277,6 @@ enabled
      Loaded: loaded (/usr/lib/systemd/system/crond.service; enabled; preset: enabled)
      Active: active (running) since Tue 2026-10-27 09:01:44 UTC; 1h 2min ago
 ```
-<!-- VERIFY: status wording on RHEL 10 -->
 
 | Command | Effect |
 |---|---|
@@ -306,10 +304,10 @@ systemctl get-default
 ```text title="Example output"
 graphical.target
 Removed '/etc/systemd/system/default.target'.
-Created symlink '/etc/systemd/system/default.target' -> '/usr/lib/systemd/system/multi-user.target'.
+Created symlink '/etc/systemd/system/default.target' → '/usr/lib/systemd/system/multi-user.target'.
 multi-user.target
 ```
-<!-- VERIFY: the default target of the lab image, and set-default output wording on RHEL 10 -->
+<!-- VERIFY: the default target of the lab image (the Removed line appears only when a default.target symlink already exists) -->
 
 `set-default` takes effect at the next boot. `systemctl isolate multi-user.target` switches the running system right now but does **not** persist. Use both only when you need both.
 

@@ -549,7 +549,6 @@ sudo dnf install -y vim bash-completion curl wget tar chrony nfs-utils
 ```bash
 sudo dnf install -y ansible-core
 ```
-<!-- VERIFY: ansible-core is available from the default repositories on RHEL 10 -->
 
 10. Generate an SSH key on `servera` and copy it to the other two systems.
 11. On `serverc`, create initial NFS directories:

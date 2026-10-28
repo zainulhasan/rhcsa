@@ -36,7 +36,7 @@ An exam task reads like "create a compressed archive of `/etc/ssh` in `/tmp`" or
 **Offline help for this topic:** `man tar`, `man gzip`, `man bzip2`, `man xz`, `man scp`, `man sftp`, `man rsync`
 
 !!! note "Supporting skill (not a listed RHEL 10 objective)"
-    The official RHEL 10 list names `tar`, `gzip` and `bzip2` only. Two extras are kept here because you will meet them at work. **`xz`** gives the smallest files and is common for kernel source and many downloadable tarballs. **`star`** is an older archiver that the RHEL 9 objective also named; it is not on the RHEL 10 list and is not taught below. If you want to try it, `dnf info star` tells you whether it is available. <!-- VERIFY: whether the star package exists in the RHEL 10 repositories -->
+    The official RHEL 10 list names `tar`, `gzip` and `bzip2` only. Two extras are kept here because you will meet them at work. **`xz`** gives the smallest files and is common for kernel source and many downloadable tarballs. **`star`** is an older archiver that the RHEL 9 objective also named; it is not on the RHEL 10 list and is not taught below. `dnf info star` finds no such package in the default RHEL 10 repositories.
 
     Logging in to the remote machine with `ssh` is lesson [05 SSH, Login Control, and Remote Workflows](05-ssh-login-switching-users-and-remote-workflows.md). This lesson only uses it to move files.
 
@@ -125,7 +125,6 @@ drwxr-xr-x student/student   0 2026-10-27 09:20 demo/a/
 -rw-r--r-- student/student   4 2026-10-27 09:20 demo/a/file1
 -rw-r--r-- student/student   4 2026-10-27 09:20 demo/a/file2
 ```
-<!-- VERIFY: column spacing of tar -tvf on RHEL 10 -->
 
 The columns are permissions, owner/group, size in bytes, modification time, and the stored name.
 
@@ -169,7 +168,6 @@ file demo.tar.gz
 ```text title="Example output"
 demo.tar.gz: gzip compressed data, from Unix, original size modulo 2^32 10240
 ```
-<!-- VERIFY: exact file output wording on RHEL 10 -->
 
 Remember the pairing: `-z` gzip, `-j` bzip2, `-J` xz.
 
@@ -193,12 +191,15 @@ sudo tar -czvf /tmp/configs.tar.gz /etc/ssh
 ```text title="Example output"
 tar: Removing leading `/' from member names
 /etc/ssh/
+/etc/ssh/moduli
+/etc/ssh/ssh_config.d/
+/etc/ssh/ssh_config.d/50-redhat.conf
 /etc/ssh/ssh_config
-/etc/ssh/sshd_config
-/etc/ssh/ssh_host_ed25519_key
+/etc/ssh/sshd_config.d/
+/etc/ssh/sshd_config.d/40-redhat-crypto-policies.conf
 ...
 ```
-<!-- VERIFY: quote style of the message, and the exact list of files in /etc/ssh on RHEL 10 -->
+<!-- VERIFY: the order of the files listed under /etc/ssh depends on the filesystem; the names are illustrative -->
 
 This is a **notice, not an error**, and the archive is fine. `tar` strips the leading `/` on purpose so that extracting an archive cannot overwrite real system files. The names inside are stored as `etc/ssh/...`. When you extract with `-C /tmp/test-restore` you get `/tmp/test-restore/etc/ssh/...`. Equivalent and tidier, because it keeps the paths short:
 
@@ -206,7 +207,7 @@ This is a **notice, not an error**, and the archive is fine. `tar` strips the le
 sudo tar -czvf /tmp/configs.tar.gz -C /etc ssh     # members are stored as ssh/...
 ```
 
-**Permissions.** `/etc/ssh` holds the private host keys, readable only by root and the `ssh_keys` group. A normal user gets `Cannot open: Permission denied` and a non-zero exit. Use `sudo`. The archive is then owned by root, but is world-readable (`-rw-r--r--`), so `student` can still copy it.
+**Permissions.** `/etc/ssh` holds the private host keys, readable only by root (mode `600`). A normal user gets `Cannot open: Permission denied` and a non-zero exit. Use `sudo`. The archive is then owned by root, but is world-readable (`-rw-r--r--`), so `student` can still copy it.
 
 ### 6. Compress and uncompress a single file
 
@@ -221,10 +222,9 @@ gunzip services.txt.gz            # back to services.txt
 ```
 
 ```text title="Example output"
--rw-r--r--. 1 student student 692252 Oct 27 09:30 services.txt
--rw-r--r--. 1 student student 140127 Oct 27 09:30 services.txt.gz
+-rw-r--r--. 1 student student 701707 Oct 27 09:30 services.txt
+-rw-r--r--. 1 student student 145001 Oct 27 09:30 services.txt.gz
 ```
-<!-- VERIFY: /etc/services size and compressed size on RHEL 10; both figures are illustrative -->
 
 | Command | Result |
 |---|---|
@@ -251,7 +251,6 @@ scp -r demo student@serverb:/tmp/                # whole directory
 student@serverb's password:
 demo.tar.gz                                   100%  176    92.4KB/s   00:00
 ```
-<!-- VERIFY: scp progress line format on RHEL 10 (OpenSSH 9.x uses SFTP internally; output is the same to the user) -->
 
 | Option | Meaning |
 |---|---|
@@ -394,7 +393,6 @@ A real file such as `/etc/services` and a long number list are used because with
     ssh student@serverb sha256sum /tmp/data.tar.gz
     ```
     **Verify:** `find restore1 restore2 restore3` shows `data/services`, `data/numbers.txt`, `data/file1` and `data/file2` in each. `ls -l` shows `data.tar` largest and `data.tar.xz` smallest (roughly `.tar` > `.tar.gz` > `.tar.bz2` > `.tar.xz`; the exact order of the last two can differ by file type). `ls services.copy*` shows both files. The two `sha256sum` lines match.
-    <!-- VERIFY: size ordering of gz/bz2/xz for this data set on the lab VM -->
 
 ### More practice
 

@@ -107,14 +107,19 @@ df -h
 
 ```text title="Example output"
 $ sudo blkid
-/dev/vda2: UUID="7B77-95E7" TYPE="vfat" PARTUUID="..."
-/dev/vda3: UUID="1c5c0a4e-0f3b-4f0e-9a58-2f3d6a7a9b11" TYPE="xfs" PARTUUID="..."
-/dev/vda4: UUID="c0a7a3a2-6b1d-4a43-8d1c-5f6d52f6c6a0" TYPE="xfs" PARTUUID="..."
+/dev/vda2: UUID="7B77-95E7" BLOCK_SIZE="512" TYPE="vfat" PARTUUID="..."
+/dev/vda3: UUID="1c5c0a4e-0f3b-4f0e-9a58-2f3d6a7a9b11" BLOCK_SIZE="512" TYPE="xfs" PARTUUID="..."
+/dev/vda4: UUID="c0a7a3a2-6b1d-4a43-8d1c-5f6d52f6c6a0" BLOCK_SIZE="512" TYPE="xfs" PARTUUID="..."
 
 $ sudo parted /dev/vdb print free
 Error: /dev/vdb: unrecognised disk label
+Model: Virtio Block Device (virtblk)
+Disk /dev/vdb: 2147MB
+Sector size (logical/physical): 512B/512B
+Partition Table: unknown
+Disk Flags:
 ```
-<!-- VERIFY: blkid/parted wording on a blank disk; UUIDs above are illustrative -->
+<!-- VERIFY: exact system-disk entries on the RHEL 10 lab image (the UUIDs and the vda layout are illustrative) -->
 
 | Command | What it tells you |
 |---|---|
@@ -204,7 +209,8 @@ sudo lvs
   LV      VG     Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
   lvfiles vgdata -wi-a----- 400.00m
 ```
-<!-- VERIFY: exact PSize/VSize (extent rounding of a 1 GiB partition) and column layout on RHEL 10 -->
+
+The first LVM command on a fresh system may also print `Creating devices file /etc/lvm/devices/system.devices`. That is normal.
 
 The LV appears as `/dev/vgdata/lvfiles`, and also as `/dev/mapper/vgdata-lvfiles` (the form `df` and `mount` show).
 
@@ -274,9 +280,10 @@ sudo blkid /dev/vgdata/lvfiles
 ```
 
 ```text title="Example output"
-/dev/vgdata/lvfiles: LABEL="files" UUID="3f1e9a64-7c1d-4c58-b0a2-9f4a5d1b6e21" TYPE="xfs"
+/dev/vgdata/lvfiles: LABEL="files" UUID="3f1e9a64-7c1d-4c58-b0a2-9f4a5d1b6e21" BLOCK_SIZE="512" TYPE="xfs"
 ```
-<!-- VERIFY: blkid field order on RHEL 10; UUID is illustrative -->
+
+The UUID is illustrative; the field order (`LABEL`, `UUID`, `BLOCK_SIZE`, `TYPE`) is what `blkid` prints.
 
 Device names such as `/dev/vdb` can change between boots. A UUID or label does not, so use one of them in `/etc/fstab`:
 
@@ -314,10 +321,14 @@ df -h /data/files
 ```
 
 ```text title="Example output"
+Success, no errors or warnings detected
+TARGET      SOURCE                     FSTYPE OPTIONS
+/data/files /dev/mapper/vgdata-lvfiles xfs    rw,relatime,inode64,logbufs=8,logbsize=32k,noquota
 Filesystem                  Size  Used Avail Use% Mounted on
-/dev/mapper/vgdata-lvfiles  395M   24M  372M   7% /data/files
+/dev/mapper/vgdata-lvfiles  336M   27M  310M   8% /data/files
 ```
-<!-- VERIFY: size and used figures for a fresh 400M XFS; they are approximate -->
+
+A fresh 400M XFS shows about 336M in `df -h`, because XFS reserves space for its log and metadata. A clean `findmnt --verify` prints `Success, no errors or warnings detected`.
 
 `daemon-reload` makes systemd re-read `/etc/fstab` (systemd generates the mount units from it). `mount -a` mounts everything in fstab that is not mounted yet. If it prints an error, fix the line now. Lesson 11 covers filesystems and mounts in more depth.
 
@@ -338,11 +349,10 @@ free -h
 
 ```text title="Example output"
 NAME      TYPE      SIZE USED PRIO
-/dev/vdb2 partition 512M   0B   -2
+/dev/vdb2 partition 512M   0B   -1
 ```
-<!-- VERIFY: swapon --show columns and default priority on RHEL 10 -->
 
-With `fdisk` on MBR, set the type with `t` and `82`. On GPT use `fdisk`'s `t` with the `swap` alias, or `gdisk` type `8200`. The type code is only a hint; `mkswap` is what makes it swap.
+With `fdisk` on MBR, set the type with `t` and `82`. On GPT use `fdisk`'s `t` with the `swap` alias. (`gdisk` was not available in the AlmaLinux 10 repositories this course was checked against, so rely on `parted` or `fdisk`.) The type code is only a hint; `mkswap` is what makes it swap.
 
 **Swap on an LV** works the same way, which makes it easy to resize later:
 
@@ -520,7 +530,6 @@ Verification: `lvs`, `vgs`, and `pvs` should no longer show the removed lab obje
     findmnt --verify
     ```
     **Verify:** `lsblk -f` shows `xfs` on the LV mounted at `/data/files` and `swap` on `vdb2`. `sudo vgs` lists `#PV` 2. `sudo lvs` shows `lvfiles` at 1.17g (1200 MiB). `df -h /data/files` shows roughly 1.2G. `swapon --show` lists `/dev/vdb2`. Reboot and repeat the checks.
-    <!-- VERIFY: lvs rounding of 1200M as 1.17g -->
 
 ## More practice
 

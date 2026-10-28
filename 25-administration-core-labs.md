@@ -297,7 +297,7 @@ You may keep the filesystem and script if they are useful for later labs, but ev
 8. Check bootloader defaults safely with `grubby`.
 
 ??? success "Solution sketches"
-    **Setup for 1:** `sudo dnf install -y createrepo_c`. **Setup for 5:** `/dev/vdc` must be clean. If an earlier run left a swap partition there, use the cleanup command under item 5 first. **Setup for 6:** the `vgdata/lvdata` LV from the guided lab above (VG has about 1 GiB free); redo the guided lab's storage steps if it is missing.
+    **Setup for 1:** `sudo dnf install -y createrepo_c dnf-plugins-core` (`dnf download` comes from `dnf-plugins-core`). **Setup for 5:** `/dev/vdc` must be clean. If an earlier run left a swap partition there, use the cleanup command under item 5 first. **Setup for 6:** the `vgdata/lvdata` LV from the guided lab above (VG has about 1 GiB free); redo the guided lab's storage steps if it is missing.
 
     1. Local repository:
         ```bash
@@ -313,7 +313,6 @@ You may keep the filesystem and script if they are useful for later labs, but ev
         EOF
         dnf repolist
         ```
-        <!-- VERIFY: dnf download is available in the default RHEL 10 dnf; otherwise install dnf-plugins-core -->
     2. `isfile.sh`:
         ```bash
         cat > ~/isfile.sh <<'EOF'
@@ -397,7 +396,7 @@ What to check before moving on:
     findmnt /par1
     lsblk -f /dev/vdb
     ```
-    **Verify:** `findmnt /par1` shows the mounted filesystem (`xfs`), `grep /par1 /etc/fstab` shows the persistent entry, `findmnt --verify` reports no error for it, and `lsblk /dev/vdb` shows `vdb1` at `1G`.
+    **Verify:** `findmnt /par1` shows the mounted filesystem (`xfs`), `grep /par1 /etc/fstab` shows the persistent entry, `findmnt --verify` ends with `Success, no errors or warnings detected`, and `lsblk /dev/vdb` shows `vdb1` at `1G`.
 
     **Reboot and re-check:** `sudo reboot`, then `findmnt /par1`. It must be mounted without any manual step.
 
@@ -731,7 +730,6 @@ What to check before moving on:
     findmnt /record
     ```
     **Verify:** the `vgs` output ends with `Ext 16.00m` (column `Ext`), `vgdisplay` shows `PE Size 16.00 MiB`, `lvdisplay` shows `Current LE 60`, `lvs` shows `960.00m`, and `findmnt /record` shows `ext4`.
-    <!-- VERIFY: column heading printed by vgs -o +vg_extent_size -->
 
     **Reboot and re-check:** `sudo reboot`, then `findmnt /record` and `sudo lvs vgapp`.
 
@@ -880,12 +878,12 @@ What to check before moving on:
 
 ### Drill 11: Make journald persistent with configuration
 
-**Setup:** note the current state: `grep -i '^#\?Storage' /etc/systemd/journald.conf` and `ls -ld /var/log/journal` (it may not exist yet).
+**Setup:** note the current state: `systemd-analyze cat-config systemd/journald.conf | grep -i '^#\?Storage'` and `ls -ld /var/log/journal` (it may not exist yet; there is no `/etc/systemd/journald.conf` by default, the stock file is `/usr/lib/systemd/journald.conf`).
 
 **Task:** as `root` (or with `sudo`):
 
 - [ ] Configure `journald` (with a drop-in file) so logs are stored persistently.
-- [ ] Restart the journal service.
+- [ ] Restart the journal service and flush the runtime journal to disk.
 - [ ] Verify both the configuration file and the resulting storage behavior.
 
 What to check before moving on:
@@ -895,24 +893,24 @@ What to check before moving on:
 - [ ] logs still exist after reboot (`journalctl --list-boots` shows more than one boot)
 
 ??? question "Hint 1"
-    The setting `Storage=` lives in the `[Journal]` section. Do not `sed` `/etc/systemd/journald.conf`: the line may be absent or commented out. A drop-in under `/etc/systemd/journald.conf.d/` always works.
+    The setting `Storage=` lives in the `[Journal]` section. Do not `sed` `/etc/systemd/journald.conf`: that file does not exist by default, so the edit does nothing. A drop-in under `/etc/systemd/journald.conf.d/` always works.
 
 ??? question "Hint 2"
-    After changing the file, restart `systemd-journald`. The directory `/var/log/journal` is what makes logs survive a reboot.
+    After adding the drop-in, restart `systemd-journald`. The directory `/var/log/journal` is what makes logs survive a reboot, and a restart alone does not create it: flush the runtime journal with `journalctl`.
 
 ??? success "Solution"
     ```bash
     sudo mkdir -p /etc/systemd/journald.conf.d && printf '[Journal]\nStorage=persistent\n' | sudo tee /etc/systemd/journald.conf.d/persistent.conf
     sudo systemctl restart systemd-journald
+    sudo journalctl --flush
     systemd-analyze cat-config systemd/journald.conf | grep -i '^Storage'
     ls -ld /var/log/journal
-    sudo journalctl --flush
     journalctl -b | tail
     journalctl --disk-usage
     ```
-    <!-- VERIFY: restarting systemd-journald with Storage=persistent creates /var/log/journal; if not, run sudo mkdir -p /var/log/journal && sudo systemd-tmpfiles --create --prefix /var/log/journal -->
-    <!-- VERIFY: systemd-analyze cat-config systemd/journald.conf lists the drop-in and Storage=persistent on RHEL 10 -->
-    **Verify:** `Storage=persistent` is visible in the merged config and `/var/log/journal` exists (owned by `root:systemd-journal`).
+    The restart alone does not create `/var/log/journal`; `sudo journalctl --flush` does. Before the flush only `/run/log/journal` exists.
+
+    **Verify:** `Storage=persistent` is visible in the merged config (after the stock file, `cat-config` prints a `# /etc/systemd/journald.conf.d/persistent.conf` header and the two lines) and `/var/log/journal` exists.
 
     **Reboot and re-check:** `sudo reboot`, then `journalctl --list-boots` (this is the check that proves persistence) must list at least two boots (`-1` and `0`), and `journalctl -b -1 | head` shows messages from before the reboot.
 
@@ -1223,7 +1221,7 @@ Grader mindset checklist:
     sudo mount -a
     findmnt /data
     ```
-    **Verify:** `lsblk -f` shows `LVM2_member` on `vdb1` and `xfs` on `vgdata-lvdata` mounted at `/data`; `sudo lvs` shows `lvdata` at `1.00g`; `findmnt --verify` is clean. **Reboot and re-check:** `findmnt /data`.
+    **Verify:** `lsblk -f` shows `LVM2_member` on `vdb1` and `xfs` on `vgdata-lvdata` mounted at `/data`; `sudo lvs` shows `lvdata` at `1.00g`; `findmnt --verify` prints `Success, no errors or warnings detected`. **Reboot and re-check:** `findmnt /data`.
 
 ### Exam-Style Task 2
 

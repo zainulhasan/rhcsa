@@ -282,7 +282,8 @@ notes.md report10.txt report1.txt report2.txt
 app1.log app2.log app3.log
 *
 ```
-<!-- VERIFY: sort order of report10.txt vs report1.txt depends on the locale on the lab image -->
+
+The order follows the locale. With an `en_US.UTF-8` locale `report10.txt` comes before `report1.txt`, as shown; in the `C` locale (`LC_ALL=C`) the order is `report1.txt report10.txt report2.txt`.
 
 Notice that `*` did not show `.hidden`: hidden files need `.*` or `ls -a`. Quotes turn globbing off, so `echo '*'` prints a literal star. Quoting is covered further in [08 Shell Scripting Basics](08-shell-scripting-basics.md).
 

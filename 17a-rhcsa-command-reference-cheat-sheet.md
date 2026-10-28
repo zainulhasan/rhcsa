@@ -341,7 +341,7 @@ Use this sheet in the same order you would build exam muscle memory:
 - Without `sudo` (or with `--user`) the remote and app are installed for your user only; with `sudo` (or `--system`) they are system-wide. Use the same scope for every step.
 - A remote is a name plus a URL or a `.flatpakrepo` file; `flatpak remote-add NAME FILE_OR_URL` accepts either.
 
-<!-- VERIFY: which Flatpak remote(s) RHEL 10 ships preconfigured and whether the exam-style lab uses a local remote; the Flathub URL above is a placeholder example and needs internet access -->
+<!-- VERIFY: which Flatpak remote(s) Red Hat's own RHEL 10 images ship preconfigured (the AlmaLinux 10.2 image had none) and whether the exam-style lab uses a local remote; the Flathub URL above works but needs internet access -->
 
 ### Add a `.repo` File Quickly
 
@@ -449,7 +449,7 @@ gpgcheck=0
 | `tuned-adm list` | Lists tuning profiles | `tuned-adm list` |
 | `tuned-adm active` | Shows active tuning profile | `sudo tuned-adm active` |
 | `tuned-adm profile NAME` | Sets tuning profile | `sudo tuned-adm profile balanced` |
-| `tuned-adm recommend` | Shows the profile tuned recommends for this machine | `tuned-adm recommend` |
+| `tuned-adm recommend` | Shows the profile tuned recommends for this machine (`virtual-guest` on a typical VM) | `tuned-adm recommend` |
 | `tuned-adm verify` | Checks the active profile is applied | `sudo tuned-adm verify` |
 | `tuned-adm off` | Turns tuning off | `sudo tuned-adm off` |
 | `mount -o remount,rw /sysroot` | Makes the recovery root writable | `mount -o remount,rw /sysroot` |
@@ -492,17 +492,16 @@ gpgcheck=0
 | Switch profile | `sudo tuned-adm profile throughput-performance` |
 | Verify | `tuned-adm active` and `sudo tuned-adm verify` |
 
-The active profile is stored by `tuned` itself, so it survives a reboot as long as `tuned.service` is enabled.
+The active profile is stored by `tuned` itself, so it survives a reboot as long as `tuned.service` is enabled. <!-- VERIFY: tuned keeps the active profile across a reboot (not observed) -->
 
 ### Preserve System Journals (persist across reboots)
 
 | Step | Command |
 |---|---|
-| Set storage mode | `sudoedit /etc/systemd/journald.conf` and set `Storage=persistent` under `[Journal]` |
-| Create the directory | `sudo mkdir -p /var/log/journal` |
-| Apply ownership and permissions | `sudo systemd-tmpfiles --create --prefix /var/log/journal` |
-| Restart and flush to disk | `sudo systemctl restart systemd-journald` then `sudo journalctl --flush` |
-| Verify | `ls -ld /var/log/journal` and `journalctl --list-boots` (after a reboot there should be two or more boots) |
+| Set storage mode (there is no `/etc/systemd/journald.conf` by default, so use a drop-in) | `sudo mkdir -p /etc/systemd/journald.conf.d` then `printf '[Journal]\nStorage=persistent\n' \| sudo tee /etc/systemd/journald.conf.d/persistent.conf` |
+| Restart journald | `sudo systemctl restart systemd-journald` (on its own this does not create `/var/log/journal`) |
+| Flush to disk (this creates `/var/log/journal`) | `sudo journalctl --flush` |
+| Verify | `systemd-analyze cat-config systemd/journald.conf`, `ls -ld /var/log/journal` and, after a reboot, `journalctl --list-boots` (the previous boot `-1` and the current `0`) |
 
 See also "Persistent journald Pattern" in the Security section below.
 
@@ -1012,13 +1011,12 @@ sudo chage -l alice
 ```text title="Example output"
 Last password change                                    : Oct 27, 2026
 Password expires                                        : Jan 25, 2027
+Password inactive                                       : never
 Account expires                                         : Dec 31, 2027
 Minimum number of days between password change          : 7
 Maximum number of days between password change          : 90
 Number of days of warning before password expires       : 14
 ```
-
-<!-- VERIFY: exact chage -l output layout; dates above are illustrative -->
 
 `/etc/login.defs` (`PASS_MAX_DAYS`, `PASS_MIN_DAYS`, `PASS_WARN_AGE`) sets the defaults for **new** users only; `chage` changes one existing user.
 
@@ -1056,7 +1054,7 @@ Number of days of warning before password expires       : 14
 | `semanage port -a -t TYPE -p proto PORT` | Adds SELinux port label for a port that has no label yet | `sudo semanage port -a -t http_port_t -p tcp 85` |
 | `semanage port -m -t TYPE -p proto PORT` | Changes the label of a port that already has one (`-a` fails with "already defined") | `sudo semanage port -m -t http_port_t -p tcp 8080` |
 | `semanage port -d -t TYPE -p proto PORT` | Deletes a label you added locally (policy-defined ports cannot be deleted) | `sudo semanage port -d -t http_port_t -p tcp 85` |
-| `ssh-keygen` | Creates SSH key pair | `ssh-keygen` |
+| `ssh-keygen` | Creates SSH key pair (ed25519 unless you pass `-t`) | `ssh-keygen` |
 | `ssh-copy-id USER@HOST` | Installs public key remotely (the remote user needs a password the first time) | `ssh-copy-id student@serverb` |
 
 <!-- VERIFY: `semanage port -m` on a policy-defined port such as 8080 (http_cache_port_t) succeeds on RHEL 10 and `semanage port -d` on a locally added port (85) removes it -->
@@ -1119,10 +1117,9 @@ Example service-side config reminder:
 
 | Goal | Command or file |
 |---|---|
-| Set persistent storage mode | edit `/etc/systemd/journald.conf` and set `Storage=persistent` |
-| Create the directory | `sudo mkdir -p /var/log/journal` then `sudo systemd-tmpfiles --create --prefix /var/log/journal` |
+| Set persistent storage mode | drop-in `/etc/systemd/journald.conf.d/persistent.conf` containing `[Journal]` and `Storage=persistent` (`/etc/systemd/journald.conf` does not exist by default) |
 | Restart journald | `sudo systemctl restart systemd-journald` |
-| Flush runtime logs to disk | `sudo journalctl --flush` |
+| Flush runtime logs to disk (creates `/var/log/journal`) | `sudo journalctl --flush` |
 | Verify storage path | `ls -ld /var/log/journal` |
 | Verify logs after reboot | `journalctl --list-boots` and `journalctl -b -1` |
 
@@ -1145,7 +1142,7 @@ Example service-side config reminder:
 
 Image used below: `registry.access.redhat.com/ubi10/httpd-24`. It serves on port **8080** inside the container, so publish it as `8080:8080`.
 
-<!-- VERIFY: the ubi10/httpd-24 image exists on registry.access.redhat.com, listens on 8080 and serves /var/www/html -->
+<!-- VERIFY: the ubi10/httpd-24 image serves /var/www/html (its existence on registry.access.redhat.com, anonymous access and port 8080 were observed) -->
 
 Learn it first in [15a Containers with Podman](15a-containers-with-podman.md), then use this section as the quick reference.
 
@@ -1234,8 +1231,6 @@ Typical workflow (rootful):
 
 !!! warning "Deprecated"
     `podman generate systemd` is **deprecated** in favor of Quadlet (Pattern 1 above). It is kept here only so you can recognise it in older notes. Prefer a `.container` file.
-
-    <!-- VERIFY: podman generate systemd still present (deprecated) in the RHEL 10 podman package -->
 
 | Command | What it does | Example |
 |---|---|---|
@@ -1451,15 +1446,13 @@ journalctl -u report.service -b
 ### Make journald Persistent
 
 ```bash
-sudoedit /etc/systemd/journald.conf
-# set Storage=persistent under [Journal]
-sudo mkdir -p /var/log/journal
-sudo systemd-tmpfiles --create --prefix /var/log/journal
+sudo mkdir -p /etc/systemd/journald.conf.d
+printf '[Journal]\nStorage=persistent\n' | sudo tee /etc/systemd/journald.conf.d/persistent.conf
 sudo systemctl restart systemd-journald
 sudo journalctl --flush
-grep '^Storage=' /etc/systemd/journald.conf
+systemd-analyze cat-config systemd/journald.conf | tail -3
 ls -ld /var/log/journal
-journalctl -b | tail
+journalctl --list-boots
 ```
 
 ### Run a Container Through systemd (Bonus, optional)

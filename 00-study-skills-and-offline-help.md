@@ -11,12 +11,11 @@ description: Learn how to practise Linux without panic, and how to find, read an
     whatis passwd
     ```
     ```text title="Example output"
-    passwd (1)           - update user's authentication tokens
-    passwd (1ssl)        - compute password hashes
+    passwd (1)           - change user password
     passwd (5)           - password file
     ```
-    <!-- VERIFY: exact entries and spacing for `whatis passwd` on a RHEL 10 minimal/server install; the set of entries depends on installed packages -->
-    Notice that one word, `passwd`, has three manual pages. The number in brackets is the manual **section**. `man passwd` opens the command; `man 5 passwd` opens the file format. By the end of this lesson you will know why that matters and how to pick the right one in seconds.
+    <!-- VERIFY: the set of `whatis passwd` entries depends on which man-page packages are installed on the RHEL 10 image -->
+    Notice that one word, `passwd`, has two manual pages. The number in brackets is the manual **section**. `man passwd` opens the command; `man 5 passwd` opens the file format. By the end of this lesson you will know why that matters and how to pick the right one in seconds.
 
 ## Why it matters
 
@@ -254,7 +253,7 @@ cd
 ### 2. `help` and `--help`: quick reminders
 
 ```bash
-help cd
+help cd | head -n 5
 ls --help | head -n 5
 ```
 
@@ -263,14 +262,13 @@ cd: cd [-L|[-P [-e]] [-@]] [dir]
     Change the shell working directory.
 
     Change the current directory to DIR.  The default DIR is the value of the
-    HOME shell variable.
+    HOME shell variable. If DIR is "-", it is converted to $OLDPWD.
 Usage: ls [OPTION]... [FILE]...
-List information about FILEs (the current directory by default).
+List information about the FILEs (the current directory by default).
 Sort entries alphabetically if none of -cftuvSUX nor --sort is specified.
 
 Mandatory arguments to long options are mandatory for short options too.
 ```
-<!-- VERIFY: exact help text wording for cd and ls on RHEL 10 -->
 
 - `help` shows help for shell builtins such as `cd`, `echo`, and `history`.
 - `--help` shows quick syntax and options for external commands. Use it when you need a fast reminder and do not want a full manual page.
@@ -336,13 +334,13 @@ man -f passwd
 ```text title="Example output"
 $ apropos password | head -n 6
 chage (1)            - change user password expiry information
+chgpasswd (8)        - update group passwords in batch mode
 chpasswd (8)         - update passwords in batch mode
-gpasswd (1)          - administer /etc/group and /etc/gshadow
-passwd (1)           - update user's authentication tokens
-passwd (5)           - password file
-shadow (5)           - shadowed password file
+endpwent (3)         - get password file entry
+endspent (3)         - get shadow password file entry
+fgetpwent (3)        - get password file entry
 ```
-<!-- VERIFY: apropos output depends on installed man pages and their exact one-line descriptions on RHEL 10 -->
+<!-- VERIFY: apropos output depends on which man pages are installed on the RHEL 10 image -->
 
 | Command | Same as | What it does |
 |---|---|---|
@@ -365,13 +363,14 @@ apropos password | head -n 3
 ```text title="Example output"
 password: nothing appropriate.
 
-Processing manual pages under /usr/share/man...
-Updating index cache for path `/usr/share/man/man8'. Wait...
+Updating index cache for path `/usr/share/man/man1'. Wait...
 ...
-3 man subdirectories contained newer manual pages.
-5 manual pages were added.
+45 man subdirectories contained newer manual pages.
+2731 manual pages were added.
+0 stray cats were added.
+0 old database entries were purged.
 ```
-<!-- VERIFY: mandb progress lines and counts on RHEL 10; also whether the man-db cache timer has already run on a fresh VM -->
+<!-- VERIFY: whether the man-db cache timer has already run on a fresh RHEL 10 VM (the counts above depend on installed packages) -->
 
 `sudo mandb` rebuilds the index (it needs root to write the cache). After that, `apropos` and `whatis` work. Remember this: it is a classic "works at home, empty in the exam" problem.
 
@@ -399,19 +398,16 @@ If a command has no info page, `info name` falls back to showing the man page.
 
 ```bash
 ls /usr/share/doc | head
-rpm -qd bash | head -n 5
+rpm -qd bash | head -n 3
 ls /usr/share/doc/bash
 ```
 
 ```text title="Example output"
-$ rpm -qd bash | head -n 5
-/usr/share/doc/bash/COMPAT
+$ rpm -qd bash | head -n 3
 /usr/share/doc/bash/FAQ
 /usr/share/doc/bash/INTRO
-/usr/share/doc/bash/NEWS
 /usr/share/doc/bash/RBASH
 ```
-<!-- VERIFY: which doc files the bash package ships on RHEL 10 (README may not exist); the list above is illustrative -->
 
 `/usr/share/doc` holds package documentation, examples, README files, and configuration samples for some software. File names differ by package and version, so do not guess: `rpm -qd packagename` lists the documentation files a package installed, and `ls /usr/share/doc/packagename` shows what is there. (Lesson 07 covers `rpm` queries in more depth.)
 
@@ -442,14 +438,15 @@ Task: "Make a user's password expire after 30 days." You do not remember the com
 
 ```bash
 apropos expire
+apropos expiry
 ```
 
 ```text title="Example output"
+expire: nothing appropriate.
 chage (1)            - change user password expiry information
 ```
-<!-- VERIFY: exact apropos hits for "expire" on RHEL 10; other pages may also match -->
 
-`chage` looks right, and it is in section 1, so it is a command. (If you get `nothing appropriate`, run `sudo mandb` and repeat.)
+`apropos` matches the words as they are written in each page's one-line description, so `expire` finds nothing while `expiry` does. When a search comes back empty, try a related word before you blame the index. `chage` looks right, and it is in section 1, so it is a command. (If every search says `nothing appropriate`, run `sudo mandb` and repeat.)
 
 **Step 2: confirm with a summary, then open the page.**
 
@@ -483,7 +480,6 @@ Minimum number of days between password change		: 0
 Maximum number of days between password change		: 99999
 Number of days of warning before password expires	: 7
 ```
-<!-- VERIFY: chage -l output format and the default values on RHEL 10 -->
 
 Now you know the command is `sudo chage -M 30 student`, and you found it without a search engine. Lesson 14 uses `chage` in full. The method is the lesson: **keyword, section, page, option, SEE ALSO, check current state, then change**.
 
@@ -574,7 +570,6 @@ You can list documentation directories and open a file with `less`. Verification
     cat /home/student/study-notes.txt
     ```
     **Verify:** `type echo` reports a shell builtin (and `/usr/bin/echo` also exists as an external program). `command -v ls` prints a path, `command -v cd` prints just `cd`. `cat /home/student/study-notes.txt` shows four lines.
-    <!-- VERIFY: the name of fstab field 6 on the RHEL 10 man page (fs_passno) -->
 
 Cleanup (optional): `rm -f /home/student/study-notes.txt`
 

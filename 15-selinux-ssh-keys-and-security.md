@@ -359,16 +359,30 @@ Enter file in which to save the key (/home/student/.ssh/id_ed25519):
 Enter passphrase (empty for no passphrase):
 Your identification has been saved in /home/student/.ssh/id_ed25519
 Your public key has been saved in /home/student/.ssh/id_ed25519.pub
+The key fingerprint is:
+SHA256:EkQfJY/S4GJvRaEEM5PXY/EMKsXH3nB+prPDFHxQMh8 student@servera.lab.example
+The key's randomart image is:
++--[ED25519 256]--+
+|    ==*oB++.E    |
+|    .OoBBOo+ .   |
+|    +.*+=B+..    |
+|   . + +. = +    |
+|      + S  *     |
+|     . .  +      |
+|         o o     |
+|          +      |
+|           .     |
++----[SHA256]-----+
 
 Number of key(s) added: 1
 
 serverb.lab.example
 ```
-<!-- VERIFY: ssh-keygen prompts, randomart block and ssh-copy-id wording on RHEL 10 -->
+<!-- VERIFY: ssh-copy-id wording on RHEL 10 (the ssh-keygen prompts and randomart block were observed; the key itself and fingerprint are illustrative) -->
 
 | Option / prompt | Meaning |
 |---|---|
-| `-t ed25519` | Key type. A modern strong default |
+| `-t ed25519` | Key type. A modern strong default (it is also what `ssh-keygen` creates if you give no `-t`) |
 | `-f path` | Where to write the key (default `~/.ssh/id_ed25519`) |
 | `-N ''` | Empty passphrase, no prompt (fine for the lab; a passphrase is safer at work) |
 | passphrase prompt | Encrypts the private key on disk. Press Enter for none |
@@ -429,17 +443,17 @@ The server settings live in `/etc/ssh/sshd_config` (and drop-in files in `/etc/s
 |---|---|
 | `PubkeyAuthentication yes` | Allow key login (normally the default) |
 | `PasswordAuthentication yes\|no` | Allow or forbid password login. Set `no` only after key login works |
-| `PermitRootLogin no\|prohibit-password\|yes` | Whether root may log in over SSH, and how |
+| `PermitRootLogin no\|prohibit-password\|yes` | Whether root may log in over SSH, and how. The built-in default is `prohibit-password` (key only); `sshd -T` prints it as `without-password`, the old name for the same thing |
 
 !!! warning "Drop-ins in `/etc/ssh/sshd_config.d/` are read first, and the first value wins"
-    The main file includes `/etc/ssh/sshd_config.d/*.conf` **before** its own settings. For each setting, sshd keeps the **first** value it reads. So a line in `sshd_config` is silently ignored if a drop-in already set the same option (for example `50-cloud-init.conf` setting `PasswordAuthentication yes`, or an installer's `01-permitrootlogin.conf`). Do not trust the file you edited; ask sshd what it actually uses:
+    The main file includes `/etc/ssh/sshd_config.d/*.conf` **before** its own settings. For each setting, sshd keeps the **first** value it reads. So a line in `sshd_config` is silently ignored if a drop-in already set the same option (for example a cloud image's `50-cloud-init.conf` setting `PasswordAuthentication yes`). RHEL 10 itself ships two drop-ins, `40-redhat-crypto-policies.conf` and `50-redhat.conf`; the `Include` line sits near the top of `sshd_config`, and with no other drop-in the defaults are `PasswordAuthentication yes` and `PermitRootLogin prohibit-password`. Do not trust the file you edited; ask sshd what it actually uses:
 
     ```bash
     ls /etc/ssh/sshd_config.d/
     sudo sshd -T | grep -iE 'permitrootlogin|passwordauthentication'
     ```
 
-    Change the value in the drop-in that sets it, or create an earlier-sorting drop-in of your own (for example `/etc/ssh/sshd_config.d/00-lab.conf`), then re-run the `sshd -T` check. <!-- VERIFY: which drop-ins a RHEL 10 image ships (installer 01-permitrootlogin.conf, cloud-init 50-cloud-init.conf) and that sshd_config includes sshd_config.d/*.conf before its own settings -->
+    Change the value in the drop-in that sets it, or create an earlier-sorting drop-in of your own (for example `/etc/ssh/sshd_config.d/00-lab.conf`), then re-run the `sshd -T` check. <!-- VERIFY: extra drop-ins that Red Hat's installer or cloud images add (for example 01-permitrootlogin.conf, 50-cloud-init.conf); the two RHEL drop-ins and the early Include were observed -->
 
 ```bash
 sudo vi /etc/ssh/sshd_config.d/00-lab.conf     # for example: PasswordAuthentication no

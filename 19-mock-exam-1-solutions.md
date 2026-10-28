@@ -271,7 +271,6 @@ This is the course's own practice scheme. A task earns its full points only if t
       LV     VG     LSize
       lvdata vgmock 512.00m
     ```
-    <!-- VERIFY: lvs size column formatting (512.00m) on RHEL 10 -->
     The 600 MiB partition becomes about 596 MiB in the VG (LVM metadata and 4 MiB extents), so a 512 MiB LV fits. **Persistence:** partition table and LVM metadata are written to disk; the filesystem mount is the part that needs an fstab line (Task 12).
 
 ### Task 12
@@ -322,9 +321,8 @@ This is the course's own practice scheme. A task earns its full points only if t
     ```
     ```text title="Example output"
     NAME      TYPE      SIZE USED PRIO
-    /dev/vdb2 partition 512M   0B   -2
+    /dev/vdb2 partition 512M   0B   -1
     ```
-    <!-- VERIFY: swapon --show columns and the default priority on RHEL 10 -->
     `swapon /dev/vdb2` is not persistent by itself; the fstab line is. Prove it with `sudo swapoff /dev/vdb2 && sudo swapon -a && swapon --show`.
 
 ### Task 14
@@ -404,19 +402,18 @@ This is the course's own practice scheme. A task earns its full points only if t
     ```
     **Verify:**
     ```bash
-    systemd-analyze cat-config systemd/journald.conf | grep -A1 '^\[Journal\]'
+    systemd-analyze cat-config systemd/journald.conf | grep '^Storage'
     ls -ld /var/log/journal
     ls /var/log/journal
     journalctl --disk-usage
     ```
     ```text title="Example output"
-    [Journal]
     Storage=persistent
     drwxr-sr-x+ 3 root systemd-journal 46 Jan  5 10:30 /var/log/journal
     4f3a9c1e2b7d4e5f8a6b0c9d1e2f3a4b
     Archived and active journals take up 24.0M in the file system.
     ```
-    The long directory name is the machine-id and appears once the journal starts writing to disk. A drop-in is used instead of `sed` on `/etc/systemd/journald.conf` because that file may not contain a `Storage=` line at all, and then `sed` changes nothing. After the reboot in Task 18, `journalctl --list-boots` should list more than one boot. **Persistence:** both the drop-in and the directory survive a reboot. <!-- VERIFY: systemd-analyze cat-config output layout for journald drop-ins on RHEL 10 -->
+    The long directory name is the machine-id and appears once the journal starts writing to disk. A drop-in is used instead of `sed` on `/etc/systemd/journald.conf` because that file does not exist by default (the stock file is `/usr/lib/systemd/journald.conf`), so `sed` would change nothing. A restart of `systemd-journald` alone does not create `/var/log/journal`; `journalctl --flush` does. After the reboot in Task 18, `journalctl --list-boots` should list more than one boot. **Persistence:** both the drop-in and the directory survive a reboot.
 
 ### Task 18
 

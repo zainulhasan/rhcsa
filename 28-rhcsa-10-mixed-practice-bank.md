@@ -595,7 +595,7 @@ On `servera`: `sudo dnf install -y autofs nfs-utils`.
     ls /shares/nfsdata
     findmnt /shares/nfsdata
     ```
-    **Verify:** `findmnt` shows `serverb.lab.example:/srv/nfsshare` of type `nfs4` after the `ls`. Reboot `servera` and repeat. <!-- VERIFY: showmount -e depends on rpcbind and mountd; this task avoids it by using NFSv4 only -->
+    **Verify:** `findmnt` shows `serverb.lab.example:/srv/nfsshare` of type `nfs4` after the `ls`. Reboot `servera` and repeat. <!-- VERIFY: showmount -e localhost works on a server running nfs-server (observed); from a remote client with only the firewalld nfs service open it needs mountd and rpc-bind too (untested), which is why this task avoids it -->
 
 #### P8 ACL with a default ACL
 
@@ -860,8 +860,7 @@ sudo usermod -aG webadmins carol
     ls -Zd /srv/webcontent /srv/webcontent/index.html
     curl http://localhost/
     ```
-    From `serverb`: `curl http://servera.lab.example/`. **Verify:** reboot `servera` and run the `curl` again; also `systemctl is-enabled httpd`. <!-- VERIFY: a DocumentRoot in a conf.d drop-in (read after httpd.conf) overrides the stock one on RHEL 10 httpd -->
-
+    From `serverb`: `curl http://servera.lab.example/`. **Verify:** reboot `servera` and run the `curl` again; also `systemctl is-enabled httpd`.
     Cleanup, so later drills see the stock page again: `sudo rm /etc/httpd/conf.d/p3.conf; sudo systemctl restart httpd`.
 
 #### P13 Custom `umask`
@@ -914,8 +913,7 @@ These tasks are not on the RHEL 10 list. Skip them if your lab image has no VDO 
 
 **Setup:** `sudo dnf install -y podman`; internet access to pull the image.
 
-**Task:** run the image `registry.access.redhat.com/ubi10/httpd-24` as a container named `web1`, publishing host port `8080` to container port `8080`, and fetch the page with `curl`. <!-- VERIFY: image name and port for the RHEL 10 UBI httpd image -->
-
+**Task:** run the image `registry.access.redhat.com/ubi10/httpd-24` as a container named `web1`, publishing host port `8080` to container port `8080`, and fetch the page with `curl`.
 ??? success "Solution"
     ```bash
     sudo dnf install -y podman
@@ -940,12 +938,14 @@ Short tasks. Aim for a few minutes each. Same scoring.
 
 ??? success "Solution"
     ```bash
-    man -k schedul
+    man -k schedul      # finds crontab(5) and cron(8), but not at
+    man -k '^at$'       # at(1)
+    man -k timer        # systemd.timer(5) among others
     man 5 crontab
     man at
     man systemd.timer
     ```
-    If `man -k` returns nothing, run `sudo mandb` first and retry.
+    The keyword you search for decides what you find, so try a second word when the first misses a page. If `man -k` returns nothing, run `sudo mandb` first and retry.
 
 #### S2 Usernames and home directories with `awk`
 
