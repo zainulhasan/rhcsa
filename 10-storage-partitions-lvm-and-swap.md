@@ -352,7 +352,7 @@ NAME      TYPE      SIZE USED PRIO
 /dev/vdb2 partition 512M   0B   -1
 ```
 
-With `fdisk` on MBR, set the type with `t` and `82`. On GPT use `fdisk`'s `t` with the `swap` alias. (`gdisk` is not in the RHEL 10 repositories, so use `parted` or `fdisk`.) The type code is only a hint; `mkswap` is what makes it swap.
+With `fdisk` on MBR, set the type with `t` and `82`. On GPT use `fdisk`'s `t` with the `swap` alias. (`gdisk` was not available in the AlmaLinux 10 repositories this course was checked against, so rely on `parted` or `fdisk`.) The type code is only a hint; `mkswap` is what makes it swap.
 
 **Swap on an LV** works the same way, which makes it easy to resize later:
 
