@@ -130,7 +130,7 @@ This is the central table of the course. "Persists" means **survives a reboot wi
 | [08](08-shell-scripting-basics.md) | Script file and its `chmod +x` | Yes | Nothing; variables set in a shell are lost |
 | [09](09-boot-targets-processes-logs-and-tuning.md) | `systemctl set-default TARGET` | Yes | Nothing; `systemctl isolate` and GRUB `e` edits last for one boot only |
 | [09](09-boot-targets-processes-logs-and-tuning.md) | `kill`, `renice`, `top` actions | No | Nothing to save; a restarted process starts fresh |
-| [09](09-boot-targets-processes-logs-and-tuning.md) | Persistent journal | Yes once configured | Drop-in `/etc/systemd/journald.conf.d/persistent.conf` with `[Journal]` and `Storage=persistent`, then `systemctl restart systemd-journald`; check with `systemd-analyze cat-config systemd/journald.conf` and, after a reboot, `journalctl --list-boots` <!-- VERIFY: journald drop-in directory and Storage=persistent creating /var/log/journal on RHEL 10 --> |
+| [09](09-boot-targets-processes-logs-and-tuning.md) | Persistent journal | Yes once configured | There is no `/etc/systemd/journald.conf` by default, so create the drop-in `/etc/systemd/journald.conf.d/persistent.conf` with `[Journal]` and `Storage=persistent`, then run `sudo journalctl --flush` (restarting `systemd-journald` alone does not create `/var/log/journal`); check with `systemd-analyze cat-config systemd/journald.conf`, `ls /var/log/journal` and, after a reboot, `journalctl --list-boots`, which lists the previous boot (`-1`) as well as the current one (`0`) |
 | [09](09-boot-targets-processes-logs-and-tuning.md) | `tuned-adm profile NAME` | Yes | Nothing; confirm with `tuned-adm active` <!-- VERIFY: tuned stores the active profile across reboot (/etc/tuned/active_profile) --> |
 | [09](09-boot-targets-processes-logs-and-tuning.md) | Root password reset with `rd.break` | Yes | Also run `touch /.autorelabel` before reboot |
 | [10](10-storage-partitions-lvm-and-swap.md) | Partitions, PV, VG, LV, `mkfs`, `mkswap`, `lvextend` | Yes | Nothing; the metadata is on disk |
@@ -139,7 +139,7 @@ This is the central table of the course. "Persists" means **survives a reboot wi
 | [11](11-filesystems-mounts-nfs-and-autofs.md) | autofs maps | Maps: Yes. Service: needs enable | `systemctl enable --now autofs`; `systemctl restart autofs` after map edits |
 | [12](12-scheduling-services-time-and-bootloader.md) | `crontab -e`, `/etc/cron.d` files | Yes | Nothing, if `crond` is enabled (it is by default) |
 | [12](12-scheduling-services-time-and-bootloader.md) | `at` jobs | Queued jobs are on disk | `atd` must be enabled; remove with `atrm` <!-- VERIFY: at jobs queued before reboot still run on RHEL 10 --> |
-| [12](12-scheduling-services-time-and-bootloader.md) | New `.service` or `.timer` file | Not active by itself | `systemctl daemon-reload`, then `systemctl enable --now NAME.timer` |
+| [12](12-scheduling-services-time-and-bootloader.md) | New `.service` or `.timer` file | Not active by itself | `systemctl daemon-reload`, then `systemctl enable --now NAME.timer`; an enabled timer stays enabled and scheduled after a reboot |
 | [12](12-scheduling-services-time-and-bootloader.md) | `systemctl enable` / `disable` | Yes | This is the persistence step for any service |
 | [12](12-scheduling-services-time-and-bootloader.md) | `chrony.conf` edit, `timedatectl set-timezone` | Yes | `systemctl restart chronyd` to apply; `date -s` is not a lasting fix |
 | [12](12-scheduling-services-time-and-bootloader.md) | Bootloader change | `grubby --update-kernel` Yes | If you edit `/etc/default/grub`, also run `grub2-mkconfig -o` (path differs for BIOS and UEFI) |
@@ -208,7 +208,7 @@ UUID=2f7b3c1e-8d4a-4c5e-9b0a-6e1d7f3a2c11  /data  xfs  defaults  0 0
 
 Success, no errors or warnings detected
 ```
-<!-- VERIFY: exact findmnt options and the findmnt --verify success line on RHEL 10 -->
+<!-- VERIFY: exact findmnt options on RHEL 10 (they include seclabel when SELinux is on); the findmnt --verify success line was observed -->
 
 `mount -a` tries every `/etc/fstab` line that is not mounted yet, so it is the safest way to test a new line before a reboot. If it prints an error, fix it now. The fstab fields are explained in [10 Storage, Partitions, LVM, and Swap](10-storage-partitions-lvm-and-swap.md).
 
@@ -231,7 +231,7 @@ cockpit dhcpv6-client ssh http
 
 cockpit dhcpv6-client ssh
 ```
-<!-- VERIFY: default NetworkManager profile name on the RHEL 10 lab image (shown here as enp1s0); output format of ip -br -->
+<!-- VERIFY: default NetworkManager profile name on the RHEL 10 lab image (shown here as enp1s0) -->
 
 The last two lines are the trap: `http` is in the runtime set but not in the permanent set. It works now and disappears after `firewall-cmd --reload` or a reboot. Fix it with `sudo firewall-cmd --runtime-to-permanent`.
 
@@ -435,26 +435,23 @@ sudo firewall-cmd --reload
 sudo firewall-cmd --list-services
 ```
 
-### Scenario 6: a typo in sudoers locks out sudo
+### Scenario 6: a typo in a sudoers file
 
-**Symptom:** every `sudo` command fails, even for `student`:
+**Symptom:** every `sudo` command now starts with an error line, and the rule you wrote for `webadmin` does not work:
 
 ```text title="Example output"
-sudo: /etc/sudoers.d/webadmin:1:35: syntax error
-sudo: no valid sudoers sources found, quitting
-sudo: unable to initialize policy plugin
+/etc/sudoers.d/webadmin:1:14: syntax error
+webadmin ALL==(root) /usr/bin/systemctl restart httpd
+             ^
 ```
-<!-- VERIFY: exact sudo parse-error wording on RHEL 10 -->
 
-**Why:** the file was written with `echo ... | sudo tee`, which saves it **before** anyone checks it. `visudo` checks the syntax first and refuses to save a broken file.
+**Why:** the file was written with `echo ... | sudo tee`, which saves it **before** anyone checks it. `visudo` checks the syntax first and refuses to save a broken file. Current `sudo` does not stop working because of one bad line: it reports the error and ignores the broken line, so `student` can still use `sudo`. What you lose is the rule on that line. If the broken line was the only thing that gave someone `sudo` rights, they are locked out until you repair the file.
 
-**Fix:** switch to root without sudo, repair the file, and validate it. User switching is covered in [01 Shell Basics and Command Syntax](01-shell-basics-and-command-syntax.md).
+**Fix:** repair the file with `visudo`, and validate it. If `sudo` itself is no use to you, switch to root without it. User switching is covered in [01 Shell Basics and Command Syntax](01-shell-basics-and-command-syntax.md).
 
 ```bash
-su -
-visudo -f /etc/sudoers.d/webadmin
-visudo -c
-exit
+sudo visudo -f /etc/sudoers.d/webadmin     # or: su -   then   visudo -f ...
+sudo visudo -c
 ```
 
 ### Scenario 7: network settings gone after reboot
