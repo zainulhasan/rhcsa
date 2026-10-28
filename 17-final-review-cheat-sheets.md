@@ -78,7 +78,7 @@ Use the [17a Command Reference Cheat Sheet](17a-rhcsa-command-reference-cheat-sh
 
 - [ ] Boot into `rescue.target` and back to `multi-user.target` by hand ([09](09-boot-targets-processes-logs-and-tuning.md)).
 - [ ] Set the default target, change a process priority with `nice`/`renice`, kill a runaway process, switch a `tuned` profile.
-- [ ] Preserve the journal across reboots and read the previous boot.
+- [ ] Preserve the journal across reboots (drop-in with `Storage=persistent`, then `sudo journalctl --flush`) and read the previous boot with `journalctl -b -1`.
 - [ ] Redo the bootloader change from [12](12-scheduling-services-time-and-bootloader.md) and the root-password reset pattern.
 - [ ] Work through the running-systems drills in [25 Administration Core Labs](25-administration-core-labs.md).
 - [ ] Look up: [17a, Boot, Targets, Processes, and Logs](17a-rhcsa-command-reference-cheat-sheet.md#boot-targets-processes-and-logs).
